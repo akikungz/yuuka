@@ -90,6 +90,8 @@ spec:
         - name: jaeger-storage
           persistentVolumeClaim:
             claimName: jaeger-data
+
+      restartPolicy: Always
 ---
 apiVersion: v1
 kind: Service

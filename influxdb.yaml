@@ -76,6 +76,8 @@ spec:
         - name: influxdb-data
           persistentVolumeClaim:
             claimName: influxdb-data
+
+      restartPolicy: Always
 ---
 apiVersion: v1
 kind: Service
