@@ -68,7 +68,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: grafana-dashboard-config
+  name: grafana-dashboard
   namespace: fitm-cloud
   labels:
     app.kubernetes.io/name: fitm-cloud
@@ -120,7 +120,7 @@ data:
             "type": "prometheus",
             "uid": "Prometheus"
           },
-          "description": "Running pods in kube-system namespace",
+          "description": "Running pods in fitm-cloud namespace",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -173,7 +173,7 @@ data:
                 "type": "prometheus",
                 "uid": "Prometheus"
               },
-              "expr": "count(kube_pod_status_phase{namespace=\"kube-system\", phase=\"Running\"})",
+              "expr": "count(kube_pod_status_phase{namespace=\"fitm-cloud\", phase=\"Running\"})",
               "refId": "A"
             }
           ],
@@ -238,7 +238,7 @@ data:
                 "type": "prometheus",
                 "uid": "Prometheus"
               },
-              "expr": "sum(rate(http_requests_total{namespace=\"kube-system\", status=~\"5..\"}[5m]))",
+              "expr": "sum(rate(http_requests_total{namespace=\"fitm-cloud\", status=~\"5..\"}[5m]))",
               "refId": "A"
             }
           ],
@@ -303,7 +303,7 @@ data:
                 "type": "loki",
                 "uid": "Loki"
               },
-              "expr": "count_over_time({namespace=\"kube-system\"} |= \"error\" [5m])",
+              "expr": "count_over_time({namespace=\"fitm-cloud\"} |= \"error\" [5m])",
               "refId": "A"
             }
           ],
@@ -404,7 +404,7 @@ data:
                 "type": "prometheus",
                 "uid": "Prometheus"
               },
-              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"kube-system\"}[5m])) by (pod) * 100",
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"fitm-cloud\"}[5m])) by (pod) * 100",
               "legendFormat": "{{pod}}",
               "refId": "A"
             }
@@ -493,7 +493,7 @@ data:
                 "type": "prometheus",
                 "uid": "Prometheus"
               },
-              "expr": "sum(container_memory_usage_bytes{namespace=\"kube-system\"}) by (pod) / 1024 / 1024",
+              "expr": "sum(container_memory_usage_bytes{namespace=\"fitm-cloud\"}) by (pod) / 1024 / 1024",
               "legendFormat": "{{pod}}",
               "refId": "A"
             }
@@ -595,7 +595,7 @@ data:
                 "type": "prometheus",
                 "uid": "Prometheus"
               },
-              "expr": "sum(rate(http_requests_total{namespace=\"kube-system\"}[5m])) by (service)",
+              "expr": "sum(rate(http_requests_total{namespace=\"fitm-cloud\"}[5m])) by (service)",
               "legendFormat": "{{service}}",
               "refId": "A"
             }
@@ -621,7 +621,7 @@ data:
             "type": "loki",
             "uid": "Loki"
           },
-          "description": "Recent logs from kube-system namespace",
+          "description": "Recent logs from fitm-cloud namespace",
           "gridPos": {
             "h": 10,
             "w": 24,
@@ -646,7 +646,7 @@ data:
                 "type": "loki",
                 "uid": "Loki"
               },
-              "expr": "{namespace=\"kube-system\"}",
+              "expr": "{namespace=\"fitm-cloud\"}",
               "refId": "A"
             }
           ],
@@ -657,7 +657,7 @@ data:
       "refresh": "30s",
       "schemaVersion": 38,
       "style": "dark",
-      "tags": ["kube-system", "overview"],
+      "tags": ["fitm-cloud", "overview"],
       "templating": {
         "list": []
       },
@@ -668,10 +668,36 @@ data:
       "timepicker": {},
       "timezone": "browser",
       "title": "FITM Cloud Overview",
-      "uid": "kube-system-overview",
+      "uid": "fitm-cloud-overview",
       "version": 1,
       "weekStart": ""
     }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-provisioning
+  namespace: fitm-cloud
+  labels:
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: grafana
+    app.kubernetes.io/managed-by: argo-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+data:
+  dashboard.yaml: |
+    apiVersion: 1
+    providers:
+      - name: 'FITM Cloud-Based Platform'
+        orgId: 1
+        folder: 'fitm-cloud'
+        type: file
+        disableDeletion: false
+        editable: true
+        updateInterval: 30s
+        allowUiUpdate: true
+        options:
+          path: /var/lib/grafana/dashboards/fitm-cloud
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -712,12 +738,15 @@ spec:
             - name: grafana-datasources
               mountPath: /etc/grafana/provisioning/datasources/datasources.yaml
               subPath: datasources.yaml
-            - name: grafana-dashboard-config
-              mountPath: /etc/grafana/provisioning/dashboards/overview.json
+            - name: grafana-dashboard
+              mountPath: /var/lib/grafana/dashboards/fitm-cloud/overview.json
               subPath: overview.json
+            - name: grafana-dashboard-provisioning
+              mountPath: /etc/grafana/provisioning/dashboards/dashboard.yaml
+              subPath: dashboard.yaml
           livenessProbe:
             httpGet:
-              path: /
+              path: /api/health
               port: 3000
             initialDelaySeconds: 30
             periodSeconds: 10
@@ -725,7 +754,7 @@ spec:
             failureThreshold: 5
           readinessProbe:
             httpGet:
-              path: /
+              path: /api/health
               port: 3000
             initialDelaySeconds: 5
             periodSeconds: 10
@@ -746,9 +775,14 @@ spec:
         - name: grafana-datasources
           configMap:
             name: grafana-datasources
-        - name: grafana-dashboard-config
+        - name: grafana-dashboard
           configMap:
-            name: grafana-dashboard-config
+            name: grafana-dashboard
+        - name: grafana-dashboard-provisioning
+          configMap:
+            name: grafana-dashboard-provisioning
+
+      restartPolicy: Always
 ---
 apiVersion: v1
 kind: Service
