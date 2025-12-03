@@ -5,6 +5,7 @@ metadata:
   namespace: fitm-cloud
   labels:
     app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: cert-issuer
     app.kubernetes.io/managed-by: argo-cd
   annotations:
     argocd.argoproj.io/sync-wave: "0"
@@ -15,6 +16,9 @@ spec:
     privateKeySecretRef:
       name: letsencrypt-prod
     solvers:
-      - http01:
-          ingress:
-            class: nginx
+      - dns01:
+          cloudflare:
+            email: thitipong.t@fitm.cloud
+            apiTokenSecretRef:
+              name: cloudflare-api-token-secret
+              key: api-token
