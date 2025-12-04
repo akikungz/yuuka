@@ -1,3 +1,4 @@
+# InfluxDB Persistent Volume Claim
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -17,6 +18,7 @@ spec:
     requests:
       storage: 8Gi
 ---
+# InfluxDB Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -79,6 +81,7 @@ spec:
 
       restartPolicy: Always
 ---
+# InfluxDB Service ClusterIP for internal communication
 apiVersion: v1
 kind: Service
 metadata:
@@ -98,6 +101,31 @@ spec:
       targetPort: 8086
       protocol: TCP
 ---
+# InfluxDB NodePort Service for external access
+apiVersion: v1
+kind: Service
+metadata:
+  name: nodeport-influxdb
+  namespace: fitm-cloud
+  labels:
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: influxdb
+    app.kubernetes.io/managed-by: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  selector:
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: influxdb
+  type: NodePort
+  ports:
+    - name: http
+      port: 8086
+      targetPort: 8086
+      protocol: TCP
+      nodePort: 30086
+---
+# InfluxDB Ingress for external access with TLS
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -107,6 +135,11 @@ metadata:
     app.kubernetes.io/name: influxdb-ingress
     app.kubernetes.io/component: influxdb
 spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - influxdb.fitm.cloud
+      secretName: influxdb-tls
   rules:
     - host: influxdb.fitm.cloud
       http:
