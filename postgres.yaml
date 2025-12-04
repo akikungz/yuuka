@@ -1,3 +1,4 @@
+# PostgreSQL Persistent Volume Claims
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -18,6 +19,7 @@ spec:
     requests:
       storage: 10Gi
 ---
+# PostgreSQL Development Persistent Volume Claims
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -38,6 +40,7 @@ spec:
     requests:
       storage: 1Gi
 ---
+# PostgreSQL Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -175,6 +178,7 @@ spec:
           persistentVolumeClaim:
             claimName: postgres-development-data
 ---
+# PostgreSQL Service
 apiVersion: v1
 kind: Service
 metadata:
@@ -199,32 +203,5 @@ spec:
     - name: postgres-dev
       port: 5433
       targetPort: postgres-dev
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: postgres
-  namespace: fitm-cloud
-  labels:
-    app.kubernetes.io/name: fitm-cloud
-    app.kubernetes.io/component: postgres
-    app.kubernetes.io/managed-by: argocd
-  annotations:
-    argocd.argoproj.io/sync-wave: "3"
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,Prune=false
-spec:
-  type: ClusterIP
-  selector:
-    app.kubernetes.io/name: fitm-cloud
-    app.kubernetes.io/component: postgres
-  ports:
-    - name: postgres
-      port: 5432
-      targetPort: postgres
-      protocol: TCP
-    - name: postgres-dev
-      port: 5433
-      targetPort: postgres-dev
-      protocol: TCP
 ---
 

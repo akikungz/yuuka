@@ -186,6 +186,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
+  ingressClassName: nginx
   tls:
     - hosts:
         - vault.fitm.cloud
