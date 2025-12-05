@@ -99,7 +99,7 @@ spec:
               command:
                 - pg_isready
                 - -U
-                - "$POSTGRES_USER"
+                - "postgres"
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 5
@@ -109,7 +109,7 @@ spec:
               command:
                 - pg_isready
                 - -U
-                - "$POSTGRES_USER"
+                - "postgres"
             initialDelaySeconds: 5
             periodSeconds: 10
             timeoutSeconds: 5
@@ -143,7 +143,7 @@ spec:
               command:
                 - pg_isready
                 - -U
-                - "$POSTGRES_USER"
+                - "postgres"
                 - -p
                 - "5433"
             initialDelaySeconds: 30
@@ -155,7 +155,7 @@ spec:
               command:
                 - pg_isready
                 - -U
-                - "$POSTGRES_USER"
+                - "postgres"
                 - -p
                 - "5433"
             initialDelaySeconds: 5
