@@ -1,0 +1,186 @@
+# RustFS Persistent Storage Claim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rustfs-data
+  namespace: fitm-cloud
+  labels:
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: rustfs
+    app.kubernetes.io/managed-by: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,Prune=false
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: proxmox-ceph-rbd
+  resources:
+    requests:
+      storage: 500Gi
+---
+# RustFS Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rustfs
+  namespace: fitm-cloud
+  labels:
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: rustfs
+    app.kubernetes.io/managed-by: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,Prune=false
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: fitm-cloud
+      app.kubernetes.io/component: rustfs
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: fitm-cloud
+        app.kubernetes.io/component: rustfs
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/agent-pre-populate-only: "true"
+        vault.hashicorp.com/role: "fitm-cloud-role"
+        vault.hashicorp.com/agent-inject-secret-rustfs: "kv/data/fitm-cloud"
+        vault.hashicorp.com/agent-inject-template-rustfs: |
+          {{- with secret "kv/data/fitm-cloud" -}}
+          export RUSTFS_SECRET_KEY="{{ .Data.data.MINIO_ROOT_PASSWORD }}"
+          {{ end }}
+    spec:
+      initContainers:
+        - name: fix-permissions
+          image: busybox:latest
+          command:
+            [
+              "sh",
+              "-c",
+              "chown -R 10001:10001 /data /logs && chmod -R 0750 /data /logs",
+            ]
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - name: rustfs-data
+              mountPath: /data
+            - name: rustfs-logs
+              mountPath: /logs
+      containers:
+        - name: rustfs
+          image: rustfs/rustfs:latest
+          ports:
+            - containerPort: 9000
+            - containerPort: 9001
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -a
+              . /vault/secrets/rustfs
+              set +a
+              exec /entrypoint.sh
+          env:
+            - name: RUSTFS_ACCESS_KEY
+              value: "admin"
+            - name: RUSTFS_ADDRESS
+              value: "0.0.0.0:9000"
+            - name: RUSTFS_CONSOLE_ADDRESS
+              value: "0.0.0.0:9001"
+            - name: RUSTFS_EXTERNAL_ADDRESS
+              value: ":9000"
+            - name: RUSTFS_CORS_ALLOWED_ORIGINS
+              value: "*"
+            - name: RUSTFS_CONSOLE_CORS_ALLOWED_ORIGINS
+              value: "*"
+          volumeMounts:
+            - name: rustfs-data
+              mountPath: /data
+            - name: rustfs-logs
+              mountPath: /logs
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+      volumes:
+        - name: rustfs-data
+          persistentVolumeClaim:
+            claimName: rustfs-data
+        - name: rustfs-logs
+          emptyDir: {}
+---
+# RustFS Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: rustfs
+  namespace: fitm-cloud
+  labels:
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: rustfs
+    app.kubernetes.io/managed-by: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,Prune=false
+spec:
+  selector:
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: rustfs
+  ports:
+    - name: rustfs
+      port: 9000
+      targetPort: 9000
+    - name: rustfs-console
+      port: 9001
+      targetPort: 9001
+---
+# RustFS Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rustfs
+  namespace: fitm-cloud
+  labels:
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: rustfs
+    app.kubernetes.io/managed-by: argocd
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,Prune=false
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - rustfs.fitm.cloud
+      secretName: rustfs-fitm-cloud-tls
+  rules:
+    - host: rustfs.fitm.cloud
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: rustfs
+                port:
+                  number: 9000
+    - host: rustfs-console.fitm.cloud
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: rustfs
+                port:
+                  number: 9001
