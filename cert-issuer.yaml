@@ -15,7 +15,7 @@ spec:
     email: thitipong.t@fitm.cloud
     privateKeySecretRef:
       name: cert-issuer-account-key
-    skipTLSVerify: false
+    skipTLSVerify: true
     solvers:
       - dns01:
           cloudflare:
@@ -44,14 +44,15 @@ spec:
     email: thitipong.t@fitm.cloud
     privateKeySecretRef:
       name: letsencrypt-prod
-    skipTLSVerify: false
+    skipTLSVerify: true
     solvers:
-      - dns01:
-          cloudflare:
-            email: akikungz@outlook.com
-            apiTokenSecretRef:
-              name: cloudflare-api-token-secret
-              key: api-token
       - http01:
           ingress:
             class: nginx
+      # DNS-01 disabled due to transparent proxy blocking Cloudflare API
+      # - dns01:
+      #     cloudflare:
+      #       email: akikungz@outlook.com
+      #       apiTokenSecretRef:
+      #         name: cloudflare-api-token-secret
+      #         key: api-token

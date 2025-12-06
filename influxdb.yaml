@@ -144,7 +144,7 @@ spec:
   tls:
     - hosts:
         - influxdb.fitm.cloud
-      secretName: influxdb-tls
+      secretName: influxdb-fitm-cloud-tls
   rules:
     - host: influxdb.fitm.cloud
       http:
