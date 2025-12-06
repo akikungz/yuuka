@@ -818,13 +818,14 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
     argocd.argoproj.io/sync-wave: "2"
 spec:
   ingressClassName: nginx
   tls:
     - hosts:
         - grafana.fitm.cloud
-      secretName: cloudflare-tls
+      secretName: grafana-fitm-cloud-tls
   rules:
     - host: grafana.fitm.cloud
       http:
