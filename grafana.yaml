@@ -809,7 +809,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: grafana-ingress
+  name: grafana
   namespace: fitm-cloud
   labels:
     app.kubernetes.io/name: fitm-cloud
