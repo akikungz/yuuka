@@ -114,7 +114,7 @@ spec:
   tls:
     - hosts:
         - pve.fitm.cloud
-      secretName: fitm-cloud-tls
+      secretName: pve-fitm-cloud-tls
   rules:
     - host: pve.fitm.cloud
       http:
