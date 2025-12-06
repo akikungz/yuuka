@@ -17,7 +17,7 @@ spec:
   storageClassName: proxmox-ceph-rbd
   resources:
     requests:
-      storage: 500Gi
+      storage: 1Ti
 ---
 # RustFS Deployment
 apiVersion: apps/v1
