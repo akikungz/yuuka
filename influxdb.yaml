@@ -129,10 +129,10 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: influxdb-ingress
+  name: influxdb
   namespace: fitm-cloud
   labels:
-    app.kubernetes.io/name: influxdb-ingress
+    app.kubernetes.io/name: fitm-cloud
     app.kubernetes.io/component: influxdb
     app.kubernetes.io/managed-by: argocd
   annotations:
