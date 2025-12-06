@@ -225,6 +225,7 @@ metadata:
     app.kubernetes.io/managed-by: argo-cd
   annotations:
     argocd.argoproj.io/sync-wave: "1"
+    kubernetes.io/ingress.class: "nginx"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
