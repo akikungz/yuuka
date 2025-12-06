@@ -15,6 +15,7 @@ spec:
     email: thitipong.t@fitm.cloud
     privateKeySecretRef:
       name: cert-issuer-account-key
+    skipTLSVerify: false
     solvers:
       - dns01:
           cloudflare:
@@ -22,6 +23,9 @@ spec:
             apiTokenSecretRef:
               name: cloudflare-api-token-secret
               key: api-token
+      - http01:
+          ingress:
+            class: nginx
 ---
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
@@ -40,6 +44,7 @@ spec:
     email: thitipong.t@fitm.cloud
     privateKeySecretRef:
       name: letsencrypt-prod
+    skipTLSVerify: false
     solvers:
       - dns01:
           cloudflare:
@@ -47,3 +52,6 @@ spec:
             apiTokenSecretRef:
               name: cloudflare-api-token-secret
               key: api-token
+      - http01:
+          ingress:
+            class: nginx
