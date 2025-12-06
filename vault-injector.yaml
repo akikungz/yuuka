@@ -118,9 +118,6 @@ metadata:
   labels:
     app.kubernetes.io/name: fitm-cloud
     app.kubernetes.io/component: vault-agent-injector
-    app.kubernetes.io/managed-by: argo-cd
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"
 webhooks:
   - name: agent-injector.hashicorp.com
     clientConfig:
