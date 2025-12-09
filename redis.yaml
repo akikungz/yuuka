@@ -24,6 +24,8 @@ metadata:
   name: redis
   namespace: fitm-cloud
   labels:
+    app: redis
+    service: redis
     app.kubernetes.io/name: fitm-cloud
     app.kubernetes.io/component: redis
     app.kubernetes.io/managed-by: argocd
@@ -34,11 +36,13 @@ spec:
   replicas: 1
   selector:
     matchLabels:
+      app: redis
       app.kubernetes.io/name: fitm-cloud
       app.kubernetes.io/component: redis
   template:
     metadata:
       labels:
+        app: redis
         app.kubernetes.io/name: fitm-cloud
         app.kubernetes.io/component: redis
       annotations:

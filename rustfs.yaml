@@ -26,6 +26,8 @@ metadata:
   name: rustfs
   namespace: fitm-cloud
   labels:
+    app: rustfs
+    service: rustfs
     app.kubernetes.io/name: fitm-cloud
     app.kubernetes.io/component: rustfs
     app.kubernetes.io/managed-by: argocd
@@ -36,11 +38,13 @@ spec:
   replicas: 1
   selector:
     matchLabels:
+      app: rustfs
       app.kubernetes.io/name: fitm-cloud
       app.kubernetes.io/component: rustfs
   template:
     metadata:
       labels:
+        app: rustfs
         app.kubernetes.io/name: fitm-cloud
         app.kubernetes.io/component: rustfs
       annotations:
@@ -50,9 +54,10 @@ spec:
         vault.hashicorp.com/agent-inject-secret-rustfs: "kv/data/fitm-cloud"
         vault.hashicorp.com/agent-inject-template-rustfs: |
           {{- with secret "kv/data/fitm-cloud" -}}
-          export RUSTFS_SECRET_KEY="{{ .Data.data.MINIO_ROOT_PASSWORD }}"
+          export RUSTFS_SECRET_KEY="{{ .Data.data.RUSTFS_ROOT_PASSWORD }}"
           {{ end }}
     spec:
+      serviceAccountName: vault-auth
       initContainers:
         - name: fix-permissions
           image: busybox:latest

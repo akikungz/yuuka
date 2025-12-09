@@ -47,6 +47,8 @@ metadata:
   name: postgres
   namespace: fitm-cloud
   labels:
+    app: postgres
+    service: postgres
     app.kubernetes.io/name: fitm-cloud
     app.kubernetes.io/component: postgres
     app.kubernetes.io/managed-by: argocd
@@ -57,11 +59,13 @@ spec:
   replicas: 1
   selector:
     matchLabels:
+      app: postgres
       app.kubernetes.io/name: fitm-cloud
       app.kubernetes.io/component: postgres
   template:
     metadata:
       labels:
+        app: postgres
         app.kubernetes.io/name: fitm-cloud
         app.kubernetes.io/component: postgres
       annotations:

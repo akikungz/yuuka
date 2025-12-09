@@ -23,6 +23,8 @@ metadata:
   name: loki
   namespace: fitm-cloud
   labels:
+    app: loki
+    service: loki
     app.kubernetes.io/name: fitm-cloud
     app.kubernetes.io/component: loki
     app.kubernetes.io/managed-by: argo-cd
@@ -32,11 +34,13 @@ spec:
   replicas: 1
   selector:
     matchLabels:
+      app: loki
       app.kubernetes.io/name: fitm-cloud
       app.kubernetes.io/component: loki
   template:
     metadata:
       labels:
+        app: loki
         app.kubernetes.io/name: fitm-cloud
         app.kubernetes.io/component: loki
     spec:
