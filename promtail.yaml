@@ -82,6 +82,11 @@ data:
         - role: pod
         
       relabel_configs:
+        # Keep only pods on the same node
+        - source_labels: [__meta_kubernetes_pod_node_name]
+          regex: ${HOSTNAME}
+          action: keep
+
         # Keep only pods from namespace fitm-cloud
         - source_labels: [__meta_kubernetes_namespace]
           regex: fitm-cloud
@@ -108,10 +113,8 @@ data:
             - __meta_kubernetes_pod_uid
             - __meta_kubernetes_pod_container_name
           separator: /
-          regex: (.+);(.+)
           target_label: __path__
-          replacement: /var/log/pods/$1/$2/*.log
-          action: replace
+          replacement: /var/log/pods/*$1/*.log
 
     limits_config:
       max_streams: 5000
@@ -148,8 +151,13 @@ spec:
             [
               "sh",
               "-c",
-              "ulimit -n 1048576 && /usr/bin/promtail -config.file=/etc/promtail/promtail-config.yaml",
+              "ulimit -n 1048576 && /usr/bin/promtail -config.file=/etc/promtail/promtail-config.yaml -config.expand-env=true",
             ]
+          env:
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
           securityContext:
             capabilities:
               add:
