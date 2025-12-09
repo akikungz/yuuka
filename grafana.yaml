@@ -714,11 +714,13 @@ spec:
   replicas: 1
   selector:
     matchLabels:
+      app: grafana
       app.kubernetes.io/name: fitm-cloud
       app.kubernetes.io/component: grafana
   template:
     metadata:
       labels:
+        app: grafana
         app.kubernetes.io/name: fitm-cloud
         app.kubernetes.io/component: grafana
     spec:

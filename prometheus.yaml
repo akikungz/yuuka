@@ -31,6 +31,10 @@ rules:
       - endpoints
       - pods
     verbs: ["get", "list", "watch"]
+  - apiGroups: ["discovery.k8s.io"]
+    resources:
+      - endpointslices
+    verbs: ["get", "list", "watch"]
   - apiGroups: ["extensions", "networking.k8s.io"]
     resources:
       - ingresses
@@ -100,7 +104,7 @@ data:
 
       - job_name: 'kubernetes-apiserver'
         kubernetes_sd_configs:
-          - role: endpoints
+          - role: endpointslice
             namespaces:
               names:
                 - default
@@ -181,7 +185,7 @@ data:
 
       - job_name: 'kubernetes-service-endpoints'
         kubernetes_sd_configs:
-          - role: endpoints
+          - role: endpointslice
         relabel_configs:
           - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
             action: keep
@@ -210,7 +214,7 @@ data:
 
       - job_name: 'kubernetes-metrics-server'
         kubernetes_sd_configs:
-          - role: endpoints
+          - role: endpointslice
             namespaces:
               names:
                 - kube-system
@@ -243,11 +247,13 @@ spec:
   replicas: 1
   selector:
     matchLabels:
+      app: prometheus
       app.kubernetes.io/name: fitm-cloud
       app.kubernetes.io/component: prometheus
   template:
     metadata:
       labels:
+        app: prometheus
         app.kubernetes.io/name: fitm-cloud
         app.kubernetes.io/component: prometheus
     spec:
