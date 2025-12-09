@@ -723,7 +723,17 @@ spec:
         app: grafana
         app.kubernetes.io/name: fitm-cloud
         app.kubernetes.io/component: grafana
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/agent-pre-populate-only: "true"
+        vault.hashicorp.com/role: "fitm-cloud-role"
+        vault.hashicorp.com/agent-inject-secret-grafana: "kv/data/fitm-cloud"
+        vault.hashicorp.com/agent-inject-template-grafana: |
+          {{- with secret "kv/data/fitm-cloud" -}}
+          GRAFANA_PASSWORD={{ .Data.data.GRAFANA_PASSWORD }}
+          {{- end }}
     spec:
+      serviceAccountName: vault-auth
       securityContext:
         fsGroup: 472
         runAsUser: 472
@@ -731,6 +741,14 @@ spec:
       containers:
         - name: grafana
           image: grafana/grafana:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -a
+              . /vault/secrets/grafana
+              set +a
+              GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD} /run.sh
           ports:
             - name: grafana
               containerPort: 3000
