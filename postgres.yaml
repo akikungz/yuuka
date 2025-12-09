@@ -101,9 +101,12 @@ spec:
           livenessProbe:
             exec:
               command:
-                - pg_isready
-                - -U
-                - "postgres"
+                - /bin/sh
+                - -c
+                - |
+                  . /vault/secrets/postgres
+                  export PGPASSWORD=$POSTGRES_PASSWORD
+                  pg_isready -U postgres
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 5
@@ -111,9 +114,12 @@ spec:
           readinessProbe:
             exec:
               command:
-                - pg_isready
-                - -U
-                - "postgres"
+                - /bin/sh
+                - -c
+                - |
+                  . /vault/secrets/postgres
+                  export PGPASSWORD=$POSTGRES_PASSWORD
+                  pg_isready -U postgres
             initialDelaySeconds: 5
             periodSeconds: 10
             timeoutSeconds: 5
@@ -145,11 +151,12 @@ spec:
           livenessProbe:
             exec:
               command:
-                - pg_isready
-                - -U
-                - "postgres"
-                - -p
-                - "5433"
+                - /bin/sh
+                - -c
+                - |
+                  . /vault/secrets/postgres
+                  export PGPASSWORD=$POSTGRES_PASSWORD
+                  pg_isready -U postgres -p 5433
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 5
@@ -157,11 +164,12 @@ spec:
           readinessProbe:
             exec:
               command:
-                - pg_isready
-                - -U
-                - "postgres"
-                - -p
-                - "5433"
+                - /bin/sh
+                - -c
+                - |
+                  . /vault/secrets/postgres
+                  export PGPASSWORD=$POSTGRES_PASSWORD
+                  pg_isready -U postgres -p 5433
             initialDelaySeconds: 5
             periodSeconds: 10
             timeoutSeconds: 5
