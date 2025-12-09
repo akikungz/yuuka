@@ -98,9 +98,8 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 1,
-      "id": null,
+      "id": 2,
       "links": [],
-      "liveNow": false,
       "panels": [
         {
           "collapsed": false,
@@ -132,7 +131,7 @@ data:
                 "steps": [
                   {
                     "color": "red",
-                    "value": null
+                    "value": 0
                   },
                   {
                     "color": "yellow",
@@ -156,17 +155,22 @@ data:
           },
           "id": 2,
           "options": {
+            "minVizHeight": 75,
+            "minVizWidth": 75,
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
             "showThresholdLabels": false,
             "showThresholdMarkers": true,
+            "sizing": "auto",
             "text": {}
           },
-          "pluginVersion": "10.2.0",
+          "pluginVersion": "12.3.0",
           "targets": [
             {
               "datasource": {
@@ -197,7 +201,7 @@ data:
                 "steps": [
                   {
                     "color": "green",
-                    "value": null
+                    "value": 0
                   },
                   {
                     "color": "yellow",
@@ -221,17 +225,22 @@ data:
           },
           "id": 3,
           "options": {
+            "minVizHeight": 75,
+            "minVizWidth": 75,
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
             "showThresholdLabels": false,
             "showThresholdMarkers": true,
+            "sizing": "auto",
             "text": {}
           },
-          "pluginVersion": "10.2.0",
+          "pluginVersion": "12.3.0",
           "targets": [
             {
               "datasource": {
@@ -262,7 +271,7 @@ data:
                 "steps": [
                   {
                     "color": "green",
-                    "value": null
+                    "value": 0
                   },
                   {
                     "color": "yellow",
@@ -286,24 +295,29 @@ data:
           },
           "id": 4,
           "options": {
+            "minVizHeight": 75,
+            "minVizWidth": 75,
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             },
             "showThresholdLabels": false,
             "showThresholdMarkers": true,
+            "sizing": "auto",
             "text": {}
           },
-          "pluginVersion": "10.2.0",
+          "pluginVersion": "12.3.0",
           "targets": [
             {
               "datasource": {
                 "type": "loki",
                 "uid": "Loki"
               },
-              "expr": "count_over_time({namespace=\"fitm-cloud\"} |= \"error\" [5m])",
+              "expr": "count_over_time({namespace=\"fitm-cloud\"} != `status=200` != `x509` |= \"error\" [5m] )",
               "refId": "A"
             }
           ],
@@ -320,34 +334,37 @@ data:
           },
           "id": 5,
           "panels": [],
-          "title": "Resource Usage",
+          "title": "Proxmox Metrics",
           "type": "row"
         },
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "Prometheus"
+            "type": "influxdb",
+            "uid": "cf6khbivtnawwf"
           },
-          "description": "CPU usage by pod",
+          "description": "CPU usage by Proxmox node",
           "fieldConfig": {
             "defaults": {
               "color": {
                 "mode": "palette-classic"
               },
               "custom": {
+                "axisBorderShow": false,
                 "axisCenteredZero": false,
                 "axisColorMode": "text",
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
+                "barWidthFactor": 0.6,
                 "drawStyle": "line",
                 "fillOpacity": 10,
                 "gradientMode": "none",
                 "hideFrom": {
+                  "legend": false,
                   "tooltip": false,
-                  "viz": false,
-                  "legend": false
+                  "viz": false
                 },
+                "insertNulls": false,
                 "lineInterpolation": "linear",
                 "lineWidth": 2,
                 "pointSize": 5,
@@ -355,6 +372,7 @@ data:
                   "type": "linear"
                 },
                 "showPoints": "never",
+                "showValues": false,
                 "spanNulls": true,
                 "stacking": {
                   "group": "A",
@@ -370,7 +388,7 @@ data:
                 "steps": [
                   {
                     "color": "green",
-                    "value": null
+                    "value": 0
                   }
                 ]
               },
@@ -384,20 +402,229 @@ data:
             "x": 0,
             "y": 6
           },
-          "id": 6,
+          "id": 12,
           "options": {
             "legend": {
-              "calcs": ["mean", "max"],
+              "calcs": [
+                "mean",
+                "max"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "none"
             }
           },
-          "pluginVersion": "10.2.0",
+          "pluginVersion": "12.3.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "cf6khbivtnawwf"
+              },
+              "query": "from(bucket: \"proxmox\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"cpustat\" and\r\n    r._field == \"cpu\"\r\n  )\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> map(fn: (r) => ({\r\n        r with\r\n        _time: r._time,\r\n        _value: float(v: r._value) * float(v: 100)\r\n      })\r\n    )\r\n",
+              "refId": "A"
+            }
+          ],
+          "title": "Proxmox Node CPU Usage",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "cf6khbivtnawwf"
+          },
+          "description": "Memory usage by Proxmox node",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineStyle": {
+                  "fill": "solid"
+                },
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "showValues": false,
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  }
+                ]
+              },
+              "unit": "sishort"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 6
+          },
+          "id": 13,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "12.3.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "cf6khbivtnawwf"
+              },
+              "query": "from(bucket: \"proxmox\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"memory\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"memused\")\r\n//  |> group(columns: [\"host\",\"nodename\"], mode: \"by\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")",
+              "refId": "A"
+            }
+          ],
+          "title": "Proxmox Node Memory Usage",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 14
+          },
+          "id": 6,
+          "panels": [],
+          "title": "Resource Usage",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "description": "CPU usage by pod",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "showValues": false,
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  }
+                ]
+              },
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 15
+          },
+          "id": 7,
+          "options": {
+            "legend": {
+              "calcs": [
+                "mean",
+                "max"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "12.3.0",
           "targets": [
             {
               "datasource": {
@@ -424,19 +651,22 @@ data:
                 "mode": "palette-classic"
               },
               "custom": {
+                "axisBorderShow": false,
                 "axisCenteredZero": false,
                 "axisColorMode": "text",
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
+                "barWidthFactor": 0.6,
                 "drawStyle": "line",
                 "fillOpacity": 10,
                 "gradientMode": "none",
                 "hideFrom": {
+                  "legend": false,
                   "tooltip": false,
-                  "viz": false,
-                  "legend": false
+                  "viz": false
                 },
+                "insertNulls": false,
                 "lineInterpolation": "linear",
                 "lineWidth": 2,
                 "pointSize": 5,
@@ -444,6 +674,7 @@ data:
                   "type": "linear"
                 },
                 "showPoints": "never",
+                "showValues": false,
                 "spanNulls": true,
                 "stacking": {
                   "group": "A",
@@ -459,7 +690,7 @@ data:
                 "steps": [
                   {
                     "color": "green",
-                    "value": null
+                    "value": 0
                   }
                 ]
               },
@@ -471,22 +702,26 @@ data:
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 6
+            "y": 15
           },
-          "id": 7,
+          "id": 8,
           "options": {
             "legend": {
-              "calcs": ["mean", "max"],
+              "calcs": [
+                "mean",
+                "max"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "none"
             }
           },
-          "pluginVersion": "10.2.0",
+          "pluginVersion": "12.3.0",
           "targets": [
             {
               "datasource": {
@@ -507,9 +742,9 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 14
+            "y": 23
           },
-          "id": 8,
+          "id": 9,
           "panels": [],
           "title": "HTTP Metrics",
           "type": "row"
@@ -526,19 +761,22 @@ data:
                 "mode": "palette-classic"
               },
               "custom": {
+                "axisBorderShow": false,
                 "axisCenteredZero": false,
                 "axisColorMode": "text",
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
+                "barWidthFactor": 0.6,
                 "drawStyle": "line",
                 "fillOpacity": 10,
                 "gradientMode": "none",
                 "hideFrom": {
+                  "legend": false,
                   "tooltip": false,
-                  "viz": false,
-                  "legend": false
+                  "viz": false
                 },
+                "insertNulls": false,
                 "lineInterpolation": "linear",
                 "lineWidth": 2,
                 "pointSize": 5,
@@ -546,6 +784,7 @@ data:
                   "type": "linear"
                 },
                 "showPoints": "never",
+                "showValues": false,
                 "spanNulls": true,
                 "stacking": {
                   "group": "A",
@@ -561,7 +800,7 @@ data:
                 "steps": [
                   {
                     "color": "green",
-                    "value": null
+                    "value": 0
                   }
                 ]
               },
@@ -573,22 +812,26 @@ data:
             "h": 8,
             "w": 24,
             "x": 0,
-            "y": 15
+            "y": 24
           },
-          "id": 9,
+          "id": 10,
           "options": {
             "legend": {
-              "calcs": ["mean", "max"],
+              "calcs": [
+                "mean",
+                "max"
+              ],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "none"
             }
           },
-          "pluginVersion": "10.2.0",
+          "pluginVersion": "12.3.0",
           "targets": [
             {
               "datasource": {
@@ -609,9 +852,9 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 23
+            "y": 32
           },
-          "id": 10,
+          "id": 11,
           "panels": [],
           "title": "Logs",
           "type": "row"
@@ -622,24 +865,30 @@ data:
             "uid": "Loki"
           },
           "description": "Recent logs from fitm-cloud namespace",
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
           "gridPos": {
             "h": 10,
             "w": 24,
             "x": 0,
-            "y": 24
+            "y": 33
           },
-          "id": 11,
+          "id": 14,
           "options": {
             "dedupStrategy": "none",
+            "enableInfiniteScrolling": false,
             "enableLogDetails": true,
             "prettifyLogMessage": false,
             "showCommonLabels": false,
+            "showControls": false,
             "showLabels": true,
             "showTime": true,
             "sortOrder": "Descending",
             "wrapLogMessage": false
           },
-          "pluginVersion": "10.2.0",
+          "pluginVersion": "12.3.0",
           "targets": [
             {
               "datasource": {
@@ -654,10 +903,14 @@ data:
           "type": "logs"
         }
       ],
+      "preload": false,
       "refresh": "30s",
-      "schemaVersion": 38,
-      "style": "dark",
-      "tags": ["fitm-cloud", "overview"],
+      "schemaVersion": 42,
+      "tags": [
+        "fitm-cloud",
+        "overview",
+        "proxmox"
+      ],
       "templating": {
         "list": []
       },
@@ -669,8 +922,7 @@ data:
       "timezone": "browser",
       "title": "FITM Cloud Overview",
       "uid": "fitm-cloud-overview",
-      "version": 1,
-      "weekStart": ""
+      "version": 3
     }
 ---
 apiVersion: v1
