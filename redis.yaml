@@ -45,31 +45,24 @@ spec:
         app: redis
         app.kubernetes.io/name: fitm-cloud
         app.kubernetes.io/component: redis
-      annotations:
-        vault.hashicorp.com/agent-inject: "true"
-        vault.hashicorp.com/agent-pre-populate-only: "true"
-        vault.hashicorp.com/role: "fitm-cloud-role"
-        vault.hashicorp.com/agent-inject-secret-redis: "kv/data/fitm-cloud"
-        vault.hashicorp.com/agent-inject-template-redis: |
-          {{- with secret "kv/data/fitm-cloud" -}}
-          REDIS_PASSWORD={{ .Data.data.REDIS_PASSWORD }}
-          {{- end -}}
     spec:
-      serviceAccountName: vault-auth
       containers:
         - name: redis
           image: redis:8-alpine
-          command:
-            - /bin/sh
-            - -c
-            - |
-              set -a
-              . /vault/secrets/redis
-              set +a
-              exec redis-server --requirepass "$REDIS_PASSWORD"
           ports:
             - name: redis
               containerPort: 6379
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: redis-password
+          command:
+            - sh
+            - -c
+            - |
+              exec redis-server --requirepass $REDIS_PASSWORD --appendonly yes
           volumeMounts:
             - name: redis-data
               mountPath: /data
@@ -78,7 +71,7 @@ spec:
               command:
                 - redis-cli
                 - -a
-                - "$REDIS_PASSWORD"
+                - $REDIS_PASSWORD
                 - ping
             initialDelaySeconds: 30
             periodSeconds: 10
@@ -89,7 +82,7 @@ spec:
               command:
                 - redis-cli
                 - -a
-                - "$REDIS_PASSWORD"
+                - $REDIS_PASSWORD
                 - ping
             initialDelaySeconds: 5
             periodSeconds: 10
@@ -97,11 +90,11 @@ spec:
             failureThreshold: 5
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "250m"
-            limits:
-              memory: "1Gi"
+              memory: "2Gi"
               cpu: "500m"
+            limits:
+              memory: "4Gi"
+              cpu: "1000m"
 
       volumes:
         - name: redis-data

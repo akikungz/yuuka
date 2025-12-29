@@ -47,17 +47,7 @@ spec:
         app: rustfs
         app.kubernetes.io/name: fitm-cloud
         app.kubernetes.io/component: rustfs
-      annotations:
-        vault.hashicorp.com/agent-inject: "true"
-        vault.hashicorp.com/agent-pre-populate-only: "true"
-        vault.hashicorp.com/role: "fitm-cloud-role"
-        vault.hashicorp.com/agent-inject-secret-rustfs: "kv/data/fitm-cloud"
-        vault.hashicorp.com/agent-inject-template-rustfs: |
-          {{- with secret "kv/data/fitm-cloud" -}}
-          export RUSTFS_SECRET_KEY="{{ .Data.data.RUSTFS_ROOT_PASSWORD }}"
-          {{ end }}
     spec:
-      serviceAccountName: vault-auth
       initContainers:
         - name: fix-permissions
           image: busybox:latest
@@ -82,14 +72,15 @@ spec:
             - containerPort: 9001
           command: ["/bin/sh", "-c"]
           args:
-            - |
-              set -a
-              . /vault/secrets/rustfs
-              set +a
-              exec /entrypoint.sh
+            - exec /entrypoint.sh
           env:
             - name: RUSTFS_ACCESS_KEY
               value: "admin"
+            - name: RUSTFS_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: rustfs-root-password
             - name: RUSTFS_ADDRESS
               value: "0.0.0.0:9000"
             - name: RUSTFS_CONSOLE_ADDRESS
@@ -157,8 +148,8 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "2"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,Prune=false
-    kubernetes.io/ingress.class: nginx
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/proxy-body-size: "0"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
@@ -168,6 +159,9 @@ spec:
     - hosts:
         - rustfs.fitm.cloud
       secretName: rustfs-fitm-cloud-tls
+    - hosts:
+        - rustfs-console.fitm.cloud
+      secretName: rustfs-console-fitm-cloud-tls
   rules:
     - host: rustfs.fitm.cloud
       http:

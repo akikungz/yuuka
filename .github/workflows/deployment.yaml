@@ -1,0 +1,256 @@
+name: Deployment Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  create-secrets:
+    name: Create Kubernetes Secrets
+    runs-on: self-hosted
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Verify k8s connection
+        run: |
+          kubectl cluster-info
+          kubectl get namespaces fitm-cloud || kubectl create namespace fitm-cloud
+
+      - name: Create base-secrets
+        run: |
+          kubectl create secret generic base-secrets \
+            --namespace fitm-cloud \
+            --from-literal=postgres-password="${{ secrets.POSTGRES_PASSWORD }}" \
+            --from-literal=redis-password="${{ secrets.REDIS_PASSWORD }}" \
+            --from-literal=rustfs-root-password="${{ secrets.RUSTFS_ROOT_PASSWORD }}" \
+            --from-literal=jwt-secret="${{ secrets.JWT_SECRET }}" \
+
+          kubectl label secret base-secrets \
+            --namespace fitm-cloud \
+            app.kubernetes.io/name=fitm-cloud \
+            app.kubernetes.io/managed-by=argocd \
+            --overwrite
+
+          kubectl annotate secret base-secrets \
+            --namespace fitm-cloud \
+            argocd.argoproj.io/sync-wave="0" \
+            --overwrite
+
+      - name: Create docker registry secret
+        run: |
+          kubectl create secret docker-registry ghcr-io-secret \
+            --namespace fitm-cloud \
+            --docker-server="ghcr.io" \
+            --docker-username="${{ github.actor }}" \
+            --docker-password="${{ secrets.GITHUB_TOKEN }}" \
+            --docker-email="${{ github.actor }}@users.noreply.github.com" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          kubectl label secret ghcr-io-secret \
+            --namespace fitm-cloud \
+            app.kubernetes.io/name=fitm-cloud \
+            app.kubernetes.io/managed-by=argocd \
+            --overwrite
+
+          kubectl annotate secret ghcr-io-secret \
+            --namespace fitm-cloud \
+            argocd.argoproj.io/sync-wave="0" \
+            --overwrite
+
+      - name: Create monitoring secret
+        run: |
+          kubectl create secret generic monitoring-secrets \
+            --namespace fitm-cloud \
+            --from-literal=grafana-admin-password="${{ secrets.GRAFANA_ADMIN_PASSWORD }}" \
+            --from-literal=influxdb-admin-password="${{ secrets.INFLUXDB_ADMIN_PASSWORD }}" \
+            --from-literal=influxdb-admin-token="${{ secrets.INFLUXDB_ADMIN_TOKEN }}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          kubectl label secret monitoring-secrets \
+            --namespace fitm-cloud \
+            app.kubernetes.io/name=fitm-cloud \
+            app.kubernetes.io/managed-by=argocd \
+            --overwrite
+
+          kubectl annotate secret monitoring-secrets \
+            --namespace fitm-cloud \
+            argocd.argoproj.io/sync-wave="0" \
+            --overwrite
+
+      - name: Create tls secret
+        run: |
+          kubectl create secret cloudflare-tls \
+            --namespace fitm-cloud \
+            --from-literal=tls.crt="${{ secrets.CLOUDFLARE_TLS_CRT }}" \
+            --from-literal=tls.key="${{ secrets.CLOUDFLARE_TLS_KEY }}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          kubectl label secret cloudflare-tls \
+            --namespace fitm-cloud \
+            app.kubernetes.io/name=fitm-cloud \
+            app.kubernetes.io/managed-by=argocd \
+            --overwrite
+
+          kubectl annotate secret cloudflare-tls \
+            --namespace fitm-cloud \
+            argocd.argoproj.io/sync-wave="0" \
+            --overwrite
+
+      - name: Verify created secrets
+        run: |
+          kubectl get secrets --namespace fitm-cloud
+          kubectl get secret base-secrets --namespace fitm-cloud -o yaml | grep -E 'name:|namespace:|labels:|annotations:|type:'
+          kubectl get secret ghcr-io-secret --namespace fitm-cloud -o yaml | grep -E 'name:|namespace:|labels:|annotations:|type:'
+          kubectl get secret grafana-admin-secret --namespace fitm-cloud -o yaml | grep -E 'name:|namespace:|labels:|annotations:|type:'
+
+      - name: Restart deployments to pick up new secrets
+        run: |
+          echo "Restarting deployments to pick up new secrets..."
+
+          # Restart services that depend on the secrets
+          # kubectl rollout restart deployment/momoi --namespace fitm-cloud || echo "Deployment momoi not found, skipping..."
+          # kubectl rollout restart deployment/midori --namespace fitm-cloud || echo "Deployment midori not found, skipping..."
+          # kubectl rollout restart deployment/yuzu --namespace fitm-cloud || echo "Deployment yuzu not found, skipping..."
+
+          echo "Waiting for rollouts to complete..."
+          sleep 10
+
+          echo "Rollout restart commands issued. Pods will restart to pick up new secrets."
+
+  trigger-argocd-sync:
+    name: Trigger Argo CD Sync
+    runs-on: self-hosted
+    needs: create-secrets
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Trigger Argo CD Application Sync
+        run: |
+          kubectl patch application fitm-cloud \
+            --namespace argocd \
+            --type merge \
+            --patch '{"operations":{"sync":{"prune":true,"syncOptions":["CreateNamespace=true","RespectIgnoreDifferences=true","SkipDryRunOnMissingResource=true","ServerSideApply=true","Validate=false"]}}}'
+
+          echo "Argo CD sync triggered."
+
+      - name: Wait for sync to complete
+        run: |
+          echo "Waiting for Argo CD sync to complete..."
+
+          TIMEOUT=600
+          ELAPSED=0
+          INTERVAL=15
+
+          while [ $ELAPSED -lt $TIMEOUT ]; do
+            STATUS=$(kubectl get application fitm-cloud --namespace argocd -o jsonpath='{.status.sync.status}' 2>/dev/null || echo "Unknown")
+            PHASE=$(kubectl get application fitm-cloud --namespace argocd -o jsonpath='{.status.operationState.phase}' 2>/dev/null || echo "")
+            
+            echo "[$ELAPSED/$TIMEOUT s] Status: $STATUS, Phase: $PHASE"
+
+            if [ "$PHASE" = "Succeeded" ] && [ "$STATUS" = "Synced" ]; then
+              echo "Argo CD sync completed successfully."
+              exit 0
+            elif [ "$PHASE" = "Error" ] || [ "$PHASE" = "Failed" ]; then
+              echo "Argo CD sync failed."
+              exit 1
+            fi
+
+            sleep $INTERVAL
+            ELAPSED=$((ELAPSED + INTERVAL))
+          done
+
+          if [ $ELAPSED -ge $TIMEOUT ]; then
+            echo "Argo CD sync timed out after $TIMEOUT seconds."
+            exit 1
+          fi
+
+      - name: Wait for healthy state
+        run: |
+          echo "Waiting for Argo CD application to reach Healthy state..."
+
+          TIMEOUT=600
+          ELAPSED=0
+          INTERVAL=15
+
+          while [ $ELAPSED -lt $TIMEOUT ]; do
+            HEALTHY=$(kubectl get application fitm-cloud --namespace argocd -o jsonpath='{.status.health.status}' 2>/dev/null || echo "Unknown")
+            
+            echo "[$ELAPSED/$TIMEOUT s] Health Status: $HEALTHY"
+
+            if [ "$HEALTHY" = "Healthy" ]; then
+              echo "Argo CD application is Healthy."
+              break
+            elif [ "$HEALTHY" = "Degraded" ]; then
+              echo "Argo CD application is Degraded, continuing to wait..."
+            fi
+
+            sleep $INTERVAL
+            ELAPSED=$((ELAPSED + INTERVAL))
+          done
+
+          if [ $ELAPSED -ge $TIMEOUT ]; then
+            echo "Waiting for Healthy state timed out after $TIMEOUT seconds, but proceeding with verification."
+          fi
+
+      - name: Verify application status
+        run: |
+          kubectl get pods --namespace fitm-cloud
+          kubectl get deployments --namespace fitm-cloud
+          kubectl get services --namespace fitm-cloud
+          kubectl get ingresses --namespace fitm-cloud
+
+      - name: Wait for pods to be ready
+        run: |
+          echo "Waiting for all pods in fitm-cloud namespace to be ready..."
+
+          kubectl rollout status statefulset \
+            --namespace fitm-cloud --timeout=600s || true
+
+          kubectl rollout status deployment \
+            --namespace fitm-cloud --timeout=600s || true
+
+          sleep 30
+
+      - name: Check unhealthy pods
+        run: |
+          MAX_RETRIES=16
+          INTERVAL=30
+
+          for ((i=1; i<=MAX_RETRIES; i++)); do
+            UNHEALTHY_PODS=$(kubectl get pods \
+              --namespace fitm-cloud \
+              --field-selector=status.phase!=Running,status.phase!=Succeeded \
+              -o name 2>/dev/null \
+              || echo "")
+            
+            if [ -z "$UNHEALTHY_PODS" ]; then
+              echo "All pods are healthy."
+              exit 0
+            fi
+
+            echo "Unhealthy pods detected (attempt $i/$MAX_RETRIES):"
+            kubectl get pods --namespace fitm-cloud \
+              --field-selector=status.phase!=Running,status.phase!=Succeeded
+
+            if [ $i -lt $MAX_RETRIES ]; then
+              echo "Waiting for $INTERVAL seconds before rechecking..."
+              sleep $INTERVAL
+            fi
+          done
+
+          echo "Some pods are still unhealthy after $((MAX_RETRIES * INTERVAL)) seconds."
+          for pod in $UNHEALTHY_PODS; do
+            echo "Describing pod: $pod"
+            kubectl describe "$pod" --namespace fitm-cloud
+          done
+
+          exit 1
