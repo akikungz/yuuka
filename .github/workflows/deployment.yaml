@@ -132,7 +132,7 @@ jobs:
           kubectl get secrets --namespace fitm-cloud
           kubectl get secret base-secrets --namespace fitm-cloud -o yaml | grep -E 'name:|namespace:|labels:|annotations:|type:'
           kubectl get secret ghcr-io-secret --namespace fitm-cloud -o yaml | grep -E 'name:|namespace:|labels:|annotations:|type:'
-          kubectl get secret grafana-admin-secret --namespace fitm-cloud -o yaml | grep -E 'name:|namespace:|labels:|annotations:|type:'
+          kubectl get secret monitoring-secrets --namespace fitm-cloud -o yaml | grep -E 'name:|namespace:|labels:|annotations:|type:'
 
       - name: Restart deployments to pick up new secrets
         run: |
