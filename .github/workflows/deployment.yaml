@@ -110,7 +110,7 @@ jobs:
             exit 0
           fi
 
-          kubectl create secret cloudflare-tls \
+          kubectl create secret generic cloudflare-tls \
             --namespace fitm-cloud \
             --from-literal=tls.crt="${{ secrets.CLOUDFLARE_TLS_CRT }}" \
             --from-literal=tls.key="${{ secrets.CLOUDFLARE_TLS_KEY }}" \
