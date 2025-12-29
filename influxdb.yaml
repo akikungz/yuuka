@@ -50,9 +50,27 @@ spec:
           ports:
             - name: http
               containerPort: 8086
+          env:
+            - name: DOCKER_INFLUXDB_INIT_MODE
+              value: "setup"
+            - name: DOCKER_INFLUXDB_INIT_USERNAME
+              value: "admin"
+            - name: DOCKER_INFLUXDB_INIT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: monitoring-secrets
+                  key: influxdb-admin-password
+            - name: DOCKER_INFLUXDB_INIT_ADMIN_TOKEN_FILE
+              value: "/run/secrets/influxdb-admin-token"
+            - name: DOCKER_INFLUXDB_INIT_ORG
+              value: "fitm"
+            - name: DOCKER_INFLUXDB_INIT_BUCKET
+              value: "fitm-cloud"
           volumeMounts:
             - name: influxdb-data
               mountPath: /var/lib/influxdb
+            - name: influxdb-admin-token
+              mountPath: "/run/secrets/influxdb-admin-token"
           resources:
             requests:
               memory: "256Mi"
@@ -80,6 +98,12 @@ spec:
         - name: influxdb-data
           persistentVolumeClaim:
             claimName: influxdb-data
+        - name: influxdb-admin-token
+          secret:
+            secretName: monitoring-secrets
+            items:
+              - key: influxdb-admin-token
+                path: influxdb-admin-token
 
       restartPolicy: Always
 ---
