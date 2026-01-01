@@ -32,6 +32,10 @@ spec:
           env:
             - name: SERVER_API_URL
               value: "http://momoi-development:3000"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://jaeger:4318/v1/traces"
+            - name: OTEL_SERVICE_NAME
+              value: "midori-dev"
           resources:
             requests:
               memory: "256Mi"
