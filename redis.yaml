@@ -58,13 +58,11 @@ spec:
                 secretKeyRef:
                   name: base-secrets
                   key: redis-password
-            - name: REDIS_USER
-              value: "default"
           command:
             - sh
             - -c
             - |
-              exec redis-server --requirepass $REDIS_PASSWORD --user $REDIS_USER --appendonly yes
+              exec redis-server --requirepass $REDIS_PASSWORD --appendonly yes
           volumeMounts:
             - name: redis-data
               mountPath: /data
