@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: midori-development
+  namespace: fitm-cloud
+  labels:
+    app: midori
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: midori
+    app.kubernetes.io/managed-by: argo-cd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: midori
+      app.kubernetes.io/name: fitm-cloud
+      app.kubernetes.io/component: midori
+  template:
+    metadata:
+      labels:
+        app: midori
+        app.kubernetes.io/name: fitm-cloud
+        app.kubernetes.io/component: midori
+    spec:
+      containers:
+        - name: midori
+          image: ghcr.io/akikungz/midori:development
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+              name: http
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: midori-development
+  namespace: fitm-cloud
+  labels:
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: midori
+spec:
+  selector:
+    app: midori
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: midori
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: midori-development
+  namespace: fitm-cloud
+  labels:
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: midori
+  annotations:
+    spec.ingressClassName: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  tls:
+    - hosts:
+        - dev.fitm.cloud
+      secretName: fitm-cloud-tls
+  rules:
+    - host: dev.fitm.cloud
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: midori-dev
+                port:
+                  number: 3000

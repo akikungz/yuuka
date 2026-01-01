@@ -1,0 +1,152 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: momoi-development
+  namespace: fitm-cloud
+  labels:
+    app: momoi
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: momoi
+    app.kubernetes.io/managed-by: argo-cd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: momoi
+      app.kubernetes.io/name: fitm-cloud
+      app.kubernetes.io/component: momoi
+  template:
+    metadata:
+      labels:
+        app: momoi
+        app.kubernetes.io/name: fitm-cloud
+        app.kubernetes.io/component: momoi
+    spec:
+      initContainers:
+        - name: init-momoi
+          image: busybox:latest
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: postgres-password
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: redis-password
+          # Create dotenv file with necessary environment variables
+          command:
+            - sh
+            - -c
+            - |
+              echo "DATABASE_URL=postgres://postgres:$POSTGRES_PASSWORD@postgres:5433/postgres" >> /mnt/config/.env
+              echo "REDIS_URL=redis://default:$REDIS_PASSWORD@redis:6379" >> /mnt/config/.env
+          volumeMounts:
+            - name: config-volume
+              mountPath: /mnt/config
+      containers:
+        - name: momoi
+          image: ghcr.io/akikungz/momoi:development
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: NODE_ENV
+              value: "development"
+            - name: PORT
+              value: "3000"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: jwt-secret
+            - name: S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: rustfs-access-key
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: rustfs-secret-key
+            - name: S3_BUCKET_NAME
+              value: "fitm-cloud"
+            - name: S3_ENDPOINT
+              value: "http://rustfs:9000"
+            - name: ALLOW_CORS_ORIGINS
+              value: "https://dev.fitm.cloud,http://localhost:3000"
+            - name: OTEL_SERVICE_NAME
+              value: "momoi-dev"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://jaeger:4317"
+          command:
+            - sh
+            - -c
+            - |
+              exec ./server --env-file /app/.env
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/.env
+              subPath: .env
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: config-volume
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: momoi-development
+  namespace: fitm-cloud
+  labels:
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: momoi
+spec:
+  selector:
+    app: momoi
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: momoi
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: momoi-development
+  namespace: fitm-cloud
+  labels:
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: momoi
+  annotations:
+    spec.ingressClassName: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /api/$1
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  tls:
+    - hosts:
+        - dev.fitm.cloud
+      secretName: fitm-cloud-tls
+  rules:
+    - host: dev.fitm.cloud
+      http:
+        paths:
+          - path: /api/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: momoi-development
+                port:
+                  number: 3000

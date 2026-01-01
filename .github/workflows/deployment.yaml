@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - development
   workflow_dispatch:
 
 jobs:
@@ -37,6 +38,9 @@ jobs:
             --from-literal=redis-password="${{ secrets.REDIS_PASSWORD }}" \
             --from-literal=rustfs-root-password="${{ secrets.RUSTFS_ROOT_PASSWORD }}" \
             --from-literal=jwt-secret="${{ secrets.JWT_SECRET }}" \
+            --from-literal=s3-access-key-id="${{ secrets.S3_ACCESS_KEY_ID }}" \
+            --from-literal=s3-secret-access-key="${{ secrets.S3_SECRET_ACCESS_KEY }}" \
+            --dry-run=client -o yaml | kubectl apply -f -
 
           kubectl label secret base-secrets \
             --namespace fitm-cloud \
@@ -138,10 +142,15 @@ jobs:
         run: |
           echo "Restarting deployments to pick up new secrets..."
 
-          # Restart services that depend on the secrets
-          # kubectl rollout restart deployment/momoi --namespace fitm-cloud || echo "Deployment momoi not found, skipping..."
-          # kubectl rollout restart deployment/midori --namespace fitm-cloud || echo "Deployment midori not found, skipping..."
-          # kubectl rollout restart deployment/yuzu --namespace fitm-cloud || echo "Deployment yuzu not found, skipping..."
+          # Restart production deployments
+          kubectl rollout restart deployment/momoi-main --namespace fitm-cloud || echo "Deployment momoi not found, skipping..."
+          kubectl rollout restart deployment/midori-main --namespace fitm-cloud || echo "Deployment midori not found, skipping..."
+          kubectl rollout restart deployment/yuzu-main --namespace fitm-cloud || echo "Deployment yuzu not found, skipping..."
+
+          # Restart development deployments
+          kubectl rollout restart deployment/momoi-development --namespace fitm-cloud || echo "Deployment momoi-development not found, skipping..."
+          kubectl rollout restart deployment/midori-development --namespace fitm-cloud || echo "Deployment midori-development not found, skipping..."
+          kubectl rollout restart deployment/yuzu-development --namespace fitm-cloud || echo "Deployment yuzu-development not found, skipping..."
 
           echo "Waiting for rollouts to complete..."
           sleep 10
