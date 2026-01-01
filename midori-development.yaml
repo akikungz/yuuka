@@ -80,6 +80,6 @@ spec:
             pathType: ImplementationSpecific
             backend:
               service:
-                name: midori-dev
+                name: midori-development
                 port:
                   number: 3000
