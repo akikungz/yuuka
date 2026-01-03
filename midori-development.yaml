@@ -30,6 +30,8 @@ spec:
             - containerPort: 3000
               name: http
           env:
+            - name: APP_ENV
+              value: "development"
             - name: SERVER_API_URL
               value: "http://momoi-development:3000"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
