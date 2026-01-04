@@ -144,8 +144,10 @@ metadata:
     app.kubernetes.io/component: momoi
   annotations:
     spec.ingressClassName: nginx
-    nginx.ingress.kubernetes.io/rewrite-target: /api/$1
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
 spec:
   tls:
     - hosts:
@@ -155,8 +157,8 @@ spec:
     - host: dev.fitm.cloud
       http:
         paths:
-          - path: /api/(.*)
-            pathType: ImplementationSpecific
+          - path: /api
+            pathType: Prefix
             backend:
               service:
                 name: momoi-development
