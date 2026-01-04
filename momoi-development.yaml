@@ -93,6 +93,8 @@ spec:
               value: "momoi-dev"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://jaeger:4317"
+            - name: BETTER_AUTH_BASE_URL
+              value: "https://dev.fitm.cloud"
           command:
             - sh
             - -c

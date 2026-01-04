@@ -38,6 +38,8 @@ spec:
               value: "http://jaeger:4318/v1/traces"
             - name: OTEL_SERVICE_NAME
               value: "midori-dev"
+            - name: NEXT_PUBLIC_API_URL
+              value: "https://dev.fitm.cloud"
           resources:
             requests:
               memory: "256Mi"
