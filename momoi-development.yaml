@@ -67,16 +67,26 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: base-secrets
-                  key: rustfs-access-key
+                  key: s3-access-key-id
             - name: S3_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
                   name: base-secrets
-                  key: rustfs-secret-key
+                  key: s3-secret-access-key
             - name: S3_BUCKET_NAME
               value: "fitm-cloud"
             - name: S3_ENDPOINT
               value: "http://rustfs:9000"
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: google-client-id
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: google-client-secret
             - name: ALLOW_CORS_ORIGINS
               value: "https://dev.fitm.cloud,http://localhost:3000"
             - name: OTEL_SERVICE_NAME
