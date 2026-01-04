@@ -42,6 +42,8 @@ jobs:
             --from-literal=jwt-secret="${{ secrets.JWT_SECRET }}" \
             --from-literal=s3-access-key-id="${{ secrets.S3_ACCESS_KEY_ID }}" \
             --from-literal=s3-secret-access-key="${{ secrets.S3_SECRET_ACCESS_KEY }}" \
+            --from-literal=google-client-id="${{ secrets.GOOGLE_CLIENT_ID }}" \
+            --from-literal=google-client-secret="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
           kubectl label secret base-secrets \
