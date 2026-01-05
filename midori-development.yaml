@@ -22,6 +22,32 @@ spec:
         app.kubernetes.io/name: fitm-cloud
         app.kubernetes.io/component: midori
     spec:
+      initContainers:
+        - name: wait-for-momoi
+          image: busybox:latest
+          command:
+            [
+              "sh",
+              "-c",
+              "until nc -z momoi-development 3000; do echo waiting for momoi; sleep 5; done;",
+            ]
+        - name: init-momoi
+          image: busybox:latest
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: postgres-password
+          # Create dotenv file with necessary environment variables
+          command:
+            - sh
+            - -c
+            - |
+              echo "DATABASE_URL=postgresql://postgres:$POSTGRES_PASSWORD@postgres:5433/postgres" > /mnt/config/.env
+          volumeMounts:
+            - name: config-volume
+              mountPath: /mnt/config
       containers:
         - name: midori
           image: ghcr.io/akikungz/midori:development
@@ -40,6 +66,25 @@ spec:
               value: "midori-dev"
             - name: NEXT_PUBLIC_API_URL
               value: "https://dev.fitm.cloud"
+            - name: BETTER_AUTH_URL
+              value: "https://dev.fitm.cloud"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: jwt-secret
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: google-client-id
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: google-client-secret
+            - name: ALLOW_CORS_ORIGINS
+              value: "https://dev.fitm.cloud"
           resources:
             requests:
               memory: "256Mi"
@@ -47,6 +92,13 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/.env
+              subPath: .env
+      volumes:
+        - name: config-volume
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
