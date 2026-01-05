@@ -31,7 +31,7 @@ spec:
               "-c",
               "until nc -z momoi-development 3000; do echo waiting for momoi; sleep 5; done;",
             ]
-        - name: init-momoi
+        - name: init-midori
           image: busybox:latest
           env:
             - name: POSTGRES_PASSWORD
