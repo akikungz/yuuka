@@ -19,27 +19,6 @@ spec:
     requests:
       storage: 10Gi
 ---
-# PostgreSQL Development Persistent Volume Claims
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: postgres-development-data
-  namespace: fitm-cloud
-  labels:
-    app.kubernetes.io/name: fitm-cloud
-    app.kubernetes.io/component: postgres
-    app.kubernetes.io/managed-by: argocd
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,Prune=false
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: proxmox-ceph-rbd
-  resources:
-    requests:
-      storage: 1Gi
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -98,42 +77,10 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "500m"
-        - name: postgres-dev
-          image: postgres:18-alpine
-          ports:
-            - name: postgres-dev
-              containerPort: 5433
-          env:
-            - name: POSTGRES_USER
-              value: postgres
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: base-secrets
-                  key: postgres-password
-            - name: POSTGRES_DB
-              value: postgres
-          command:
-            - /bin/sh
-            - -c
-            - exec docker-entrypoint.sh postgres -p 5433
-          volumeMounts:
-            - name: postgres-development-data
-              mountPath: /var/lib/postgresql/data
-          resources:
-            requests:
-              memory: "512Mi"
-              cpu: "250m"
-            limits:
-              memory: "1Gi"
-              cpu: "500m"
       volumes:
         - name: postgres-data
           persistentVolumeClaim:
             claimName: postgres-data
-        - name: postgres-development-data
-          persistentVolumeClaim:
-            claimName: postgres-development-data
       restartPolicy: Always
 ---
 # PostgreSQL Service
@@ -158,8 +105,4 @@ spec:
     - name: postgres
       port: 5432
       targetPort: postgres
-    - name: postgres-dev
-      port: 5433
-      targetPort: postgres-dev
 ---
-
