@@ -26,12 +26,29 @@ jobs:
           kubectl cluster-info
           kubectl get namespaces fitm-cloud || kubectl create namespace fitm-cloud
 
+      - name: Check commit message for re-create secrets
+        id: check-commit-message
+        run: |
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+          echo "Commit message: $COMMIT_MESSAGE"
+
+          if [[ "$COMMIT_MESSAGE" == *"[re-create secrets]"* ]]; then
+            echo "recreate_secrets=true" >> $GITHUB_OUTPUT
+          else
+            echo "recreate_secrets=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Create base-secrets
         run: |
-          # Check if the secret already exists
+          # Check if the secret already exists or if re-creation is requested
           if kubectl get secret base-secrets --namespace fitm-cloud >/dev/null 2>&1; then
-            echo "Secret base-secrets already exists in namespace fitm-cloud. Skipping creation."
-            exit 0
+            if [ "${{ steps.check-commit-message.outputs.recreate_secrets }}" = "true" ]; then
+              echo "Re-creating existing secret base-secrets as per commit message."
+              kubectl delete secret base-secrets --namespace fitm-cloud
+            else
+              echo "Secret base-secrets already exists in namespace fitm-cloud. Skipping creation."
+              exit 0
+            fi
           fi
 
           kubectl create secret generic base-secrets \
@@ -44,6 +61,8 @@ jobs:
             --from-literal=s3-secret-access-key="${{ secrets.S3_SECRET_ACCESS_KEY }}" \
             --from-literal=google-client-id="${{ secrets.GOOGLE_CLIENT_ID }}" \
             --from-literal=google-client-secret="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
+            --from-literal=pve-token-id="${{ secrets.PVE_TOKEN_ID }}" \
+            --from-literal=pve-token-secret="${{ secrets.PVE_TOKEN_SECRET }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
           kubectl label secret base-secrets \
@@ -86,10 +105,15 @@ jobs:
 
       - name: Create monitoring secret
         run: |
-          # Check if the secret already exists
+          # Check if the secret already exists or if re-creation is requested
           if kubectl get secret monitoring-secrets --namespace fitm-cloud >/dev/null 2>&1; then
-            echo "Secret monitoring-secrets already exists in namespace fitm-cloud. Skipping creation."
-            exit 0
+          if [ "${{ steps.check-commit-message.outputs.recreate_secrets }}" = "true" ]; then
+              echo "Re-creating existing secret monitoring-secrets as per commit message."
+              kubectl delete secret monitoring-secrets --namespace fitm-cloud
+            else
+              echo "Secret monitoring-secrets already exists in namespace fitm-cloud. Skipping creation."
+              exit 0
+            fi
           fi
 
           kubectl create secret generic monitoring-secrets \
@@ -112,10 +136,15 @@ jobs:
 
       - name: Create tls secret
         run: |
-          # Check if the secret already exists
+          # Check if the secret already exists or if re-creation is requested
           if kubectl get secret cloudflare-tls --namespace fitm-cloud >/dev/null 2>&1; then
-            echo "Secret cloudflare-tls already exists in namespace fitm-cloud. Skipping creation."
-            exit 0
+            if [ "${{ steps.check-commit-message.outputs.recreate_secrets }}" = "true" ]; then
+              echo "Re-creating existing secret cloudflare-tls as per commit message."
+              kubectl delete secret cloudflare-tls --namespace fitm-cloud
+            else
+              echo "Secret cloudflare-tls already exists in namespace fitm-cloud. Skipping creation."
+              exit 0
+            fi
           fi
 
           kubectl create secret generic cloudflare-tls \
@@ -141,6 +170,7 @@ jobs:
           kubectl get secret base-secrets --namespace fitm-cloud -o yaml | grep -E 'name:|namespace:|labels:|annotations:|type:'
           kubectl get secret ghcr-io-secret --namespace fitm-cloud -o yaml | grep -E 'name:|namespace:|labels:|annotations:|type:'
           kubectl get secret monitoring-secrets --namespace fitm-cloud -o yaml | grep -E 'name:|namespace:|labels:|annotations:|type:'
+          kubectl get secret cloudflare-tls --namespace fitm-cloud -o yaml | grep -E 'name:|namespace:|labels:|annotations:|type:'
 
       - name: Restart deployments to pick up new secrets
         run: |
