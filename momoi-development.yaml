@@ -151,10 +151,10 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
     nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
 spec:
-  tls:
-    - hosts:
-        - dev.fitm.cloud
-      secretName: fitm-cloud-tls
+  # tls:
+  #   - hosts:
+  #       - dev.fitm.cloud
+  #     secretName: fitm-cloud-tls
   rules:
     - host: dev.fitm.cloud
       http:

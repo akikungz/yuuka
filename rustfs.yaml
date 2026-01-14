@@ -155,13 +155,13 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
 spec:
   ingressClassName: nginx
-  tls:
-    - hosts:
-        - rustfs.fitm.cloud
-      secretName: rustfs-fitm-cloud-tls
-    - hosts:
-        - rustfs-console.fitm.cloud
-      secretName: rustfs-console-fitm-cloud-tls
+  # tls:
+  #   - hosts:
+  #       - rustfs.fitm.cloud
+  #     secretName: rustfs-fitm-cloud-tls
+  #   - hosts:
+  #       - rustfs-console.fitm.cloud
+  #     secretName: rustfs-console-fitm-cloud-tls
   rules:
     - host: rustfs.fitm.cloud
       http:

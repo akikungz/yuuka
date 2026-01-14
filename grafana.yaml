@@ -150,10 +150,10 @@ metadata:
     argocd.argoproj.io/sync-wave: "2"
 spec:
   ingressClassName: nginx
-  tls:
-    - hosts:
-        - grafana.fitm.cloud
-      secretName: grafana-fitm-cloud-tls
+  # tls:
+  #   - hosts:
+  #       - grafana.fitm.cloud
+  #     secretName: grafana-fitm-cloud-tls
   rules:
     - host: grafana.fitm.cloud
       http:

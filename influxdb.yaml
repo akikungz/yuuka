@@ -167,10 +167,10 @@ metadata:
     argocd.argoproj.io/sync-wave: "3"
 spec:
   ingressClassName: nginx
-  tls:
-    - hosts:
-        - influxdb.fitm.cloud
-      secretName: influxdb-fitm-cloud-tls
+  # tls:
+  #   - hosts:
+  #       - influxdb.fitm.cloud
+  #     secretName: influxdb-fitm-cloud-tls
   rules:
     - host: influxdb.fitm.cloud
       http:
