@@ -40,12 +40,6 @@ jobs:
 
       - name: Create base-secrets
         run: |
-          # Check if the secret already exists or if re-creation is requested
-          if kubectl get secret base-secrets --namespace fitm-cloud >/dev/null 2>&1; then
-            echo "Secret base-secrets already exists in namespace fitm-cloud. Skipping creation."
-            exit 0
-          fi
-
           kubectl create secret generic base-secrets \
             --namespace fitm-cloud \
             --from-literal=postgres-password="${{ secrets.POSTGRES_PASSWORD }}" \
@@ -73,12 +67,6 @@ jobs:
 
       - name: Create docker registry secret
         run: |
-          # Check if the secret already exists
-          if kubectl get secret ghcr-io-secret --namespace fitm-cloud >/dev/null 2>&1; then
-            echo "Secret ghcr-io-secret already exists in namespace fitm-cloud. Skipping creation."
-            exit 0
-          fi
-
           kubectl create secret docker-registry ghcr-io-secret \
             --namespace fitm-cloud \
             --docker-server="ghcr.io" \
@@ -100,12 +88,6 @@ jobs:
 
       - name: Create monitoring secret
         run: |
-          # Check if the secret already exists or if re-creation is requested
-          if kubectl get secret monitoring-secrets --namespace fitm-cloud >/dev/null 2>&1; then
-            echo "Secret monitoring-secrets already exists in namespace fitm-cloud. Skipping creation."
-            exit 0
-          fi
-
           kubectl create secret generic monitoring-secrets \
             --namespace fitm-cloud \
             --from-literal=grafana-admin-password="${{ secrets.GRAFANA_ADMIN_PASSWORD }}" \
@@ -126,12 +108,6 @@ jobs:
 
       - name: Create tls secret
         run: |
-          # Check if the secret already exists or if re-creation is requested
-          if kubectl get secret cloudflare-tls --namespace fitm-cloud >/dev/null 2>&1; then
-            echo "Secret cloudflare-tls already exists in namespace fitm-cloud. Skipping creation."
-            exit 0
-          fi
-
           kubectl create secret generic cloudflare-tls \
             --namespace fitm-cloud \
             --from-literal=tls.crt="${{ secrets.CLOUDFLARE_TLS_CRT }}" \
