@@ -191,133 +191,133 @@ jobs:
 
           echo "Rollout restart commands issued. Pods will restart to pick up new secrets."
 
-  trigger-argocd-sync:
-    name: Trigger Argo CD Sync
-    runs-on: self-hosted
-    needs: create-secrets
-    permissions:
-      contents: read
-      packages: write
+  # trigger-argocd-sync:
+  #   name: Trigger Argo CD Sync
+  #   runs-on: self-hosted
+  #   needs: create-secrets
+  #   permissions:
+  #     contents: read
+  #     packages: write
 
-    steps:
-      - name: Trigger Argo CD Application Sync
-        run: |
-          kubectl patch application fitm-cloud \
-            --namespace argocd \
-            --type merge \
-            --patch '{"operations":{"sync":{"prune":true,"syncOptions":["CreateNamespace=true","RespectIgnoreDifferences=true","SkipDryRunOnMissingResource=true","ServerSideApply=true","Validate=false"]}}}'
+  #   steps:
+  #     - name: Trigger Argo CD Application Sync
+  #       run: |
+  #         kubectl patch application fitm-cloud \
+  #           --namespace argocd \
+  #           --type merge \
+  #           --patch '{"operations":{"sync":{"prune":true,"syncOptions":["CreateNamespace=true","RespectIgnoreDifferences=true","SkipDryRunOnMissingResource=true","ServerSideApply=true","Validate=false"]}}}'
 
-          echo "Argo CD sync triggered."
+  #         echo "Argo CD sync triggered."
 
-      - name: Wait for sync to complete
-        run: |
-          echo "Waiting for Argo CD sync to complete..."
+  #     - name: Wait for sync to complete
+  #       run: |
+  #         echo "Waiting for Argo CD sync to complete..."
 
-          TIMEOUT=600
-          ELAPSED=0
-          INTERVAL=15
+  #         TIMEOUT=600
+  #         ELAPSED=0
+  #         INTERVAL=15
 
-          while [ $ELAPSED -lt $TIMEOUT ]; do
-            STATUS=$(kubectl get application fitm-cloud --namespace argocd -o jsonpath='{.status.sync.status}' 2>/dev/null || echo "Unknown")
-            PHASE=$(kubectl get application fitm-cloud --namespace argocd -o jsonpath='{.status.operationState.phase}' 2>/dev/null || echo "")
+  #         while [ $ELAPSED -lt $TIMEOUT ]; do
+  #           STATUS=$(kubectl get application fitm-cloud --namespace argocd -o jsonpath='{.status.sync.status}' 2>/dev/null || echo "Unknown")
+  #           PHASE=$(kubectl get application fitm-cloud --namespace argocd -o jsonpath='{.status.operationState.phase}' 2>/dev/null || echo "")
             
-            echo "[$ELAPSED/$TIMEOUT s] Status: $STATUS, Phase: $PHASE"
+  #           echo "[$ELAPSED/$TIMEOUT s] Status: $STATUS, Phase: $PHASE"
 
-            if [ "$PHASE" = "Succeeded" ] && [ "$STATUS" = "Synced" ]; then
-              echo "Argo CD sync completed successfully."
-              exit 0
-            elif [ "$PHASE" = "Error" ] || [ "$PHASE" = "Failed" ]; then
-              echo "Argo CD sync failed."
-              exit 1
-            fi
+  #           if [ "$PHASE" = "Succeeded" ] && [ "$STATUS" = "Synced" ]; then
+  #             echo "Argo CD sync completed successfully."
+  #             exit 0
+  #           elif [ "$PHASE" = "Error" ] || [ "$PHASE" = "Failed" ]; then
+  #             echo "Argo CD sync failed."
+  #             exit 1
+  #           fi
 
-            sleep $INTERVAL
-            ELAPSED=$((ELAPSED + INTERVAL))
-          done
+  #           sleep $INTERVAL
+  #           ELAPSED=$((ELAPSED + INTERVAL))
+  #         done
 
-          if [ $ELAPSED -ge $TIMEOUT ]; then
-            echo "Argo CD sync timed out after $TIMEOUT seconds."
-            exit 1
-          fi
+  #         if [ $ELAPSED -ge $TIMEOUT ]; then
+  #           echo "Argo CD sync timed out after $TIMEOUT seconds."
+  #           exit 1
+  #         fi
 
-      - name: Wait for healthy state
-        run: |
-          echo "Waiting for Argo CD application to reach Healthy state..."
+  #     - name: Wait for healthy state
+  #       run: |
+  #         echo "Waiting for Argo CD application to reach Healthy state..."
 
-          TIMEOUT=600
-          ELAPSED=0
-          INTERVAL=15
+  #         TIMEOUT=600
+  #         ELAPSED=0
+  #         INTERVAL=15
 
-          while [ $ELAPSED -lt $TIMEOUT ]; do
-            HEALTHY=$(kubectl get application fitm-cloud --namespace argocd -o jsonpath='{.status.health.status}' 2>/dev/null || echo "Unknown")
+  #         while [ $ELAPSED -lt $TIMEOUT ]; do
+  #           HEALTHY=$(kubectl get application fitm-cloud --namespace argocd -o jsonpath='{.status.health.status}' 2>/dev/null || echo "Unknown")
             
-            echo "[$ELAPSED/$TIMEOUT s] Health Status: $HEALTHY"
+  #           echo "[$ELAPSED/$TIMEOUT s] Health Status: $HEALTHY"
 
-            if [ "$HEALTHY" = "Healthy" ]; then
-              echo "Argo CD application is Healthy."
-              break
-            elif [ "$HEALTHY" = "Degraded" ]; then
-              echo "Argo CD application is Degraded, continuing to wait..."
-            fi
+  #           if [ "$HEALTHY" = "Healthy" ]; then
+  #             echo "Argo CD application is Healthy."
+  #             break
+  #           elif [ "$HEALTHY" = "Degraded" ]; then
+  #             echo "Argo CD application is Degraded, continuing to wait..."
+  #           fi
 
-            sleep $INTERVAL
-            ELAPSED=$((ELAPSED + INTERVAL))
-          done
+  #           sleep $INTERVAL
+  #           ELAPSED=$((ELAPSED + INTERVAL))
+  #         done
 
-          if [ $ELAPSED -ge $TIMEOUT ]; then
-            echo "Waiting for Healthy state timed out after $TIMEOUT seconds, but proceeding with verification."
-          fi
+  #         if [ $ELAPSED -ge $TIMEOUT ]; then
+  #           echo "Waiting for Healthy state timed out after $TIMEOUT seconds, but proceeding with verification."
+  #         fi
 
-      - name: Verify application status
-        run: |
-          kubectl get pods --namespace fitm-cloud
-          kubectl get deployments --namespace fitm-cloud
-          kubectl get services --namespace fitm-cloud
-          kubectl get ingresses --namespace fitm-cloud
+  #     - name: Verify application status
+  #       run: |
+  #         kubectl get pods --namespace fitm-cloud
+  #         kubectl get deployments --namespace fitm-cloud
+  #         kubectl get services --namespace fitm-cloud
+  #         kubectl get ingresses --namespace fitm-cloud
 
-      - name: Wait for pods to be ready
-        run: |
-          echo "Waiting for all pods in fitm-cloud namespace to be ready..."
+  #     - name: Wait for pods to be ready
+  #       run: |
+  #         echo "Waiting for all pods in fitm-cloud namespace to be ready..."
 
-          kubectl rollout status statefulset \
-            --namespace fitm-cloud --timeout=600s || true
+  #         kubectl rollout status statefulset \
+  #           --namespace fitm-cloud --timeout=600s || true
 
-          kubectl rollout status deployment \
-            --namespace fitm-cloud --timeout=600s || true
+  #         kubectl rollout status deployment \
+  #           --namespace fitm-cloud --timeout=600s || true
 
-          sleep 30
+  #         sleep 30
 
-      - name: Check unhealthy pods
-        run: |
-          MAX_RETRIES=16
-          INTERVAL=30
+  #     - name: Check unhealthy pods
+  #       run: |
+  #         MAX_RETRIES=16
+  #         INTERVAL=30
 
-          for ((i=1; i<=MAX_RETRIES; i++)); do
-            UNHEALTHY_PODS=$(kubectl get pods \
-              --namespace fitm-cloud \
-              --field-selector=status.phase!=Running,status.phase!=Succeeded \
-              -o name 2>/dev/null \
-              || echo "")
+  #         for ((i=1; i<=MAX_RETRIES; i++)); do
+  #           UNHEALTHY_PODS=$(kubectl get pods \
+  #             --namespace fitm-cloud \
+  #             --field-selector=status.phase!=Running,status.phase!=Succeeded \
+  #             -o name 2>/dev/null \
+  #             || echo "")
             
-            if [ -z "$UNHEALTHY_PODS" ]; then
-              echo "All pods are healthy."
-              exit 0
-            fi
+  #           if [ -z "$UNHEALTHY_PODS" ]; then
+  #             echo "All pods are healthy."
+  #             exit 0
+  #           fi
 
-            echo "Unhealthy pods detected (attempt $i/$MAX_RETRIES):"
-            kubectl get pods --namespace fitm-cloud \
-              --field-selector=status.phase!=Running,status.phase!=Succeeded
+  #           echo "Unhealthy pods detected (attempt $i/$MAX_RETRIES):"
+  #           kubectl get pods --namespace fitm-cloud \
+  #             --field-selector=status.phase!=Running,status.phase!=Succeeded
 
-            if [ $i -lt $MAX_RETRIES ]; then
-              echo "Waiting for $INTERVAL seconds before rechecking..."
-              sleep $INTERVAL
-            fi
-          done
+  #           if [ $i -lt $MAX_RETRIES ]; then
+  #             echo "Waiting for $INTERVAL seconds before rechecking..."
+  #             sleep $INTERVAL
+  #           fi
+  #         done
 
-          echo "Some pods are still unhealthy after $((MAX_RETRIES * INTERVAL)) seconds."
-          for pod in $UNHEALTHY_PODS; do
-            echo "Describing pod: $pod"
-            kubectl describe "$pod" --namespace fitm-cloud
-          done
+  #         echo "Some pods are still unhealthy after $((MAX_RETRIES * INTERVAL)) seconds."
+  #         for pod in $UNHEALTHY_PODS; do
+  #           echo "Describing pod: $pod"
+  #           kubectl describe "$pod" --namespace fitm-cloud
+  #         done
 
-          exit 1
+  #         exit 1
