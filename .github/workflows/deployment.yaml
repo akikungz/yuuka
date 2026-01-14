@@ -26,29 +26,24 @@ jobs:
           kubectl cluster-info
           kubectl get namespaces fitm-cloud || kubectl create namespace fitm-cloud
 
-      - name: Check commit message for re-create secrets
-        id: check-commit-message
-        run: |
-          COMMIT_MESSAGE=$(git log -1 --pretty=%B)
-          echo "Commit message: $COMMIT_MESSAGE"
+      # - name: Check commit message for re-create secrets
+      #   id: check-commit-message
+      #   run: |
+      #     COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+      #     echo "Commit message: $COMMIT_MESSAGE"
 
-          if [[ "$COMMIT_MESSAGE" == *"[re-create secrets]"* ]]; then
-            echo "recreate_secrets=true" >> $GITHUB_OUTPUT
-          else
-            echo "recreate_secrets=false" >> $GITHUB_OUTPUT
-          fi
+      #     if [[ "$COMMIT_MESSAGE" == *"[re-create secrets]"* ]]; then
+      #       echo "recreate_secrets=true" >> $GITHUB_OUTPUT
+      #     else
+      #       echo "recreate_secrets=false" >> $GITHUB_OUTPUT
+      #     fi
 
       - name: Create base-secrets
         run: |
           # Check if the secret already exists or if re-creation is requested
           if kubectl get secret base-secrets --namespace fitm-cloud >/dev/null 2>&1; then
-            if [ "${{ steps.check-commit-message.outputs.recreate_secrets }}" = "true" ]; then
-              echo "Re-creating existing secret base-secrets as per commit message."
-              kubectl delete secret base-secrets --namespace fitm-cloud
-            else
-              echo "Secret base-secrets already exists in namespace fitm-cloud. Skipping creation."
-              exit 0
-            fi
+            echo "Secret base-secrets already exists in namespace fitm-cloud. Skipping creation."
+            exit 0
           fi
 
           kubectl create secret generic base-secrets \
@@ -107,13 +102,8 @@ jobs:
         run: |
           # Check if the secret already exists or if re-creation is requested
           if kubectl get secret monitoring-secrets --namespace fitm-cloud >/dev/null 2>&1; then
-          if [ "${{ steps.check-commit-message.outputs.recreate_secrets }}" = "true" ]; then
-              echo "Re-creating existing secret monitoring-secrets as per commit message."
-              kubectl delete secret monitoring-secrets --namespace fitm-cloud
-            else
-              echo "Secret monitoring-secrets already exists in namespace fitm-cloud. Skipping creation."
-              exit 0
-            fi
+            echo "Secret monitoring-secrets already exists in namespace fitm-cloud. Skipping creation."
+            exit 0
           fi
 
           kubectl create secret generic monitoring-secrets \
@@ -138,13 +128,8 @@ jobs:
         run: |
           # Check if the secret already exists or if re-creation is requested
           if kubectl get secret cloudflare-tls --namespace fitm-cloud >/dev/null 2>&1; then
-            if [ "${{ steps.check-commit-message.outputs.recreate_secrets }}" = "true" ]; then
-              echo "Re-creating existing secret cloudflare-tls as per commit message."
-              kubectl delete secret cloudflare-tls --namespace fitm-cloud
-            else
-              echo "Secret cloudflare-tls already exists in namespace fitm-cloud. Skipping creation."
-              exit 0
-            fi
+            echo "Secret cloudflare-tls already exists in namespace fitm-cloud. Skipping creation."
+            exit 0
           fi
 
           kubectl create secret generic cloudflare-tls \
