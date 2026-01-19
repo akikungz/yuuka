@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yuzu-development
+  namespace: fitm-cloud
+  labels:
+    app: yuzu
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: yuzu
+    app.kubernetes.io/managed-by: argo-cd
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: yuzu
+      app.kubernetes.io/name: fitm-cloud
+      app.kubernetes.io/component: yuzu
+  template:
+    metadata:
+      labels:
+        app: yuzu
+        app.kubernetes.io/name: fitm-cloud
+        app.kubernetes.io/component: yuzu
+    spec:
+      initContainers:
+        - name: init-yuzu
+          image: busybox:latest
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: postgres-password
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: redis-password
+          # Create dotenv file with necessary environment variables
+          command:
+            - sh
+            - -c
+            - |
+              echo "DATABASE_URL=postgresql://postgres:$POSTGRES_PASSWORD@postgres:5432/development" > /mnt/config/.env
+              echo "REDIS_URL=redis://:$REDIS_PASSWORD@redis:6379" >> /mnt/config/.env
+          volumeMounts:
+            - name: config-volume
+              mountPath: /mnt/config
+      containers:
+        - name: yuzu
+          image: ghcr.io/akikungz/yuzu:development
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: NODE_ENV
+              value: "development"
+            - name: OTEL_SERVICE_NAME
+              value: "yuzu.development"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://jaeger:4317"
+            - name: PVE_API_URL
+              value: "https://10.20.30.201:8006"
+            - name: PVE_API_TOKEN_ID
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: pve-token-id
+            - name: PVE_API_TOKEN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: pve-token-secret
+          command:
+            - sh
+            - -c
+            - |
+              # exec ./server --env-file /app/.env
+              bun run --env-file /app/.env ./src/index.ts
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/.env
+              subPath: .env
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: config-volume
+          emptyDir: {}

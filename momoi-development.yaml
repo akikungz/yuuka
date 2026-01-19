@@ -41,7 +41,7 @@ spec:
             - sh
             - -c
             - |
-              echo "DATABASE_URL=postgresql://postgres:$POSTGRES_PASSWORD@postgres:5433/postgres" > /mnt/config/.env
+              echo "DATABASE_URL=postgresql://postgres:$POSTGRES_PASSWORD@postgres:5432/development" > /mnt/config/.env
               echo "REDIS_URL=redis://:$REDIS_PASSWORD@redis:6379" >> /mnt/config/.env
           volumeMounts:
             - name: config-volume
@@ -88,9 +88,9 @@ spec:
                   name: base-secrets
                   key: google-client-secret
             - name: ALLOW_CORS_ORIGINS
-              value: "https://dev.fitm.cloud,http://localhost:3000"
+              value: "https://dev.fitm.cloud,http://localhost:3000,http://midori-development:3000"
             - name: OTEL_SERVICE_NAME
-              value: "momoi-dev"
+              value: "momoi.development"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://jaeger:4317"
             - name: BETTER_AUTH_URL
@@ -146,15 +146,15 @@ metadata:
     app.kubernetes.io/component: momoi
   annotations:
     spec.ingressClassName: nginx
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/proxy-body-size: "0"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
     nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
+    # nginx.ingress.kubernetes.io/proxy-real-ip-cidr: "10.20.30.0/24"
+    # Trust X-Forwarded-For header from Load Balancer
+    # nginx.ingress.kubernetes.io/real-ip-header: "X-Forwarded-For"
 spec:
-  # tls:
-  #   - hosts:
-  #       - dev.fitm.cloud
-  #     secretName: fitm-cloud-tls
+  ingressClassName: nginx
   rules:
     - host: dev.fitm.cloud
       http:

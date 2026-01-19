@@ -34,10 +34,12 @@ spec:
               value: "development"
             - name: SERVER_API_URL
               value: "http://momoi-development:3000"
+            - name: AUTH_API_URL
+              value: "http://arisu:3001"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://jaeger:4318/v1/traces"
             - name: OTEL_SERVICE_NAME
-              value: "midori-dev"
+              value: "midori.development"
             - name: NEXT_PUBLIC_API_URL
               value: "https://dev.fitm.cloud"
           resources:
@@ -77,15 +79,11 @@ metadata:
     app.kubernetes.io/component: midori
   annotations:
     spec.ingressClassName: nginx
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/proxy-body-size: "0"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
     nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
 spec:
-  # tls:
-  #   - hosts:
-  #       - dev.fitm.cloud
-  #     secretName: fitm-cloud-tls
   rules:
     - host: dev.fitm.cloud
       http:

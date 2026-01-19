@@ -26,18 +26,6 @@ jobs:
           kubectl cluster-info
           kubectl get namespaces fitm-cloud || kubectl create namespace fitm-cloud
 
-      # - name: Check commit message for re-create secrets
-      #   id: check-commit-message
-      #   run: |
-      #     COMMIT_MESSAGE=$(git log -1 --pretty=%B)
-      #     echo "Commit message: $COMMIT_MESSAGE"
-
-      #     if [[ "$COMMIT_MESSAGE" == *"[re-create secrets]"* ]]; then
-      #       echo "recreate_secrets=true" >> $GITHUB_OUTPUT
-      #     else
-      #       echo "recreate_secrets=false" >> $GITHUB_OUTPUT
-      #     fi
-
       - name: Create base-secrets
         run: |
           kubectl create secret generic base-secrets \

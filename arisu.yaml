@@ -1,0 +1,270 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: arisu
+  namespace: fitm-cloud
+  labels:
+    app: arisu
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: arisu
+    app.kubernetes.io/managed-by: argo-cd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: arisu
+      app.kubernetes.io/name: fitm-cloud
+      app.kubernetes.io/component: arisu
+  template:
+    metadata:
+      labels:
+        app: arisu
+        app.kubernetes.io/name: fitm-cloud
+        app.kubernetes.io/component: arisu
+    spec:
+      hostAliases:
+        - ip: "74.125.200.84" # Use the IP you got from ping
+          hostnames:
+            - "accounts.google.com"
+            - "oauth2.googleapis.com"
+            - "openidconnect.googleapis.com"
+            - "www.googleapis.com"
+      initContainers:
+        - name: init-arisu-main
+          image: busybox:latest
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: postgres-password
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: redis-password
+          # Create dotenv file with necessary environment variables
+          command:
+            - sh
+            - -c
+            - |
+              echo "DATABASE_URL=postgresql://postgres:$POSTGRES_PASSWORD@postgres:5432/production" > /mnt/config/.env
+              echo "REDIS_URL=redis://:$REDIS_PASSWORD@redis:6379" >> /mnt/config/.env
+          volumeMounts:
+            - name: prod-config-volume
+              mountPath: /mnt/config
+        - name: init-arisu-development
+          image: busybox:latest
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: postgres-password
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: redis-password
+          # Create dotenv file with necessary environment variables
+          command:
+            - sh
+            - -c
+            - |
+              echo "DATABASE_URL=postgresql://postgres:$POSTGRES_PASSWORD@postgres:5432/development" > /mnt/config/.env
+              echo "REDIS_URL=redis://:$REDIS_PASSWORD@redis:6379" >> /mnt/config/.env
+          volumeMounts:
+            - name: dev-config-volume
+              mountPath: /mnt/config
+      containers:
+        - name: arisu-main
+          image: ghcr.io/akikungz/arisu:main
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+              name: arisu-main
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3000"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: jwt-secret
+            - name: S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: s3-access-key-id
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: s3-secret-access-key
+            - name: S3_BUCKET_NAME
+              value: "fitm-cloud"
+            - name: S3_ENDPOINT
+              value: "http://rustfs:9000"
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: google-client-id
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: google-client-secret
+            - name: ALLOW_CORS_ORIGINS
+              value: "https://dev.fitm.cloud,http://localhost:3000,http://midori-development:3000"
+            - name: OTEL_SERVICE_NAME
+              value: "arisu.production"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://jaeger:4318"
+            - name: BETTER_AUTH_URL
+              value: "https://dev.fitm.cloud"
+            - name: BETTER_AUTH_TRUST_HOST
+              value: "true"
+            - name: NODE_OPTIONS
+              value: "--use-system-ca"
+          command:
+            - sh
+            - -c
+            - |
+              # exec ./server --env-file /app/.env
+              node --env-file=/app/.env --use-system-ca ./dist/src/index.js
+          volumeMounts:
+            - name: prod-config-volume
+              mountPath: /app/.env
+              subPath: .env
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+        - name: arisu-development
+          image: ghcr.io/akikungz/arisu:main
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3001
+              name: arisu-dev
+          env:
+            - name: NODE_ENV
+              value: "development"
+            - name: PORT
+              value: "3001"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: jwt-secret
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: google-client-id
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: google-client-secret
+            - name: ALLOW_CORS_ORIGINS
+              value: "https://dev.fitm.cloud,http://localhost:3000,http://midori-development:3000"
+            - name: OTEL_SERVICE_NAME
+              value: "arisu.development"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://jaeger:4318"
+            - name: BETTER_AUTH_URL
+              value: "https://dev.fitm.cloud"
+            - name: BETTER_AUTH_TRUST_HOST
+              value: "true"
+            - name: NODE_OPTIONS
+              value: "--use-system-ca"
+          command:
+            - sh
+            - -c
+            - |
+              # exec ./server --env-file /app/.env
+              node --env-file=/app/.env --use-system-ca ./dist/src/index.js
+          volumeMounts:
+            - name: dev-config-volume
+              mountPath: /app/.env
+              subPath: .env
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: prod-config-volume
+          emptyDir: {}
+        - name: dev-config-volume
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: arisu
+  namespace: fitm-cloud
+  labels:
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: arisu
+spec:
+  selector:
+    app: arisu
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: arisu
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+      name: arisu-main
+    - protocol: TCP
+      port: 3001
+      targetPort: 3001
+      name: arisu-development
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: arisu
+  namespace: fitm-cloud
+  labels:
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: arisu
+  annotations:
+    spec.ingressClassName: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: fitm.cloud
+      http:
+        paths:
+          - path: /api/auth
+            pathType: Prefix
+            backend:
+              service:
+                name: arisu
+                port:
+                  number: 3000
+    - host: dev.fitm.cloud
+      http:
+        paths:
+          - path: /api/auth
+            pathType: Prefix
+            backend:
+              service:
+                name: arisu
+                port:
+                  number: 3001
