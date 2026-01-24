@@ -22,6 +22,17 @@ spec:
         app.kubernetes.io/name: fitm-cloud
         app.kubernetes.io/component: midori
     spec:
+      initContainers:
+        - name: wait-for-momoi
+          image: busybox:latest
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z momoi-development 3000; do
+                echo "Waiting for momoi-development to be available..."
+                sleep 5
+              done
       containers:
         - name: midori
           image: ghcr.io/akikungz/midori:development

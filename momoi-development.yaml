@@ -46,6 +46,54 @@ spec:
           volumeMounts:
             - name: config-volume
               mountPath: /mnt/config
+        - name: wait-for-postgres
+          image: busybox:latest
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: postgres-password
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z -v -w30 postgres 5432
+              do
+                echo "Waiting for postgres database connection..."
+                sleep 5
+              done
+              echo "Postgres is up and running!"
+        - name: wait-for-redis
+          image: busybox:latest
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: base-secrets
+                  key: redis-password
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z -v -w30 redis 6379
+              do
+                echo "Waiting for Redis server connection..."
+                sleep 5
+              done
+              echo "Redis is up and running!"
+        - name: wait-for-rustfs
+          image: busybox:latest
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z -v -w30 rustfs 9000
+              do
+                echo "Waiting for RustFS server connection..."
+                sleep 5
+              done
+              echo "RustFS is up and running!"
       containers:
         - name: momoi
           image: ghcr.io/akikungz/momoi:development
