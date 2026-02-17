@@ -64,10 +64,7 @@ data:
         "list": [
           {
             "builtIn": 1,
-            "datasource": {
-              "type": "grafana",
-              "uid": "-- Grafana --"
-            },
+            "datasource": "-- Grafana --",
             "enable": true,
             "hide": true,
             "iconColor": "rgba(0, 211, 255, 1)",
@@ -78,832 +75,1280 @@ data:
       },
       "editable": true,
       "fiscalYearStartMonth": 0,
-      "graphTooltip": 1,
-      "id": 2,
+      "graphTooltip": 0,
+      "id": null,
       "links": [],
+      "liveNow": false,
       "panels": [
         {
-          "collapsed": false,
-          "gridPos": {
-            "h": 1,
-            "w": 24,
-            "x": 0,
-            "y": 0
-          },
-          "id": 1,
-          "panels": [],
-          "title": "Pod Status",
-          "type": "row"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "Prometheus"
-          },
-          "description": "Running pods in fitm-cloud namespace",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "red",
-                    "value": 0
-                  },
-                  {
-                    "color": "yellow",
-                    "value": 1
-                  },
-                  {
-                    "color": "green",
-                    "value": 3
-                  }
-                ]
-              },
-              "unit": "short"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 8,
-            "x": 0,
-            "y": 1
-          },
-          "id": 2,
-          "options": {
-            "minVizHeight": 75,
-            "minVizWidth": 75,
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "showThresholdLabels": false,
-            "showThresholdMarkers": true,
-            "sizing": "auto",
-            "text": {}
-          },
-          "pluginVersion": "12.3.0",
+          "type": "stat",
+          "title": "Nodes Ready",
+          "datasource": "Prometheus",
           "targets": [
             {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "Prometheus"
-              },
-              "expr": "count(kube_pod_status_phase{namespace=\"fitm-cloud\", phase=\"Running\"})",
+              "expr": "sum(kube_node_status_condition{condition=\"Ready\",status=\"true\"})",
               "refId": "A"
             }
           ],
-          "title": "Running Pods",
-          "type": "gauge"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "Prometheus"
-          },
-          "description": "5xx error rate",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": 0
-                  },
-                  {
-                    "color": "yellow",
-                    "value": 0.1
-                  },
-                  {
-                    "color": "red",
-                    "value": 1
-                  }
-                ]
-              },
-              "unit": "reqps"
-            },
-            "overrides": []
-          },
           "gridPos": {
-            "h": 4,
-            "w": 8,
-            "x": 8,
-            "y": 1
-          },
-          "id": 3,
-          "options": {
-            "minVizHeight": 75,
-            "minVizWidth": 75,
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "showThresholdLabels": false,
-            "showThresholdMarkers": true,
-            "sizing": "auto",
-            "text": {}
-          },
-          "pluginVersion": "12.3.0",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "Prometheus"
-              },
-              "expr": "sum(rate(http_requests_total{namespace=\"fitm-cloud\", status=~\"5..\"}[5m]))",
-              "refId": "A"
-            }
-          ],
-          "title": "Error Rate (5xx)",
-          "type": "gauge"
-        },
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "Loki"
-          },
-          "description": "Log errors in last 5 minutes",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": 0
-                  },
-                  {
-                    "color": "yellow",
-                    "value": 10
-                  },
-                  {
-                    "color": "red",
-                    "value": 50
-                  }
-                ]
-              },
-              "unit": "short"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 4,
-            "w": 8,
-            "x": 16,
-            "y": 1
-          },
-          "id": 4,
-          "options": {
-            "minVizHeight": 75,
-            "minVizWidth": 75,
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "showThresholdLabels": false,
-            "showThresholdMarkers": true,
-            "sizing": "auto",
-            "text": {}
-          },
-          "pluginVersion": "12.3.0",
-          "targets": [
-            {
-              "datasource": {
-                "type": "loki",
-                "uid": "Loki"
-              },
-              "expr": "count_over_time({namespace=\"fitm-cloud\"} != `status=200` != `x509` |= \"error\" [5m] )",
-              "refId": "A"
-            }
-          ],
-          "title": "Log Error Count (5m)",
-          "type": "gauge"
-        },
-        {
-          "collapsed": false,
-          "gridPos": {
-            "h": 1,
-            "w": 24,
             "x": 0,
-            "y": 5
-          },
-          "id": 5,
-          "panels": [],
-          "title": "Proxmox Metrics",
-          "type": "row"
+            "y": 0,
+            "w": 6,
+            "h": 4
+          }
         },
         {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "cf6khbivtnawwf"
-          },
-          "description": "CPU usage by Proxmox node",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "showValues": false,
-                "spanNulls": true,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": 0
-                  }
-                ]
-              },
-              "unit": "percent"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 6
-          },
-          "id": 12,
-          "options": {
-            "legend": {
-              "calcs": [
-                "mean",
-                "max"
-              ],
-              "displayMode": "table",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "hideZeros": false,
-              "mode": "multi",
-              "sort": "none"
-            }
-          },
-          "pluginVersion": "12.3.0",
+          "type": "stat",
+          "title": "Nodes NotReady",
+          "datasource": "Prometheus",
           "targets": [
             {
-              "datasource": {
-                "type": "influxdb",
-                "uid": "cf6khbivtnawwf"
-              },
-              "query": "from(bucket: \"proxmox\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"cpustat\" and\r\n    r._field == \"cpu\"\r\n  )\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> map(fn: (r) => ({\r\n        r with\r\n        _time: r._time,\r\n        _value: float(v: r._value) * float(v: 100)\r\n      })\r\n    )\r\n",
+              "expr": "sum(kube_node_status_condition{condition=\"Ready\",status!=\"true\"})",
               "refId": "A"
             }
           ],
-          "title": "Proxmox Node CPU Usage",
-          "type": "timeseries"
+          "gridPos": {
+            "x": 6,
+            "y": 0,
+            "w": 6,
+            "h": 4
+          }
         },
         {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "cf6khbivtnawwf"
-          },
-          "description": "Memory usage by Proxmox node",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineStyle": {
-                  "fill": "solid"
-                },
-                "lineWidth": 2,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "showValues": false,
-                "spanNulls": true,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": 0
-                  }
-                ]
-              },
-              "unit": "sishort"
-            },
-            "overrides": []
-          },
+          "type": "stat",
+          "title": "Pending Pods",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "sum(kube_pod_status_phase{phase=\"Pending\",namespace=~\"$namespace\"})",
+              "refId": "A"
+            }
+          ],
           "gridPos": {
-            "h": 8,
-            "w": 12,
             "x": 12,
-            "y": 6
-          },
-          "id": 13,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "table",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "hideZeros": false,
-              "mode": "multi",
-              "sort": "none"
-            }
-          },
-          "pluginVersion": "12.3.0",
+            "y": 0,
+            "w": 6,
+            "h": 4
+          }
+        },
+        {
+          "type": "stat",
+          "title": "Failed Jobs (1h)",
+          "datasource": "Prometheus",
           "targets": [
             {
-              "datasource": {
-                "type": "influxdb",
-                "uid": "cf6khbivtnawwf"
-              },
-              "query": "from(bucket: \"proxmox\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"memory\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"memused\")\r\n//  |> group(columns: [\"host\",\"nodename\"], mode: \"by\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")",
+              "expr": "sum(increase(kube_job_status_failed{namespace=~\"$namespace\"}[1h]))",
               "refId": "A"
             }
           ],
-          "title": "Proxmox Node Memory Usage",
-          "type": "timeseries"
+          "gridPos": {
+            "x": 18,
+            "y": 0,
+            "w": 6,
+            "h": 4
+          }
         },
         {
-          "collapsed": false,
-          "gridPos": {
-            "h": 1,
-            "w": 24,
-            "x": 0,
-            "y": 14
-          },
-          "id": 6,
-          "panels": [],
-          "title": "Resource Usage",
-          "type": "row"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "Prometheus"
-          },
-          "description": "CPU usage by pod",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "showValues": false,
-                "spanNulls": true,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": 0
-                  }
-                ]
-              },
-              "unit": "percent"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 15
-          },
-          "id": 7,
-          "options": {
-            "legend": {
-              "calcs": [
-                "mean",
-                "max"
-              ],
-              "displayMode": "table",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "hideZeros": false,
-              "mode": "multi",
-              "sort": "none"
-            }
-          },
-          "pluginVersion": "12.3.0",
+          "type": "stat",
+          "title": "Arisu Up",
+          "datasource": "Prometheus",
           "targets": [
             {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "Prometheus"
-              },
-              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"fitm-cloud\"}[5m])) by (pod) * 100",
-              "legendFormat": "{{pod}}",
+              "expr": "min(up{job=\"arisu\"})",
               "refId": "A"
             }
           ],
-          "title": "CPU Usage",
-          "type": "timeseries"
+          "gridPos": {
+            "x": 0,
+            "y": 4,
+            "w": 6,
+            "h": 4
+          }
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "Prometheus"
-          },
-          "description": "Memory usage by pod",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "showValues": false,
-                "spanNulls": true,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": 0
-                  }
-                ]
-              },
-              "unit": "decmbytes"
-            },
-            "overrides": []
-          },
+          "type": "stat",
+          "title": "Momoi Dev Up",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "min(up{job=\"momoi-development\"})",
+              "refId": "A"
+            }
+          ],
           "gridPos": {
-            "h": 8,
-            "w": 12,
+            "x": 6,
+            "y": 4,
+            "w": 6,
+            "h": 4
+          }
+        },
+        {
+          "type": "stat",
+          "title": "Midori Dev Up",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "min(up{job=\"midori-development\"})",
+              "refId": "A"
+            }
+          ],
+          "gridPos": {
             "x": 12,
-            "y": 15
-          },
-          "id": 8,
-          "options": {
-            "legend": {
-              "calcs": [
-                "mean",
-                "max"
-              ],
-              "displayMode": "table",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "hideZeros": false,
-              "mode": "multi",
-              "sort": "none"
-            }
-          },
-          "pluginVersion": "12.3.0",
+            "y": 4,
+            "w": 6,
+            "h": 4
+          }
+        },
+        {
+          "type": "stat",
+          "title": "Yuzu Dev Up",
+          "datasource": "Prometheus",
           "targets": [
             {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "Prometheus"
-              },
-              "expr": "sum(container_memory_usage_bytes{namespace=\"fitm-cloud\"}) by (pod) / 1024 / 1024",
-              "legendFormat": "{{pod}}",
+              "expr": "min(up{job=\"yuzu\"})",
               "refId": "A"
             }
           ],
-          "title": "Memory Usage",
-          "type": "timeseries"
+          "gridPos": {
+            "x": 18,
+            "y": 4,
+            "w": 6,
+            "h": 4
+          }
         },
         {
-          "collapsed": false,
-          "gridPos": {
-            "h": 1,
-            "w": 24,
-            "x": 0,
-            "y": 23
-          },
-          "id": 9,
-          "panels": [],
-          "title": "HTTP Metrics",
-          "type": "row"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "Prometheus"
-          },
-          "description": "HTTP request rate by service",
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "showValues": false,
-                "spanNulls": true,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": 0
-                  }
-                ]
-              },
-              "unit": "reqps"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 24,
-            "x": 0,
-            "y": 24
-          },
-          "id": 10,
-          "options": {
-            "legend": {
-              "calcs": [
-                "mean",
-                "max"
-              ],
-              "displayMode": "table",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "hideZeros": false,
-              "mode": "multi",
-              "sort": "none"
-            }
-          },
-          "pluginVersion": "12.3.0",
+          "type": "timeseries",
+          "title": "Pods by Phase",
+          "datasource": "Prometheus",
           "targets": [
             {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "Prometheus"
-              },
-              "expr": "sum(rate(http_requests_total{namespace=\"fitm-cloud\"}[5m])) by (service)",
-              "legendFormat": "{{service}}",
+              "expr": "sum by (phase) (kube_pod_status_phase{namespace=~\"$namespace\"})",
+              "legendFormat": "{{phase}}",
               "refId": "A"
             }
           ],
-          "title": "HTTP Request Rate",
-          "type": "timeseries"
+          "gridPos": {
+            "x": 0,
+            "y": 8,
+            "w": 12,
+            "h": 7
+          }
         },
         {
-          "collapsed": false,
-          "gridPos": {
-            "h": 1,
-            "w": 24,
-            "x": 0,
-            "y": 32
-          },
-          "id": 11,
-          "panels": [],
-          "title": "Logs",
-          "type": "row"
-        },
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "Loki"
-          },
-          "description": "Recent logs from fitm-cloud namespace",
-          "fieldConfig": {
-            "defaults": {},
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 10,
-            "w": 24,
-            "x": 0,
-            "y": 33
-          },
-          "id": 14,
-          "options": {
-            "dedupStrategy": "none",
-            "enableInfiniteScrolling": false,
-            "enableLogDetails": true,
-            "prettifyLogMessage": false,
-            "showCommonLabels": false,
-            "showControls": false,
-            "showLabels": true,
-            "showTime": true,
-            "sortOrder": "Descending",
-            "wrapLogMessage": false
-          },
-          "pluginVersion": "12.3.0",
+          "type": "timeseries",
+          "title": "Deployment Desired vs Available",
+          "datasource": "Prometheus",
           "targets": [
             {
-              "datasource": {
-                "type": "loki",
-                "uid": "Loki"
-              },
-              "expr": "{namespace=\"fitm-cloud\"}",
+              "expr": "sum by (deployment) (kube_deployment_spec_replicas{namespace=~\"$namespace\"})",
+              "legendFormat": "{{deployment}} desired",
+              "refId": "A"
+            },
+            {
+              "expr": "sum by (deployment) (kube_deployment_status_replicas_available{namespace=~\"$namespace\"})",
+              "legendFormat": "{{deployment}} available",
+              "refId": "B"
+            }
+          ],
+          "gridPos": {
+            "x": 12,
+            "y": 8,
+            "w": 12,
+            "h": 7
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "CPU Usage (%)",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+              "legendFormat": "{{instance}}",
               "refId": "A"
             }
           ],
-          "title": "Application Logs",
-          "type": "logs"
+          "gridPos": {
+            "x": 0,
+            "y": 15,
+            "w": 12,
+            "h": 7
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Memory Available (%)",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "100 * (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)",
+              "legendFormat": "{{instance}}",
+              "refId": "A"
+            }
+          ],
+          "gridPos": {
+            "x": 12,
+            "y": 15,
+            "w": 12,
+            "h": 7
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Disk Usage (%)",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "100 - (node_filesystem_avail_bytes{mountpoint=\"/\",fstype!~\"tmpfs|overlay\"} / node_filesystem_size_bytes{mountpoint=\"/\",fstype!~\"tmpfs|overlay\"} * 100)",
+              "legendFormat": "{{instance}}",
+              "refId": "A"
+            }
+          ],
+          "gridPos": {
+            "x": 0,
+            "y": 22,
+            "w": 12,
+            "h": 7
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Network Traffic (bytes/s)",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "sum by (instance) (rate(node_network_receive_bytes_total[5m]))",
+              "legendFormat": "{{instance}} rx",
+              "refId": "A"
+            },
+            {
+              "expr": "sum by (instance) (rate(node_network_transmit_bytes_total[5m]))",
+              "legendFormat": "{{instance}} tx",
+              "refId": "B"
+            }
+          ],
+          "gridPos": {
+            "x": 12,
+            "y": 22,
+            "w": 12,
+            "h": 7
+          }
+        },
+        {
+          "type": "logs",
+          "title": "Logs (namespace)",
+          "datasource": "Loki",
+          "targets": [
+            {
+              "expr": "{namespace=~\"$namespace\"} |= \"error\"",
+              "refId": "A"
+            }
+          ],
+          "gridPos": {
+            "x": 0,
+            "y": 29,
+            "w": 24,
+            "h": 9
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Application RPS",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total{job=\"arisu\"}[1m]))",
+              "legendFormat": "arisu",
+              "refId": "A"
+            },
+            {
+              "expr": "sum(rate(http_requests_total{job=\"momoi-development\"}[1m]))",
+              "legendFormat": "momoi-development",
+              "refId": "B"
+            },
+            {
+              "expr": "sum(rate(http_requests_total{job=\"midori-development\"}[1m]))",
+              "legendFormat": "midori-development",
+              "refId": "C"
+            }
+          ],
+          "gridPos": {
+            "x": 0,
+            "y": 38,
+            "w": 24,
+            "h": 7
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Application Error Rate (5xx)",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total{job=\"arisu\",status=~\"5..\"}[5m]))",
+              "legendFormat": "arisu 5xx",
+              "refId": "A"
+            },
+            {
+              "expr": "sum(rate(http_request_errors_total{job=\"momoi-development\"}[5m]))",
+              "legendFormat": "momoi-development errors",
+              "refId": "B"
+            },
+            {
+              "expr": "sum(rate(http_requests_total{job=\"midori-development\",status_code=~\"5..\"}[5m]))",
+              "legendFormat": "midori-development 5xx",
+              "refId": "C"
+            }
+          ],
+          "gridPos": {
+            "x": 0,
+            "y": 45,
+            "w": 24,
+            "h": 7
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Application Latency p95 (s)",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"arisu\"}[5m])) by (le))",
+              "legendFormat": "arisu",
+              "refId": "A"
+            },
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"momoi-development\"}[5m])) by (le))",
+              "legendFormat": "momoi-development",
+              "refId": "B"
+            },
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"midori-development\"}[5m])) by (le))",
+              "legendFormat": "midori-development",
+              "refId": "C"
+            }
+          ],
+          "gridPos": {
+            "x": 0,
+            "y": 52,
+            "w": 24,
+            "h": 7
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Yuzu Jobs Processed (rate)",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "sum(rate(yuzu_jobs_processed_total{job=\"yuzu\"}[5m])) by (queue, status)",
+              "legendFormat": "{{queue}} {{status}}",
+              "refId": "A"
+            }
+          ],
+          "gridPos": {
+            "x": 0,
+            "y": 59,
+            "w": 12,
+            "h": 7
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Yuzu Active vs Waiting Jobs",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "sum(yuzu_active_jobs{job=\"yuzu\"}) by (queue)",
+              "legendFormat": "{{queue}} active",
+              "refId": "A"
+            },
+            {
+              "expr": "sum(yuzu_waiting_jobs{job=\"yuzu\"}) by (queue)",
+              "legendFormat": "{{queue}} waiting",
+              "refId": "B"
+            }
+          ],
+          "gridPos": {
+            "x": 12,
+            "y": 59,
+            "w": 12,
+            "h": 7
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Yuzu Job Duration p95 (s)",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(yuzu_job_duration_seconds_bucket{job=\"yuzu\"}[5m])) by (le, queue))",
+              "legendFormat": "{{queue}}",
+              "refId": "A"
+            }
+          ],
+          "gridPos": {
+            "x": 0,
+            "y": 66,
+            "w": 12,
+            "h": 7
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Yuzu PVE API Errors",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "sum(rate(yuzu_pve_api_calls_total{job=\"yuzu\",status=~\"5..\"}[5m])) by (endpoint)",
+              "legendFormat": "{{endpoint}}",
+              "refId": "A"
+            }
+          ],
+          "gridPos": {
+            "x": 12,
+            "y": 66,
+            "w": 12,
+            "h": 7
+          }
         }
       ],
-      "preload": false,
       "refresh": "30s",
-      "schemaVersion": 42,
+      "schemaVersion": 39,
+      "style": "dark",
       "tags": [
-        "fitm-cloud",
-        "overview",
-        "proxmox"
+        "global",
+        "observability"
+      ],
+      "templating": {
+        "list": [
+          {
+            "type": "query",
+            "name": "namespace",
+            "label": "Namespace",
+            "datasource": "Prometheus",
+            "refresh": 2,
+            "query": "label_values(kube_pod_status_phase, namespace)",
+            "current": {
+              "text": "fitm-cloud",
+              "value": "fitm-cloud"
+            },
+            "multi": true,
+            "includeAll": true,
+            "allValue": ".*",
+            "sort": 1
+          }
+        ]
+      },
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "Global Overview",
+      "uid": "global-overview",
+      "version": 1
+    }
+  arisu-overview.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": "-- Grafana --",
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "Request rate (RPS)",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total[1m])) by (method, path)",
+              "legendFormat": "{{method}} {{path}}",
+              "refId": "A"
+            }
+          ],
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 12,
+            "h": 8
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Error rate (5xx)",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m]))",
+              "legendFormat": "5xx",
+              "refId": "A"
+            }
+          ],
+          "gridPos": {
+            "x": 12,
+            "y": 0,
+            "w": 12,
+            "h": 8
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Latency p95 (s)",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+              "legendFormat": "p95",
+              "refId": "A"
+            }
+          ],
+          "gridPos": {
+            "x": 0,
+            "y": 8,
+            "w": 12,
+            "h": 8
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Log volume by level",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "sum(rate(log_messages_total[5m])) by (level)",
+              "legendFormat": "{{level}}",
+              "refId": "A"
+            }
+          ],
+          "gridPos": {
+            "x": 12,
+            "y": 8,
+            "w": 12,
+            "h": 8
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Error log count",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "sum(rate(log_errors_total[5m])) by (error_type)",
+              "legendFormat": "{{error_type}}",
+              "refId": "A"
+            }
+          ],
+          "gridPos": {
+            "x": 0,
+            "y": 16,
+            "w": 12,
+            "h": 8
+          }
+        },
+        {
+          "type": "logs",
+          "title": "Logs (Loki)",
+          "datasource": "Loki",
+          "targets": [
+            {
+              "expr": "{application=\"arisu\"} | json",
+              "refId": "A"
+            }
+          ],
+          "gridPos": {
+            "x": 12,
+            "y": 16,
+            "w": 12,
+            "h": 8
+          }
+        }
+      ],
+      "schemaVersion": 39,
+      "style": "dark",
+      "tags": [
+        "arisu",
+        "observability"
       ],
       "templating": {
         "list": []
       },
       "time": {
-        "from": "now-1h",
+        "from": "now-6h",
         "to": "now"
       },
       "timepicker": {},
+      "timezone": "",
+      "title": "Arisu Overview",
+      "uid": "arisu-overview",
+      "version": 1
+    }
+  midori-overview.json: |
+    {
+      "uid": "midori-overview",
+      "title": "Midori Overview",
+      "tags": [
+        "midori",
+        "observability"
+      ],
       "timezone": "browser",
-      "title": "FITM Cloud Overview",
-      "uid": "fitm-cloud-overview",
-      "version": 3
+      "schemaVersion": 38,
+      "version": 1,
+      "refresh": "30s",
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "templating": {
+        "list": [
+          {
+            "type": "datasource",
+            "name": "PROMETHEUS",
+            "label": "Prometheus",
+            "query": "prometheus",
+            "current": {
+              "text": "Prometheus",
+              "value": "Prometheus"
+            }
+          },
+          {
+            "type": "datasource",
+            "name": "LOKI",
+            "label": "Loki",
+            "query": "loki",
+            "current": {
+              "text": "Loki",
+              "value": "Loki"
+            }
+          },
+          {
+            "type": "datasource",
+            "name": "JAEGER",
+            "label": "Jaeger",
+            "query": "jaeger",
+            "current": {
+              "text": "Jaeger",
+              "value": "Jaeger"
+            }
+          },
+          {
+            "type": "query",
+            "name": "service",
+            "label": "Service",
+            "datasource": "$PROMETHEUS",
+            "refresh": 2,
+            "query": "label_values(http_requests_total, service)",
+            "current": {
+              "text": "midori",
+              "value": "midori"
+            }
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "stat",
+          "title": "Requests / sec",
+          "datasource": "$PROMETHEUS",
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 8,
+            "h": 4
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total{service=\"$service\"}[5m]))",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "type": "stat",
+          "title": "Error rate (5xx)",
+          "datasource": "$PROMETHEUS",
+          "gridPos": {
+            "x": 8,
+            "y": 0,
+            "w": 8,
+            "h": 4
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total{service=\"$service\",status_code=~\"5..\"}[5m]))",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "stat",
+          "title": "p95 latency (s)",
+          "datasource": "$PROMETHEUS",
+          "gridPos": {
+            "x": 16,
+            "y": 0,
+            "w": 8,
+            "h": 4
+          },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{service=\"$service\"}[5m])) by (le))",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "timeseries",
+          "title": "Request rate",
+          "datasource": "$PROMETHEUS",
+          "gridPos": {
+            "x": 0,
+            "y": 4,
+            "w": 12,
+            "h": 6
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total{service=\"$service\"}[5m]))",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "type": "timeseries",
+          "title": "Latency p50/p95/p99",
+          "datasource": "$PROMETHEUS",
+          "gridPos": {
+            "x": 12,
+            "y": 4,
+            "w": 12,
+            "h": 6
+          },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket{service=\"$service\"}[5m])) by (le))",
+              "legendFormat": "p50",
+              "refId": "A"
+            },
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{service=\"$service\"}[5m])) by (le))",
+              "legendFormat": "p95",
+              "refId": "B"
+            },
+            {
+              "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{service=\"$service\"}[5m])) by (le))",
+              "legendFormat": "p99",
+              "refId": "C"
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "type": "logs",
+          "title": "Recent error logs",
+          "datasource": "$LOKI",
+          "gridPos": {
+            "x": 0,
+            "y": 10,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "{service=\"$service\"} |= \"ERROR\"",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 7,
+          "type": "traces",
+          "title": "Recent traces",
+          "datasource": "$JAEGER",
+          "gridPos": {
+            "x": 12,
+            "y": 10,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "query": "$service",
+              "refId": "A"
+            }
+          ]
+        }
+      ]
+    }
+  momoi-overview.json: |
+    {
+      "id": null,
+      "uid": "momoi-overview",
+      "title": "Momoi Overview",
+      "tags": [
+        "momoi",
+        "overview"
+      ],
+      "timezone": "browser",
+      "schemaVersion": 38,
+      "version": 1,
+      "refresh": "30s",
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "templating": {
+        "list": [
+          {
+            "name": "route",
+            "type": "query",
+            "datasource": "Prometheus",
+            "refresh": 2,
+            "query": "label_values(http_requests_total, route)",
+            "multi": true,
+            "includeAll": true,
+            "allValue": ".*",
+            "sort": 1
+          },
+          {
+            "name": "status_code",
+            "type": "query",
+            "datasource": "Prometheus",
+            "refresh": 2,
+            "query": "label_values(http_requests_total, status_code)",
+            "multi": true,
+            "includeAll": true,
+            "allValue": ".*",
+            "sort": 1
+          }
+        ]
+      },
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "Requests per Second",
+          "datasource": "Prometheus",
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total{route=~\"$route\"}[5m])) by (method)",
+              "legendFormat": "{{method}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Error Rate (%)",
+          "datasource": "Prometheus",
+          "gridPos": {
+            "x": 12,
+            "y": 0,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "100 * (sum(rate(http_request_errors_total{route=~\"$route\"}[5m])) / sum(rate(http_requests_total{route=~\"$route\"}[5m])))",
+              "legendFormat": "error %",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "P95 Latency (s)",
+          "datasource": "Prometheus",
+          "gridPos": {
+            "x": 0,
+            "y": 8,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{route=~\"$route\"}[5m])) by (le))",
+              "legendFormat": "p95",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "P99 Latency (s)",
+          "datasource": "Prometheus",
+          "gridPos": {
+            "x": 12,
+            "y": 8,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{route=~\"$route\"}[5m])) by (le))",
+              "legendFormat": "p99",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Top Routes (RPS)",
+          "datasource": "Prometheus",
+          "gridPos": {
+            "x": 0,
+            "y": 16,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "topk(10, sum(rate(http_requests_total[5m])) by (route))",
+              "legendFormat": "{{route}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Error Routes (Top 10)",
+          "datasource": "Prometheus",
+          "gridPos": {
+            "x": 12,
+            "y": 16,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "topk(10, sum(rate(http_request_errors_total[5m])) by (route, error_type))",
+              "legendFormat": "{{route}} | {{error_type}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Log Volume by Level",
+          "datasource": "Prometheus",
+          "gridPos": {
+            "x": 0,
+            "y": 24,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(log_entries_total[5m])) by (level)",
+              "legendFormat": "{{level}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Log Errors by Type",
+          "datasource": "Prometheus",
+          "gridPos": {
+            "x": 12,
+            "y": 24,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(log_errors_total[5m])) by (error_type)",
+              "legendFormat": "{{error_type}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Provisioning Success Rate (%)",
+          "datasource": "Prometheus",
+          "gridPos": {
+            "x": 0,
+            "y": 32,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "100 * (sum(rate(momoi_instance_provisioning_total{status=\"success\"}[1h])) / sum(rate(momoi_instance_provisioning_total[1h])))",
+              "legendFormat": "success %",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Pending Requests",
+          "datasource": "Prometheus",
+          "gridPos": {
+            "x": 12,
+            "y": 32,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "sum(momoi_pending_requests_count) by (type)",
+              "legendFormat": "{{type}}",
+              "refId": "A"
+            }
+          ]
+        }
+      ]
+    }
+  yuzu-overview.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": "-- Grafana --",
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "links": [],
+      "panels": [
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 0
+          },
+          "id": 1,
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(yuzu_jobs_processed_total[5m])) by (queue, status)",
+              "legendFormat": "{{queue}} {{status}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Jobs processed (rate)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 12,
+            "y": 0
+          },
+          "id": 2,
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(yuzu_active_jobs) by (queue)",
+              "legendFormat": "{{queue}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Active jobs",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 18,
+            "y": 0
+          },
+          "id": 3,
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(yuzu_waiting_jobs) by (queue)",
+              "legendFormat": "{{queue}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Waiting jobs",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 8
+          },
+          "id": 4,
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            }
+          },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(yuzu_job_duration_seconds_bucket[5m])) by (le, queue))",
+              "legendFormat": "{{queue}}",
+              "refId": "A"
+            }
+          ],
+          "title": "p95 job duration",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 8
+          },
+          "id": 5,
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom"
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(yuzu_pve_api_calls_total{status=~\"5..\"}[5m])) by (endpoint)",
+              "legendFormat": "{{endpoint}}",
+              "refId": "A"
+            }
+          ],
+          "title": "PVE API error rate",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Loki",
+          "gridPos": {
+            "h": 10,
+            "w": 24,
+            "x": 0,
+            "y": 16
+          },
+          "id": 6,
+          "options": {
+            "dedupStrategy": "none",
+            "enableLogDetails": true,
+            "prettifyLogMessage": true,
+            "showCommonLabels": false,
+            "showLabels": false,
+            "showTime": true,
+            "wrapLogMessage": true
+          },
+          "targets": [
+            {
+              "expr": "{app=\"yuzu\"} |= \"error\"",
+              "refId": "A"
+            }
+          ],
+          "title": "Error logs",
+          "type": "logs"
+        }
+      ],
+      "refresh": "30s",
+      "schemaVersion": 39,
+      "style": "dark",
+      "tags": [
+        "yuzu",
+        "overview"
+      ],
+      "templating": {
+        "list": []
+      },
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "Yuzu Overview",
+      "uid": "yuzu-overview",
+      "version": 1
     }
 ---
 apiVersion: v1

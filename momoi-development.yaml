@@ -143,6 +143,14 @@ spec:
               value: "http://jaeger:4317"
             - name: BETTER_AUTH_URL
               value: "https://dev.fitm.cloud"
+            - name: LOKI_URL
+              value: "http://loki:3100"
+            - name: LOG_LEVEL
+              value: "info"
+            - name: LOG_FORMAT
+              value: "json"
+            - name: LOG_PRETTY
+              value: "false"
           command:
             - sh
             - -c

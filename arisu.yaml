@@ -122,13 +122,21 @@ spec:
             - name: OTEL_SERVICE_NAME
               value: "arisu.production"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: "http://jaeger:4318"
+              value: "http://jaeger:4318/v1/traces"
             - name: BETTER_AUTH_URL
               value: "https://dev.fitm.cloud"
             - name: BETTER_AUTH_TRUST_HOST
               value: "true"
             - name: NODE_OPTIONS
               value: "--use-system-ca"
+            - name: LOG_LOKI_ENDPOINT
+              value: "http://loki:3100"
+            - name: LOG_FORMAT
+              value: "json"
+            - name: LOG_LEVEL
+              value: "info"
+            - name: LOG_PRETTY
+              value: "false"
           command:
             - sh
             - -c
@@ -177,13 +185,21 @@ spec:
             - name: OTEL_SERVICE_NAME
               value: "arisu.development"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: "http://jaeger:4318"
+              value: "http://jaeger:4318/v1/traces"
             - name: BETTER_AUTH_URL
               value: "https://dev.fitm.cloud"
             - name: BETTER_AUTH_TRUST_HOST
               value: "true"
             - name: NODE_OPTIONS
               value: "--use-system-ca"
+            - name: LOG_LOKI_ENDPOINT
+              value: "http://loki:3100"
+            - name: LOG_FORMAT
+              value: "json"
+            - name: LOG_LEVEL
+              value: "info"
+            - name: LOG_PRETTY
+              value: "false"
           command:
             - sh
             - -c

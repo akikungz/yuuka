@@ -108,6 +108,16 @@ spec:
                 secretKeyRef:
                   name: base-secrets
                   key: pve-token-secret
+            - name: METRICS_PORT
+              value: "9464"
+            - name: LOKI_ENABLED
+              value: "true"
+            - name: LOKI_HOST
+              value: "http://loki:3100"
+            - name: LOG_PRETTY
+              value: "false"
+            - name: LOKI_LABELS
+              value: "app=yuzu,env=development"
           command:
             - sh
             - -c
@@ -128,3 +138,23 @@ spec:
       volumes:
         - name: config-volume
           emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: yuzu-development
+  namespace: fitm-cloud
+  labels:
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: yuzu
+spec:
+  selector:
+    app: yuzu
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: yuzu
+  ports:
+    - name: metrics
+      protocol: TCP
+      port: 9464
+      targetPort: 9464
