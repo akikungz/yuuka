@@ -1,0 +1,103 @@
+%*************************************
+% ภาคผนวก ซ.
+%*************************************
+\vspace{-0.5in}
+
+\appendixChapterTitle{ค}{หน้าที่ของแต่ละรีโพซิทอรีและแนวทางการตรวจสอบปัญหาเบื้องต้น}
+\section{หน้าที่ของแต่ละรีโพซิทอรีในระบบ}
+\hspace*{1.3em}
+การแยกระบบออกเป็นหลายรีโพซิทอรีช่วยลด coupling และทำให้ทีมพัฒนาสามารถดูแลแต่ละส่วนของแพลตฟอร์มได้อย่างเป็นอิสระมากขึ้น อย่างไรก็ตาม ผู้พัฒนาต้องเข้าใจความรับผิดชอบของแต่ละรีโพซิทอรีอย่างชัดเจนเพื่อให้ตรวจสอบปัญหาได้ถูกจุด
+
+\begin{mycustomenum2}
+    \item \textbf{Midori} รับผิดชอบส่วนติดต่อผู้ใช้ การเรียก API ของระบบ และประสบการณ์ผู้ใช้บนเว็บ
+    \item \textbf{Momoi} รับผิดชอบตรรกะทางธุรกิจ การเชื่อมต่อฐานข้อมูล การเปิดเผย OpenAPI และการส่งงานเข้าสู่คิว
+    \item \textbf{Yuzu} รับผิดชอบการประมวลผลงานเบื้องหลัง เช่น provision, deprovision และการเปลี่ยนสถานะเครื่องเสมือน
+    \item \textbf{Yuuka} รับผิดชอบ manifest, Docker Compose, ตัวอย่าง environment และการตั้งค่า observability ของระบบ
+\end{mycustomenum2}
+
+\section{ส่วนประกอบสนับสนุนที่เกี่ยวข้องกับหลายรีโพซิทอรี}
+\hspace*{1.3em}
+แม้ว่าบริการหลักจะมีเพียงสามตัว แต่การทำงานจริงยังขึ้นกับบริการสนับสนุนหลายตัวที่เชื่อมโยงกันระหว่างรีโพซิทอรี เช่น PostgreSQL สำหรับข้อมูลเชิงธุรกรรม Redis และ BullMQ สำหรับคิวงาน RustFS สำหรับพื้นที่จัดเก็บไฟล์ และ Jaeger, Prometheus, Grafana, Loki สำหรับการติดตามสถานะของระบบ
+
+\section{แนวทางการตรวจสอบปัญหาเบื้องต้น}
+\hspace*{1.3em}
+เมื่อเกิดปัญหาระหว่างการพัฒนา ควรเริ่มจากการแยกก่อนว่าปัญหาเกิดในรีโพซิทอรีใด หรือเกิดจากการเชื่อมต่อข้ามรีโพซิทอรี ดังแนวทางต่อไปนี้
+
+\begin{mycustomenum2}
+    \item \textbf{เปิดหน้าเว็บไม่ได้หรือข้อมูลไม่แสดง} ให้ตรวจสอบ Midori ก่อนว่าเริ่มต้นได้สมบูรณ์ และค่า endpoint ของ Momoi ถูกต้อง
+    \item \textbf{API ตอบกลับผิดพลาด} ให้ตรวจสอบ log ของ Momoi รวมถึงสถานะของ PostgreSQL, Redis และค่าที่อยู่ในไฟล์ environment
+    \item \textbf{งาน provision หรือเปลี่ยนสถานะ VM ไม่ทำงาน} ให้ตรวจสอบ Yuzu, Redis queue และการเชื่อมต่อไปยัง Proxmox VE
+    \item \textbf{อัปโหลดไฟล์หรือเรียกไฟล์ไม่ได้} ให้ตรวจสอบการตั้งค่า RustFS/S3-compatible storage ทั้งฝั่ง Momoi และบริการประกอบใน Yuuka
+    \item \textbf{ข้อมูล observability ไม่ขึ้น dashboard} ให้ตรวจสอบการ export metrics และ traces ของแต่ละบริการ รวมถึงสถานะของ Prometheus, Loki และ Jaeger
+\end{mycustomenum2}
+
+\section{ตัวอย่างรายการตรวจสอบอย่างเป็นลำดับ}
+\hspace*{1.3em}
+ในทางปฏิบัติ การไล่ตรวจสอบจากชั้นนอกเข้าสู่ชั้นในจะช่วยลดเวลาในการหาสาเหตุของปัญหาได้ โดยอาจเริ่มจาก browser, frontend, API, queue worker, database และ infrastructure ตามลำดับ ดังนี้
+
+\begin{figure}[htbp]
+\centering
+\adjustbox{frame, width=0.95\textwidth}{
+    \begin{minipage}{0.9\textwidth}
+        \texttt{\footnotesize
+        1. ตรวจสอบว่า Midori ทำงานที่ localhost:3000\\
+        2. ตรวจสอบว่า Momoi ทำงานที่ localhost:3001\\
+        3. ตรวจสอบ docker compose services ในรีโพซิทอรี Yuuka\\
+        4. ตรวจสอบ Redis และ PostgreSQL\\
+        5. ตรวจสอบ log ของ Yuzu และสถานะ queue\\
+        6. ตรวจสอบ Jaeger, Prometheus และ Grafana
+        }
+    \end{minipage}
+}
+\caption{\fontSixTeen{ตัวอย่างลำดับการตรวจสอบปัญหาในระบบแบบหลายรีโพซิทอรี}}
+\label{figH:TroubleshootingOrder}
+\end{figure}
+
+\section{ข้อควรระวังเรื่องความสอดคล้องระหว่างรีโพซิทอรี}
+\hspace*{1.3em}
+เนื่องจากแต่ละรีโพซิทอรีพัฒนาแยกจากกัน จึงควรระมัดระวังความสอดคล้องของ schema ฐานข้อมูล, ตัวแปร environment, เส้นทาง API, queue name และข้อมูลอ้างอิงที่ใช้ร่วมกัน เพราะหากค่าหนึ่งค่าผิดไปเพียงจุดเดียว อาจทำให้เกิดปัญหาต่อเนื่องข้ามหลายบริการได้
+
+\section{เอกสารอ้างอิงที่ควรใช้ประกอบ}
+\hspace*{1.3em}
+ในการทำงานจริง ผู้พัฒนาควรอ่าน README และเอกสารในแต่ละรีโพซิทอรีร่วมกัน โดยเฉพาะเอกสารใน Yuuka ที่สรุปตัวอย่าง environment และการติดตั้งเครื่องมือประกอบ ส่วน Midori, Momoi และ Yuzu ควรใช้ร่วมกับเอกสาร API, queue และ observability เพื่อให้เห็นภาพรวมของระบบครบถ้วน
+
+\begin{mycustomenum2}
+    \item \textbf{Port ถูกใช้งานแล้ว}
+    \begin{mycustomenum2}
+        \item ตรวจสอบ Port ที่ใช้งานด้วยคำสั่ง: lsof -i :3000 (สำหรับ macOS/Linux)
+        \item หยุดกระบวนการที่ใช้ Port หรือเปลี่ยน Port ในไฟล์ .env
+    \end{mycustomenum2}
+
+    \item \textbf{Docker Services ไม่สามารถเริ่มได้}
+    \begin{mycustomenum2}
+        \item ตรวจสอบสถานะด้วยคำสั่ง: docker-compose ps
+        \item ดู Log ด้วยคำสั่ง: docker-compose logs [service\_name]
+        \item รีสตาร์ท Services ด้วยคำสั่ง: docker-compose restart
+    \end{mycustomenum2}
+
+    \item \textbf{Database Connection Error}
+    \begin{mycustomenum2}
+        \item ตรวจสอบว่า PostgreSQL Container ทำงานอยู่
+        \item ตรวจสอบการตั้งค่าใน Environment Variables
+        \item รันคำสั่ง Database Migration (หากจำเป็น)
+    \end{mycustomenum2}
+
+    \item \textbf{Frontend ไม่สามารถเชื่อมต่อ API ได้}
+    \begin{mycustomenum2}
+        \item ตรวจสอบว่า Momoi API Service ทำงานอยู่ที่ Port 3001
+        \item ตรวจสอบการตั้งค่า API URL ในไฟล์ Environment
+        \item ตรวจสอบ CORS Settings ใน API Service
+    \end{mycustomenum2}
+\end{mycustomenum2}
+
+% \newpage
+\vspace{0.5em}
+\textbf{การเข้าถึงข้อมูลเพิ่มเติม}
+\vspace{0.5em}
+
+\begin{mycustomenum2}
+    \item อ่าน Documentation เพิ่มเติมใน README.md ของแต่ละ Component
+    \item ตรวจสอบ Log Files สำหรับข้อมูลการ Debug
+    \item ใช้ Jaeger UI สำหรับติดตามการทำงานของ API
+    \item ใช้ Grafana Dashboard สำหรับติดตามประสิทธิภาพระบบ
+\end{mycustomenum2}

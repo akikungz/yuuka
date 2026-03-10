@@ -1,0 +1,63 @@
+---
+title: Proxmox VE Infrastructure Domain
+config:
+  layout: elk
+  theme: neutral
+---
+erDiagram
+
+  PVE_NODE {
+    int      id        PK
+    string   name      UK
+    string   ipAddress UK
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  PVE_NETWORK {
+    int      id        PK
+    string   name
+    string   subnet
+    string   gateway
+    string   bridge
+    int      vlanTag
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  PVE_NETWORK_IP {
+    int      id          PK
+    string   ipAddress   UK
+    boolean  isAllocated
+    int      pveNetworkId FK
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  PVE_TEMPLATE {
+    int      id          PK
+    string   name
+    string   description
+    int      vmId        UK
+    string   type        "QEMU | LXC"
+    int      pveNodeId   FK
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  PVE_VM {
+    int      id             PK
+    int      vmId           UK
+    string   hostname       UK
+    string   status         "RUNNING | STOPPED | SUSPENDED"
+    string   type           "QEMU | LXC"
+    int      pveNodeId      FK
+    int      pveNetworkIPId FK "unique, nullable"
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  PVE_NODE      ||--|{ PVE_TEMPLATE  : "hosts templates"
+  PVE_NODE      ||--|{ PVE_VM        : "hosts VMs"
+  PVE_NETWORK   ||--|{ PVE_NETWORK_IP : "contains IPs"
+  PVE_NETWORK_IP ||--o| PVE_VM       : "assigned to"

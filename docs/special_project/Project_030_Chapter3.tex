@@ -8,56 +8,123 @@
 \subsection{สถาปัตยกรรมระบบโดยรวม}
 
 \hspace*{1.3em} %ย่อหน้า
-ระบบแพลตฟอร์มคลัสเตอร์เสมือนได้รับการออกแบบในรูปแบบ Microservices Architecture โดยแบ่งเป็นส่วนประกอบหลัก 3 ส่วน คือ
+ระบบแพลตฟอร์มคลัสเตอร์เสมือนในฉบับพัฒนาปัจจุบันยังคงยึดแนวคิด Microservices Architecture แต่เมื่อพิจารณาทั้งบริการหลักและบริการสนับสนุนที่ใช้ในการติดตั้งจริง สามารถแบ่งองค์ประกอบออกเป็น 4 กลุ่มหลัก คือ
 \begin{mycustomitem}
-    \item \textbf{Frontend} เว็บแอปพลิเคชันสำหรับผู้ใช้งาน พัฒนาด้วย Next.js และ React
-    \item \textbf{Backend} เซิร์ฟเวอร์ API สำหรับการจัดการข้อมูลและการยืนยันตัวตน พัฒนาด้วย Elysia.js
-    \item \textbf{Instance Management (VM Management)} เซอร์วิสจัดการเครื่องเสมือนและการสื่อสารกับ Proxmox VE
+    \item \textbf{Frontend (Midori)} เว็บแอปพลิเคชันสำหรับผู้ใช้งาน พัฒนาด้วย Next.js และ React ทำหน้าที่เป็นส่วนติดต่อผู้ใช้สำหรับนักศึกษา อาจารย์ และผู้ดูแลระบบ
+    \item \textbf{API Service (Momoi)} เซิร์ฟเวอร์หลักของระบบ พัฒนาด้วย Bun, Elysia.js และ Prisma รับผิดชอบโดเมนด้านข้อมูลวิชาการ คำร้องขอเครื่องเสมือน การจัดการเครื่องเสมือน พื้นที่จัดเก็บไฟล์ และการเชื่อมต่อกับบริการภายนอก
+    \item \textbf{Worker / VM Management (Yuzu)} เซอร์วิสประมวลผลงานเบื้องหลังสำหรับการสร้าง ลบ และเปลี่ยนสถานะเครื่องเสมือน โดยสื่อสารกับ Proxmox VE แบบ Asynchronous
+    \item \textbf{Supporting Services and Deployment (Yuuka)} ชุดโครงสร้างพื้นฐานและไฟล์สำหรับการติดตั้งใช้งานจริง เช่น Arisu สำหรับการยืนยันตัวตน PostgreSQL, Redis, RustFS และระบบสังเกตการณ์การทำงานของแพลตฟอร์ม
 \end{mycustomitem}
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1.0\linewidth]{Image/diagram/overview_diagram.png}
-    \caption{\fontSixTeen{แผนภาพการทํางานและลําดับขั้นตอนโดยรวมของโปรแกรม}}
-    \label{fig3:system_overview_flow}
-\end{figure}
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=1.0\linewidth]{Image/diagram/overview_diagram.png}
+%     \caption{\fontSixTeen{แผนภาพการทํางานและลําดับขั้นตอนโดยรวมของโปรแกรม}}
+%     \label{fig3:system_overview_flow}
+% \end{figure}
 
+% แผนภาพนี้ควรรีเจนจากไฟล์ Mermaid: docs/diagram/chapter3-context-diagram.mmd
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1.0\linewidth]{Image/diagram/context_diagram.drawio.png}
+    \includegraphics[width=1.0\linewidth]{Image/diagram/chapter3-context-diagram.png}
     \caption{\fontSixTeen{แผนภาพบริบทของระบบแพลตฟอร์มคลัสเตอร์เสมือน}}
     \label{fig3:context_diagram}
 \end{figure}
 
 \hspace*{1.3em} %ย่อหน้า
-จากภาพที่ \ref{fig3:context_diagram} แสดงการเชื่อมต่อและการสื่อสารระหว่างส่วนประกอบต่าง ๆ ของระบบ โดยผู้ใช้งานเข้าถึงระบบผ่านเว็บแอปพลิเคชันซึ่งจะติดต่อกับ Backend API และระบบจัดการเครื่องเสมือน เพื่อให้บริการที่สมบูรณ์ตามขั้นตอนรวมในภาพที่ \ref{fig3:system_overview_flow} และรายละเอียดการไหลของข้อมูลตามภาพที่ \ref{fig3:data_flow_level_0} – \ref{fig3:data_flow_level_1_vm} 
+จากภาพที่ \ref{fig3:context_diagram} ระบบถูกมองเป็นกระบวนการเดียวในลักษณะ Black Box เพื่อแสดงเฉพาะความสัมพันธ์ระหว่างระบบกับเอนทิตีภายนอก ได้แก่ นักศึกษา อาจารย์หรือผู้ดูแลระบบ บริการยืนยันตัวตน Proxmox VE Cluster และ Object Storage โดยไม่มีการแสดงแหล่งเก็บข้อมูลภายในตามหลักของ Context Diagram จากนั้นในภาพที่ \ref{fig3:data_flow_level_0} – \ref{fig3:data_flow_level_0_storage} ได้ทำการแตกกระบวนการหลักของระบบออกเป็น 5 กระบวนการ พร้อมเพิ่มแหล่งเก็บข้อมูลที่จำเป็น โดยแยกแสดงเป็น 3 มุมมองเพื่อความชัดเจน และในภาพที่ \ref{fig3:data_flow_level_1_auth} – \ref{fig3:data_flow_level_1_vm} ได้ขยายรายละเอียดทั้ง 5 กระบวนการหลัก เพื่อรักษาความสมดุลของกระแสข้อมูลระหว่างแต่ละระดับของ DFD ให้สอดคล้องกัน
+
+% แผนภาพนี้ควรรีเจนจากไฟล์ Mermaid: docs/diagram/chapter3-dataflow-level0.mmd
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{Image/diagram/chapter3-dataflow-level0_90.png}
+    \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับ 0: ภาพรวมทั้งระบบ}}
+    \label{fig3:data_flow_level_0}
+\end{figure}
+
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=1.0\textwidth]{Image/diagram/chapter3-dataflow-level0-vm-operations.png}
+%     \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับ 0: กลุ่มกระบวนการจัดการคำร้องและเครื่องเสมือน}}
+%     \label{fig3:data_flow_level_0_vm_operations}
+% \end{figure}
+
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=1.0\textwidth]{Image/diagram/chapter3-dataflow-level0-storage.png}
+%     \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับ 0: กลุ่มกระบวนการยืนยันตัวตนและจัดการไฟล์}}
+%     \label{fig3:data_flow_level_0_storage}
+% \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1.0\textwidth]{Image/diagram/data-flow_level-0.png}
-    \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับ 0}}
-    \label{fig3:data_flow_level_0}
+    % แผนภาพนี้ควรรีเจนจากไฟล์ Mermaid: docs/diagram/chapter3-dataflow-level1-process1.mmd
+    \includegraphics[width=1.0\textwidth]{Image/diagram/chapter3-dataflow-level1-process1.png}
+    \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับที่ 1 ของกระบวนการ 1.0 การยืนยันตัวตนและกำหนดสิทธิ์ผู้ใช้}}
+    \label{fig3:data_flow_level_1_auth}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1.0\textwidth]{Image/diagram/data-flow_level-1_midori.png}
-    \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับที่ 1 (Frontend)}}
+    % แผนภาพนี้ควรรีเจนจากไฟล์ Mermaid: docs/diagram/chapter3-dataflow-level1-process2.mmd
+    \includegraphics[width=1.0\textwidth]{Image/diagram/chapter3-dataflow-level1-process2.png}
+    \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับที่ 1 ของกระบวนการ 2.0 การจัดการคำร้องและข้อมูลวิชาการ}}
     \label{fig3:data_flow_level_1_frontend}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1.0\textwidth]{Image/diagram/data-flow_level-1_momoi.png}
-    \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับที่ 1 (Backend)}}
+    % แผนภาพนี้ควรรีเจนจากไฟล์ Mermaid: docs/diagram/chapter3-dataflow-level1-process3.mmd
+    \includegraphics[width=1.0\textwidth]{Image/diagram/chapter3-dataflow-level1-process3.png}
+    \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับที่ 1 ของกระบวนการ 3.0 การจัดการข้อมูลเครื่องเสมือน}}
     \label{fig3:data_flow_level_1_backend}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1.0\textwidth]{Image/diagram/data-flow_level-1_yuzu.png}
-    \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับที่ 1 (VM Management)}}
+    % แผนภาพนี้ควรรีเจนจากไฟล์ Mermaid: docs/diagram/chapter3-dataflow-level1-process4.mmd
+    \includegraphics[width=1.0\textwidth]{Image/diagram/chapter3-dataflow-level1-process4.png}
+    \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับที่ 1 ของกระบวนการ 4.0 การจัดการไฟล์และสิทธิ์การเข้าถึง}}
+    \label{fig3:data_flow_level_1_storage}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    % แผนภาพนี้ควรรีเจนจากไฟล์ Mermaid: docs/diagram/chapter3-dataflow-level1-process5.mmd
+    \includegraphics[width=1.0\textwidth]{Image/diagram/chapter3-dataflow-level1-process5.png}
+    \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับที่ 1 ของกระบวนการ 5.0 การประมวลผลงานจัดสรรเครื่องเสมือน}}
     \label{fig3:data_flow_level_1_vm}
+\end{figure}
+
+\hspace*{1.3em} %ย่อหน้า
+สำหรับการวิเคราะห์เชิงลึกเพิ่มเติม ได้จัดทำแผนภาพการไหลของข้อมูลระดับที่ 2 เพื่อขยายกระบวนการย่อยที่มีความซับซ้อน ได้แก่ การพิจารณาอนุมัติคำร้องในกระบวนการ 2.3 การรับคำร้องที่อนุมัติแล้วและจัดเตรียมงานในกระบวนการ 3.1 การส่งงานเข้าคิวในกระบวนการ 3.3 และการดำเนินการบน Proxmox VE ในกระบวนการ 5.3 ทั้งนี้การกำหนดชื่อกระแสข้อมูลในแต่ละระดับถูกจัดให้สอดคล้องกันตามหลัก Balancing ของ DFD ดังแสดงในภาพที่ \ref{fig3:data_flow_level_2_approval} – \ref{fig3:data_flow_level_2_pve}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{Image/diagram/chapter3-dataflow-level2-request-approval.png}
+    \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับที่ 2 ของกระบวนการ 2.3 การพิจารณาอนุมัติคำร้อง}}
+    \label{fig3:data_flow_level_2_approval}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{Image/diagram/chapter3-dataflow-level2-request-provision.png}
+    \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับที่ 2 ของกระบวนการ 3.1 การรับคำร้องที่อนุมัติแล้วและจัดเตรียมงาน}}
+    \label{fig3:data_flow_level_2_provision}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{Image/diagram/chapter3-dataflow-level2-instance-queue.png}
+    \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับที่ 2 ของกระบวนการ 3.3 การส่งงานเข้าคิว}}
+    \label{fig3:data_flow_level_2_queue}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.35\textwidth]{Image/diagram/chapter3-dataflow-level2-pve-execution.png}
+    \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับที่ 2 ของกระบวนการ 5.3 การดำเนินการบน Proxmox VE}}
+    \label{fig3:data_flow_level_2_pve}
 \end{figure}
 
 \newpage
@@ -113,487 +180,108 @@
 \subsection{การออกแบบฐานข้อมูล}
 
 \hspace*{1.3em} %ย่อหน้า
-ระบบใช้ PostgreSQL เป็นฐานข้อมูลหลัก โดยออกแบบตารางหลักดังนี้
+ระบบใช้ PostgreSQL เป็นฐานข้อมูลหลัก และใช้ Prisma ORM ในการกำหนดสคีมาและสร้างชั้นเข้าถึงข้อมูล โดยในฉบับพัฒนาปัจจุบันโครงสร้างฐานข้อมูลสามารถสรุปเป็นกลุ่มข้อมูลหลักดังนี้
 \begin{mycustomitem}
-    \item \textbf{User} เก็บข้อมูลผู้ใช้งาน การยืนยันตัวตน และความสัมพันธ์กับเซสชัน/บัญชี
-    \item \textbf{Session} เก็บข้อมูลเซสชันการเข้าสู่ระบบของผู้ใช้
-    \item \textbf{Account} เก็บข้อมูลบัญชีผู้ใช้จากผู้ให้บริการภายนอก (เช่น OAuth)
-    \item \textbf{Verification} เก็บข้อมูลสำหรับการยืนยัน (เช่น โทเค็น/อีเมล)
-    \item \textbf{staff\_list} รายชื่อบุคลากร/อาจารย์ที่ได้รับอนุญาต
-    \item \textbf{user\_public\_key} คีย์สาธารณะของผู้ใช้ (เช่น SSH public key)
-    \item \textbf{network} ข้อมูลเครือข่าย ชื่อเครือข่าย และเกตเวย์
-    \item \textbf{ip\_address} รายการที่อยู่ IP และการผูกกับเครื่องเสมือน
-    \item \textbf{semester} ข้อมูลภาคการศึกษา ช่วงเวลา และสถานะการใช้งาน
-    \item \textbf{pve\_node} โหนดของ Proxmox VE และสถานะของโหนด
-    \item \textbf{instance\_template} แม่แบบ VM/LXC และโหนดต้นทางที่ใช้สร้างเครื่อง
-    \item \textbf{instance\_course} ข้อมูลรายวิชาและผู้รับผิดชอบสำหรับการจัดสรรเครื่อง
-    \item \textbf{instance\_request} คำร้องขอเครื่องเสมือนของผู้ใช้ พร้อมสเปกที่ต้องการ
-    \item \textbf{instance} เครื่องเสมือนที่ถูกจัดสรรให้ผู้ใช้ รวมสถานะการทำงานและโหนดที่รัน
-    \item \textbf{instance\_request\_extends} คำร้องขอเพิ่มเติม/ขยายสำหรับเครื่องที่มีอยู่
+    \item \textbf{Authentication and Role Management} เช่น User, Session, Account, Verification และ PlatformUser สำหรับจัดการตัวตนผู้ใช้งาน เซสชัน และบทบาท ADMIN, INSTRUCTOR, STUDENT
+    \item \textbf{Academic Structure} เช่น Course, Semester, CourseOffering และ InstructorSearch สำหรับเชื่อมโยงรายวิชา ภาคการศึกษา และผู้สอน
+    \item \textbf{Virtualization Resources} เช่น PVENode, PVENetwork, PVENetworkIP, PVETemplate และ PVEVM สำหรับสะท้อนทรัพยากรที่เกี่ยวข้องกับ Proxmox VE
+    \item \textbf{Request Workflow} เช่น Request, ExtendedRequest, RequestAuditLog และ ExtendedRequestAuditLog สำหรับคำร้องขอเครื่องเสมือน การขยายสิทธิ์การใช้งาน และประวัติการอนุมัติ
+    \item \textbf{Instance Management} เช่น Instance, InstanceReverseProxy, InstanceAuditLog และ PlatformSSHKey สำหรับข้อมูลเครื่องเสมือน ช่องทางการเชื่อมต่อ และบันทึกการเปลี่ยนแปลง
+    \item \textbf{Platform Storage} เช่น PlatformFile สำหรับการจัดเก็บไฟล์
 \end{mycustomitem}
 
+% แผนภาพนี้ถูกสร้างจากไฟล์ Mermaid: docs/database/db-overview.mmd
 \begin{figure}[H]
     \centering
-    % ภาพนี้ถูกสร้างจากไฟล์ Mermaid: docs/diagram/database.mmd
-    \includegraphics[width=1.0\textwidth]{Image/diagram/database.png}
-    \caption{\fontSixTeen{แผนภาพโครงสร้างฐานข้อมูลของระบบ (Logical Schema)}}
+    \includegraphics[width=1.0\textwidth]{Image/diagram/database/db-overview.png}
+    \caption{\fontSixTeen{แผนภาพโครงสร้างฐานข้อมูลของระบบภาพรวม (ER Diagram Overview)}}
     \label{fig3:database_schema}
 \end{figure}
 
+% แผนภาพนี้ถูกสร้างจากไฟล์ Mermaid: docs/database/db-auth.mmd
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1.0\textwidth]{Image/diagram/database/auth_user.png}
-    \caption{\fontSixTeen{แผนภาพโครงสร้างฐานข้อมูลของระบบแบบย่อย 1}}
+    \includegraphics[width=1.0\textwidth]{Image/diagram/database/db-auth.png}
+    \caption{\fontSixTeen{แผนภาพ ER กลุ่มข้อมูลการยืนยันตัวตนและผู้ใช้งาน}}
     \label{fig3:database_schema-1}
 \end{figure}
 
+% แผนภาพนี้ถูกสร้างจากไฟล์ Mermaid: docs/database/db-academic.mmd
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1.0\textwidth]{Image/diagram/database/academic_struct.png}
-    \caption{\fontSixTeen{แผนภาพโครงสร้างฐานข้อมูลของระบบแบบย่อย 2}}
+    \includegraphics[width=1.0\textwidth]{Image/diagram/database/db-academic.png}
+    \caption{\fontSixTeen{แผนภาพ ER กลุ่มข้อมูลโครงสร้างวิชาการ}}
     \label{fig3:database_schema-2}
 \end{figure}
 
+% แผนภาพนี้ถูกสร้างจากไฟล์ Mermaid: docs/database/db-pve.mmd
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1.0\textwidth]{Image/diagram/database/instance.png}
-    \caption{\fontSixTeen{แผนภาพโครงสร้างฐานข้อมูลของระบบแบบย่อย 3}}
+    \includegraphics[width=1.0\textwidth]{Image/diagram/database/db-pve.png}
+    \caption{\fontSixTeen{แผนภาพ ER กลุ่มข้อมูลโครงสร้างพื้นฐาน Proxmox VE}}
     \label{fig3:database_schema-3}
 \end{figure}
 
+% แผนภาพนี้ถูกสร้างจากไฟล์ Mermaid: docs/database/db-instance.mmd
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{Image/diagram/database/networking.png}
-    \caption{\fontSixTeen{แผนภาพโครงสร้างฐานข้อมูลของระบบแบบย่อย 4}}
+    \includegraphics[width=1.0\textwidth]{Image/diagram/database/db-instance.png}
+    \caption{\fontSixTeen{แผนภาพ ER กลุ่มข้อมูลการจัดการเครื่องเสมือน}}
     \label{fig3:database_schema-4}
 \end{figure}
 
+% แผนภาพนี้ถูกสร้างจากไฟล์ Mermaid: docs/database/db-request.mmd
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.6\textwidth]{Image/diagram/database/request.png}
-    \caption{\fontSixTeen{แผนภาพโครงสร้างฐานข้อมูลของระบบแบบย่อย 5}}
+    \includegraphics[width=1.0\textwidth]{Image/diagram/database/db-request.png}
+    \caption{\fontSixTeen{แผนภาพ ER กลุ่มข้อมูลคำร้องขอและกระบวนการอนุมัติ}}
     \label{fig3:database_schema-5}
 \end{figure}
 
-% ตารางสรุปสคีมาฐานข้อมูลจาก Prisma (ตาราง, PK, FK, รายละเอียด)
+% แผนภาพนี้ถูกสร้างจากไฟล์ Mermaid: docs/database/db-storage.mmd
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{Image/diagram/database/db-storage.png}
+    \caption{\fontSixTeen{แผนภาพ ER กลุ่มข้อมูลพื้นที่จัดเก็บไฟล์}}
+    \label{fig3:database_schema-6}
+\end{figure}
+
+\hspace*{1.3em} %ย่อหน้า
+จากภาพที่ \ref{fig3:database_schema} – \ref{fig3:database_schema-6} จะเห็นได้ว่าการออกแบบฐานข้อมูลไม่ได้ครอบคลุมเฉพาะข้อมูลผู้ใช้และเครื่องเสมือนเท่านั้น แต่ยังรวมถึงโครงสร้างทางวิชาการ ประวัติการอนุมัติ การจัดการ reverse proxy และระบบจัดเก็บไฟล์ภายในแพลตฟอร์มด้วย ทั้งนี้ได้แบ่งแผนภาพเป็น 6 กลุ่มตามโดเมนข้อมูล ได้แก่ การยืนยันตัวตน โครงสร้างวิชาการ โครงสร้างพื้นฐาน Proxmox VE การจัดการเครื่องเสมือน กระบวนการคำร้องขอ และพื้นที่จัดเก็บไฟล์ การออกแบบในลักษณะนี้ทำให้ Momoi สามารถทำหน้าที่เป็นศูนย์กลางของข้อมูลธุรกรรม ขณะที่ Yuzu ใช้ข้อมูลเดียวกันในการอ้างอิงระหว่างการประมวลผลคำสั่งบน Proxmox VE
+
 \begin{table}[H]
-    \caption{\fontSixTeen{สรุปตาราง คีย์หลัก และคีย์ต่างประเทศจาก Prisma Schema (ส่วนที่ 1)}}\label{tab3:db_schema_overview_a}
+    \caption{\fontSixTeen{สรุปกลุ่มข้อมูลหลักจาก Prisma Schema ฉบับปัจจุบัน}}\label{tab3:db_domain_overview}
     \fontSixTeen
     \renewcommand{\arraystretch}{1.2}
-    \begin{tabularx}{\textwidth}{|l|L|L|L|}
+    \begin{tabularx}{\textwidth}{|L|X|}
         \hline
-        	\textbf{ชื่อตาราง} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{คีย์หลัก (PK)}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{คีย์ต่างประเทศ (FK)}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{รายละเอียด}} \\
+	        \textbf{กลุ่มข้อมูล} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{เอนทิตีหลัก}} \\
         \hline
-        user & id (String) & — & ผู้ใช้และข้อมูลยืนยันตัวตน (อีเมลไม่ซ้ำ) \\
-        session & id (String) & userId -> user(id) & เซสชันผู้ใช้, token ไม่ซ้ำ \\
-        account & id (String) & userId -> user(id) & บัญชีจากผู้ให้บริการภายนอก \\
-        verification & id (String) & — & ข้อมูลการยืนยัน (เช่น โทเค็น) \\
-        staff\_list & id (Int) & — & รายชื่อบุคลากร, email ไม่ซ้ำ \\
-        user\_public\_key & id (Int) & user\_id -> user(id) & คีย์สาธารณะของผู้ใช้ (SSH key) \\
-        network & id (Int) & — & ข้อมูลเครือข่าย / เกตเวย์ \\
-        ip\_address & id (Int) & network\_id -> network(id); instance\_id -> instance(id) (ตัวเลือก) & IP address ผูกกับเครือข่าย/อินสแตนซ์ (1–1 ตัวเลือก) \\
-        semester & id (Int) & — & ภาคการศึกษา, name ไม่ซ้ำ \\
-        pve\_node & id (Int) & — & โหนด Proxmox VE, name ไม่ซ้ำ \\
+        Authentication และ RBAC & User, Session, Account, Verification, PlatformUser \\
+        โครงสร้างวิชาการ & Course, Semester, CourseOffering, InstructorSearch \\
+        ทรัพยากร Proxmox VE & PVENode, PVENetwork, PVENetworkIP, PVETemplate, PVEVM \\
+        กระบวนการคำร้องขอ & Request, ExtendedRequest, RequestAuditLog, ExtendedRequestAuditLog \\
+        การจัดการเครื่องเสมือน & Instance, InstanceReverseProxy, InstanceAuditLog, PlatformSSHKey \\
+        พื้นที่จัดเก็บไฟล์ & PlatformFile \\
         \hline
     \end{tabularx}
 \end{table}
 
 \begin{table}[H]
-    \caption{\fontSixTeen{สรุปตาราง คีย์หลัก และคีย์ต่างประเทศจาก Prisma Schema (ส่วนที่ 2)}}\label{tab3:db_schema_overview_b}
-    \fontSixTeen
-    \renewcommand{\arraystretch}{1.2}
-    \begin{tabularx}{\textwidth}{|L|X|L|L|}
-        \hline
-        	\textbf{ชื่อตาราง} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{คีย์หลัก (PK)}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{คีย์ต่างประเทศ (FK)}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{รายละเอียด}} \\
-        \hline
-        instance\_template & id (Int) & vm\_template\_host -> pve\_node(name) & แม่แบบ VM/LXC สำหรับสร้างเครื่อง \\
-        instance\_course & id (Int) & — & รายวิชา/ผู้รับผิดชอบ \\
-        instance\_request & id (Int) & user\_id -> user(id); course\_id -> instance\_course(id); template\_id -> instance\_template(id) & คำร้องขอเครื่องเสมือน (สเปก/สถานะ) \\
-        instance & id (Int) & user\_id -> user(id); course\_id -> instance\_course(id) (ตัวเลือก); semester\_id -> semester(id) (ตัวเลือก); template\_id -> instance \_template(id); pve\_node -> pve\_node(name) & เครื่องเสมือนที่จัดสรรให้ผู้ใช้ \\
-        instance\_request \_extends & id (Int) & instance\_id -> instance(id); instance\_requestId -> instance\_request(id) (ตัวเลือก) & คำร้องขอเพิ่มเติมสำหรับเครื่อง \\
-        \hline
-    \end{tabularx}
-\end{table}
-
-% ตารางค่า enum ที่ใช้ในสคีมา
-\begin{table}[H]
-    \caption{\fontSixTeen{รายการ Enum และค่าที่อนุญาตในสคีมาฐานข้อมูล}}\label{tab3:db_enums}
+    \caption{\fontSixTeen{รายการ Enum สำคัญในสคีมาฐานข้อมูลฉบับปัจจุบัน}}\label{tab3:db_enums_current}
     \fontSixTeen
     \renewcommand{\arraystretch}{1.2}
     \begin{tabularx}{\textwidth}{|l|L|}
         \hline
-        	\textbf{ชื่อ Enum} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ค่า}} \\
+	        \textbf{ชื่อ Enum} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ค่า}} \\
         \hline
-        instance\_state & active, deleted, archived \\
-        instance\_status & pending, running, stopped \\
-        instance\_request\_type & course, project, personal \\
-        request\_state & pending, approved, rejected, cancelled \\
-        vm\_type & qemu, lxc \\
-        node\_status & online, offline, maintenance, unknown \\
-        \hline
-    \end{tabularx}
-\end{table}
-
-% รายละเอียดตารางและฟิลด์ (Field-level) จาก Prisma Schema
-% หมายเหตุ: ฟิลด์ความสัมพันธ์แบบ Array (e.g., Session[]) เป็น virtual relation ไม่ใช่คอลัมน์จริงในฐานข้อมูล
-
-% user
-\begin{table}[H]
-    \caption{\fontSixTeen{รายละเอียดฟิลด์ของตาราง user}}\label{tab3:user_fields}
-    \fontSixTeen
-    \renewcommand{\arraystretch}{1.2}
-    \begin{tabularx}{\textwidth}{|l|L|L|L|}
-        \hline
-        \multicolumn{4}{|l|}{\textbf{ตาราง: user}} \\
-        \hline
-        	\textbf{ฟิลด์} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ประเภทข้อมูล}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ข้อจำกัด}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{รายละเอียด}} \\
-        \hline
-        id & String & PK & รหัสผู้ใช้ (ไอดีหลัก) \\
-        name & String & — & ชื่อผู้ใช้ \\
-        email & String & UNIQUE & อีเมล (ไม่ซ้ำ) \\
-        emailVerified & Boolean & DEFAULT false & สถานะยืนยันอีเมล \\
-        image & String? & NULLABLE & URL รูปภาพโปรไฟล์ \\
-        createdAt & DateTime & DEFAULT now() & วันที่สร้าง \\
-        updatedAt & DateTime & DEFAULT now(), UPDATED\_AT & วันที่อัปเดตล่าสุด \\
-        sessions & Session[] & RELATION (virtual) & ความสัมพันธ์ 1–หลาย ไปยัง session \\
-        accounts & Account[] & RELATION (virtual) & ความสัมพันธ์ 1–หลาย ไปยัง account \\
-        user\_public\_key & user\_public\_key[] & RELATION (virtual) & คีย์สาธารณะของผู้ใช้ \\
-        instance\_request & instance\_request[] & RELATION (virtual) & คำร้องขอเครื่องของผู้ใช้ \\
-        instance & instance[] & RELATION (virtual) & เครื่องเสมือนของผู้ใช้ \\
-        \hline
-    \end{tabularx}
-\end{table}
-
-% session
-\begin{table}[H]
-    \caption{\fontSixTeen{รายละเอียดฟิลด์ของตาราง session}}\label{tab3:session_fields}
-    \fontSixTeen
-    \renewcommand{\arraystretch}{1.2}
-    \begin{tabularx}{\textwidth}{|l|L|L|L|}
-        \hline
-        \multicolumn{4}{|l|}{\textbf{ตาราง: session}} \\
-        \hline
-        	\textbf{ฟิลด์} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ประเภทข้อมูล}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ข้อจำกัด}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{รายละเอียด}} \\
-        \hline
-        id & String & PK & ไอดีเซสชัน \\
-        expiresAt & DateTime & — & วันหมดอายุ \\
-        token & String & UNIQUE & โทเค็นเซสชัน \\
-        createdAt & DateTime & DEFAULT now() & วันที่สร้าง \\
-        updatedAt & DateTime & UPDATED\_AT & วันที่อัปเดต \\
-        ipAddress & String? & NULLABLE & ไอพีจากผู้ใช้ \\
-        userAgent & String? & NULLABLE & ข้อมูลเบราว์เซอร์/เอเจนต์ \\
-        userId & String & FK -> user(id), ON DELETE CASCADE & อ้างอิงผู้ใช้ \\
-        \hline
-    \end{tabularx}
-\end{table}
-
-% account
-\begin{table}[H]
-    \caption{\fontSixTeen{รายละเอียดฟิลด์ของตาราง account}}\label{tab3:account_fields}
-    \fontSixTeen
-    \renewcommand{\arraystretch}{1.2}
-    \begin{tabularx}{\textwidth}{|l|L|L|L|}
-        \hline
-        \multicolumn{4}{|l|}{\textbf{ตาราง: account}} \\
-        \hline
-        	\textbf{ฟิลด์} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ประเภทข้อมูล}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ข้อจำกัด}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{รายละเอียด}} \\
-        \hline
-        id & String & PK & ไอดีแอคเคานต์ \\
-        accountId & String & — & ไอดีบัญชีจากผู้ให้บริการ \\
-        providerId & String & — & ผู้ให้บริการ (เช่น github, google) \\
-        userId & String & FK -> user(id), ON DELETE CASCADE & อ้างอิงผู้ใช้ \\
-        accessToken & String? & NULLABLE & โทเค็นการเข้าถึง \\
-        refreshToken & String? & NULLABLE & โทเค็นรีเฟรช \\
-        idToken & String? & NULLABLE & ไอดีโทเค็น (OIDC) \\
-        accessTokenExpiresAt & DateTime? & NULLABLE & วันหมดอายุ access token \\
-        refreshTokenExpiresAt & DateTime? & NULLABLE & วันหมดอายุ refresh token \\
-        scope & String? & NULLABLE & สโคปการเข้าถึง \\
-        password & String? & NULLABLE & รหัสผ่าน (กรณี local) \\
-        createdAt & DateTime & DEFAULT now() & วันที่สร้าง \\
-        updatedAt & DateTime & UPDATED\_AT & วันที่อัปเดต \\
-        \hline
-    \end{tabularx}
-\end{table}
-
-% verification
-\begin{table}[H]
-    \caption{\fontSixTeen{รายละเอียดฟิลด์ของตาราง verification}}\label{tab3:verification_fields}
-    \fontSixTeen
-    \renewcommand{\arraystretch}{1.2}
-    \begin{tabularx}{\textwidth}{|l|L|L|L|}
-        \hline
-        \multicolumn{4}{|l|}{\textbf{ตาราง: verification}} \\
-        \hline
-        	\textbf{ฟิลด์} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ประเภทข้อมูล}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ข้อจำกัด}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{รายละเอียด}} \\
-        \hline
-        id & String & PK & ไอดีรายการยืนยัน \\
-        identifier & String & — & ตัวระบุ \\
-        value & String & — & ค่า (เช่น โทเค็น) \\
-        expiresAt & DateTime & — & วันหมดอายุ \\
-        createdAt & DateTime & DEFAULT now() & วันที่สร้าง \\
-        updatedAt & DateTime & DEFAULT now(), UPDATED\_AT & วันที่อัปเดต \\
-        \hline
-    \end{tabularx}
-\end{table}
-
-% staff_list
-\begin{table}[H]
-    \caption{\fontSixTeen{รายละเอียดฟิลด์ของตาราง staff\_list}}\label{tab3:staff_list_fields}
-    \fontSixTeen
-    \renewcommand{\arraystretch}{1.2}
-    \begin{tabularx}{\textwidth}{|l|L|L|L|}
-        \hline
-        \multicolumn{4}{|l|}{\textbf{ตาราง: staff\_list}} \\
-        \hline
-        	\textbf{ฟิลด์} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ประเภทข้อมูล}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ข้อจำกัด}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{รายละเอียด}} \\
-        \hline
-        id & Int & PK, AUTO INCREMENT & เลขไอดีรายการ \\
-        email & String & UNIQUE & อีเมลบุคลากร \\
-        created\_at & DateTime & DEFAULT now() & วันที่สร้าง \\
-        updated\_at & DateTime & DEFAULT now() & วันที่อัปเดต \\
-        deleted\_at & DateTime? & NULLABLE & วันที่ลบ (เชิงตรรกะ) \\
-        \hline
-    \end{tabularx}
-\end{table}
-
-% user_public_key
-\begin{table}[H]
-    \caption{\fontSixTeen{รายละเอียดฟิลด์ของตาราง user\_public\_key}}\label{tab3:user_public_key_fields}
-    \fontSixTeen
-    \renewcommand{\arraystretch}{1.2}
-    \begin{tabularx}{\textwidth}{|l|L|L|L|}
-        \hline
-        \multicolumn{4}{|l|}{\textbf{ตาราง: user\_public\_key}} \\
-        \hline
-        	\textbf{ฟิลด์} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ประเภทข้อมูล}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ข้อจำกัด}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{รายละเอียด}} \\
-        \hline
-        id & Int & PK, AUTO INCREMENT & เลขไอดี \\
-        user\_id & String & FK -> user(id), ON DELETE CASCADE & อ้างอิงผู้ใช้ \\
-        public\_key & String & — & คีย์สาธารณะ \\
-        created\_at & DateTime & DEFAULT now() & วันที่สร้าง \\
-        deleted\_at & DateTime? & NULLABLE & วันที่ลบ (เชิงตรรกะ) \\
-        \hline
-    \end{tabularx}
-\end{table}
-
-% network
-\begin{table}[H]
-    \caption{\fontSixTeen{รายละเอียดฟิลด์ของตาราง network}}\label{tab3:network_fields}
-    \fontSixTeen
-    \renewcommand{\arraystretch}{1.2}
-    \begin{tabularx}{\textwidth}{|l|L|L|L|}
-        \hline
-        \multicolumn{4}{|l|}{\textbf{ตาราง: network}} \\
-        \hline
-        	\textbf{ฟิลด์} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ประเภทข้อมูล}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ข้อจำกัด}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{รายละเอียด}} \\
-        \hline
-        id & Int & PK, AUTO INCREMENT & เลขไอดีเครือข่าย \\
-        name & String & — & ชื่อเครือข่าย \\
-        network & String & — & ช่วงเครือข่าย (CIDR) \\
-        gateway & String & — & เกตเวย์ \\
-        created\_at & DateTime & DEFAULT now() & วันที่สร้าง \\
-        updated\_at & DateTime & DEFAULT now() & วันที่อัปเดต \\
-        deleted\_at & DateTime? & NULLABLE & วันที่ลบ (เชิงตรรกะ) \\
-        \hline
-    \end{tabularx}
-\end{table}
-
-% ip_address
-\begin{table}[H]
-    \caption{\fontSixTeen{รายละเอียดฟิลด์ของตาราง ip\_address}}\label{tab3:ip_address_fields}
-    \fontSixTeen
-    \renewcommand{\arraystretch}{1.2}
-    \begin{tabularx}{\textwidth}{|l|L|L|L|}
-        \hline
-        \multicolumn{4}{|l|}{\textbf{ตาราง: ip\_address}} \\
-        \hline
-        	\textbf{ฟิลด์} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ประเภทข้อมูล}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ข้อจำกัด}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{รายละเอียด}} \\
-        \hline
-        id & Int & PK, AUTO INCREMENT & เลขไอดี \\
-        network\_id & Int & FK -> network(id), ON DELETE CASCADE & อ้างอิงเครือข่าย \\
-        ip & String & UNIQUE & ที่อยู่ไอพี \\
-        created\_at & DateTime & DEFAULT now() & วันที่สร้าง \\
-        updated\_at & DateTime & DEFAULT now() & วันที่อัปเดต \\
-        deleted\_at & DateTime? & NULLABLE & วันที่ลบ (เชิงตรรกะ) \\
-        instance\_id & Int? & UNIQUE, NULLABLE, FK -> instance(id), ON DELETE SET NULL & ผูกกับเครื่อง (1–1 ตัวเลือก) \\
-        \hline
-    \end{tabularx}
-\end{table}
-
-% semester
-\begin{table}[H]
-    \caption{\fontSixTeen{รายละเอียดฟิลด์ของตาราง semester}}\label{tab3:semester_fields}
-    \fontSixTeen
-    \renewcommand{\arraystretch}{1.2}
-    \begin{tabularx}{\textwidth}{|l|L|L|L|}
-        \hline
-        \multicolumn{4}{|l|}{\textbf{ตาราง: semester}} \\
-        \hline
-        	\textbf{ฟิลด์} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ประเภทข้อมูล}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ข้อจำกัด}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{รายละเอียด}} \\
-        \hline
-        id & Int & PK, AUTO INCREMENT & เลขไอดีภาคการศึกษา \\
-        name & String & UNIQUE & ชื่อภาคการศึกษา \\
-        start\_at & DateTime & — & วันเริ่มต้น \\
-        end\_at & DateTime & — & วันสิ้นสุด \\
-        active & Boolean & DEFAULT false & เปิดใช้งาน \\
-        created\_at & DateTime & DEFAULT now() & วันที่สร้าง \\
-        updated\_at & DateTime & DEFAULT now() & วันที่อัปเดต \\
-        deleted\_at & DateTime? & NULLABLE & วันที่ลบ (เชิงตรรกะ) \\
-        \hline
-    \end{tabularx}
-\end{table}
-
-% pve_node
-\begin{table}[H]
-    \caption{\fontSixTeen{รายละเอียดฟิลด์ของตาราง pve\_node}}\label{tab3:pve_node_fields}
-    \fontSixTeen
-    \renewcommand{\arraystretch}{1.2}
-    \begin{tabularx}{\textwidth}{|l|L|L|L|}
-        \hline
-        \multicolumn{4}{|l|}{\textbf{ตาราง: pve\_node}} \\
-        \hline
-        	\textbf{ฟิลด์} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ประเภทข้อมูล}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ข้อจำกัด}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{รายละเอียด}} \\
-        \hline
-        id & Int & PK, AUTO INCREMENT & เลขไอดีโหนด \\
-        name & String & UNIQUE & ชื่อโหนด \\
-        status & node\_status & — & สถานะโหนด \\
-        created\_at & DateTime & DEFAULT now() & วันที่สร้าง \\
-        updated\_at & DateTime & DEFAULT now() & วันที่อัปเดต \\
-        deleted\_at & DateTime? & NULLABLE & วันที่ลบ (เชิงตรรกะ) \\
-        \hline
-    \end{tabularx}
-\end{table}
-
-% instance_template
-\begin{table}[H]
-    \caption{\fontSixTeen{รายละเอียดฟิลด์ของตาราง instance\_template}}\label{tab3:instance_template_fields}
-    \fontSixTeen
-    \renewcommand{\arraystretch}{1.2}
-    \begin{tabularx}{\textwidth}{|l|L|L|L|}
-        \hline
-        \multicolumn{4}{|l|}{\textbf{ตาราง: instance\_template}} \\
-        \hline
-        	\textbf{ฟิลด์} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ประเภทข้อมูล}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ข้อจำกัด}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{รายละเอียด}} \\
-        \hline
-        id & Int & PK, AUTO INCREMENT & เลขไอดีแม่แบบ \\
-        os\_name & String & — & ชื่อระบบปฏิบัติการ \\
-        vm\_template\_id & String & — & ไอดีแม่แบบใน PVE \\
-        vm\_template\_host & String & FK -> pve\_node(name) & โฮสต์แม่แบบ (อ้างอิงชื่อโหนด) \\
-        vm\_type & vm\_type & — & ประเภท VM/LXC \\
-        based\_size & Int & — & ขนาดดิสก์พื้นฐาน (GB) \\
-        created\_at & DateTime & DEFAULT now() & วันที่สร้าง \\
-        updated\_at & DateTime & DEFAULT now() & วันที่อัปเดต \\
-        deleted\_at & DateTime? & NULLABLE & วันที่ลบ (เชิงตรรกะ) \\
-        \hline
-    \end{tabularx}
-\end{table}
-
-% instance_course
-\begin{table}[H]
-    \caption{\fontSixTeen{รายละเอียดฟิลด์ของตาราง instance\_course}}\label{tab3:instance_course_fields}
-    \fontSixTeen
-    \renewcommand{\arraystretch}{1.2}
-    \begin{tabularx}{\textwidth}{|l|L|L|L|}
-        \hline
-        \multicolumn{4}{|l|}{\textbf{ตาราง: instance\_course}} \\
-        \hline
-        	\textbf{ฟิลด์} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ประเภทข้อมูล}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ข้อจำกัด}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{รายละเอียด}} \\
-        \hline
-        id & Int & PK, AUTO INCREMENT & เลขไอดีรายวิชา \\
-        course\_id & String & — & รหัสรายวิชา \\
-        course\_title & String & — & ชื่อรายวิชา \\
-        main\_staff & Int & — & ผู้รับผิดชอบหลัก \\
-        assistant\_staff\_1 & Int? & NULLABLE & ผู้ช่วย 1 \\
-        assistant\_staff\_2 & Int? & NULLABLE & ผู้ช่วย 2 \\
-        assistant\_staff\_3 & Int? & NULLABLE & ผู้ช่วย 3 \\
-        created\_at & DateTime & DEFAULT now() & วันที่สร้าง \\
-        updated\_at & DateTime & DEFAULT now() & วันที่อัปเดต \\
-        deleted\_at & DateTime? & NULLABLE & วันที่ลบ (เชิงตรรกะ) \\
-        \hline
-    \end{tabularx}
-\end{table}
-
-% instance_request_extends
-\begin{table}[H]
-    \caption{\fontSixTeen{รายละเอียดฟิลด์ของตาราง instance\_request\_extends}}\label{tab3:instance_request_extends_fields}
-    \fontSixTeen
-    \renewcommand{\arraystretch}{1.2}
-    \begin{tabularx}{\textwidth}{|l|L|L|L|}
-        \hline
-        \multicolumn{4}{|l|}{\textbf{ตาราง: instance\_request\_extends}} \\
-        \hline
-        	\textbf{ฟิลด์} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ประเภทข้อมูล}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ข้อจำกัด}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{รายละเอียด}} \\
-        \hline
-        id & Int & PK, AUTO INCREMENT & เลขไอดีรายการ \\
-        instance\_id & Int & FK -> instance(id), ON DELETE CASCADE & เครื่องที่เกี่ยวข้อง \\
-        title & String & — & ชื่อคำร้องเพิ่มเติม \\
-        description & String & — & รายละเอียด \\
-        state & request\_state & DEFAULT pending & สถานะคำร้อง \\
-        reason & String? & NULLABLE & เหตุผลประกอบ \\
-        created\_at & DateTime & DEFAULT now() & วันที่สร้าง \\
-        updated\_at & DateTime & DEFAULT now() & วันที่อัปเดต \\
-        instance\_requestId & Int? & FK -> instance\_request(id), NULLABLE & อ้างอิงคำร้องหลัก (ถ้ามี) \\
-        \hline
-    \end{tabularx}
-\end{table}
-
-% instance_request
-\begin{table}[H]
-    \caption{\fontSixTeen{รายละเอียดฟิลด์ของตาราง instance\_request}}\label{tab3:instance_request_fields}
-    \fontSixTeen
-    \renewcommand{\arraystretch}{1.2}
-    \begin{tabularx}{\textwidth}{|l|L|L|L|}
-        \hline
-        \multicolumn{4}{|l|}{\textbf{ตาราง: instance\_request}} \\
-        \hline
-        	\textbf{ฟิลด์} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ประเภทข้อมูล}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ข้อจำกัด}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{รายละเอียด}} \\
-        \hline
-        id & Int & PK, AUTO INCREMENT & เลขไอดีคำร้อง \\
-        user\_id & String & FK -> user(id), ON DELETE CASCADE & ผู้ร้องขอ \\
-        title & String & — & ชื่อคำร้อง/โครงการ \\
-        hostname & String & — & ชื่อโฮสต์ที่ต้องการ \\
-        description & String & — & รายละเอียด \\
-        type & instance\_request\_type & — & ประเภทคำร้อง (course/project/personal) \\
-        course\_id & Int & FK -> instance\_course(id), ON DELETE CASCADE & รายวิชา \\
-        template\_id & Int & FK -> instance\_template(id), ON DELETE CASCADE & แม่แบบที่จะใช้ \\
-        cpus & Int & — & จำนวนคอร์ CPU \\
-        memory & Int & — & หน่วยความจำ (MB) \\
-        disk & Int & — & ขนาดดิสก์ (GB) \\
-        state & request\_state & DEFAULT pending & สถานะคำร้อง \\
-        reason & String? & NULLABLE & เหตุผลประกอบ \\
-        created\_at & DateTime & DEFAULT now() & วันที่สร้าง \\
-        updated\_at & DateTime & DEFAULT now() & วันที่อัปเดต \\
-        \hline
-    \end{tabularx}
-\end{table}
-
-% instance
-\begin{table}[H]
-    \caption{\fontSixTeen{รายละเอียดฟิลด์ของตาราง instance}}\label{tab3:instance_fields}
-    \fontSixTeen
-    \renewcommand{\arraystretch}{1.2}
-    \begin{tabularx}{\textwidth}{|l|L|L|L|}
-        \hline
-        \multicolumn{4}{|l|}{\textbf{ตาราง: instance}} \\
-        \hline
-        	\textbf{ฟิลด์} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ประเภทข้อมูล}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ข้อจำกัด}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{รายละเอียด}} \\
-        \hline
-        id & Int & PK, AUTO INCREMENT & เลขไอดีเครื่องเสมือน \\
-        user\_id & String & FK -> user(id), ON DELETE CASCADE & เจ้าของเครื่อง \\
-        title & String & — & ชื่อเครื่อง \\
-        hostname & String & — & โฮสต์เนม \\
-        description & String & — & รายละเอียด \\
-        type & instance\_request\_type & — & ประเภทการใช้งาน \\
-        course\_id & Int & FK -> instance\_course(id), ON DELETE CASCADE, NULLABLE & รายวิชา (ถ้ามี) \\
-        semester\_id & Int? & FK -> semester(id), ON DELETE CASCADE, NULLABLE & ภาคการศึกษา (ถ้ามี) \\
-        template\_id & Int & FK -> instance\_template(id), ON DELETE CASCADE & แม่แบบ \\
-        cpus & Int & — & คอร์ CPU \\
-        memory & Int & — & หน่วยความจำ (MB) \\
-        disk & Int & — & ขนาดดิสก์ (GB) \\
-        state & instance\_state & DEFAULT active & สถานะทรัพยากร \\
-        status & instance\_status & DEFAULT pending & สถานะการทำงาน \\
-        pve\_node & String & FK -> pve\_node(name), ON DELETE CASCADE & ชื่อโหนด PVE ที่รัน \\
-        vm\_id & Int & — & ไอดี VM ใน PVE \\
+        PlatformRole & ADMIN, INSTRUCTOR, STUDENT \\
+        PVEVMStatus & RUNNING, STOPPED, SUSPENDED \\
+        PVEVMType & QEMU, LXC \\
+        InstanceStatus & PENDING, ACTIVE, PROMOTED, INACTIVE, DELETED \\
+        InstanceProvisionStatus & NOT\_STARTED, QUEUED, PROVISIONING, COMPLETED, FAILED \\
+        ReverseProxyType & HTTPS, HTTP \\
+        ApprovalStatus & PENDING, APPROVED, REJECTED, CANCELLED \\
         \hline
     \end{tabularx}
 \end{table}
@@ -604,22 +292,67 @@
 \hspace*{1.3em} %ย่อหน้า
 ระบบใช้ RESTful API เป็นหลักในการสื่อสารระหว่างส่วนประกอบ โดยมีการออกแบบดังนี้
 \begin{mycustomitem}
-    \item \textbf{Authentication Endpoints} สำหรับ Login, Logout และ Token Management
-    \item \textbf{Instance Management Endpoints} สำหรับการจัดการเครื่องเสมือน (CRUD Operations)
-    % \item \textbf{Monitoring Endpoints} สำหรับการติดตามการใช้ทรัพยากร
+    \item \textbf{Authentication Endpoints} ให้บริการโดย Momoi สำหรับ Login, Logout, Session และ OAuth flow โดย Midori จะ proxy คำขอยืนยันตัวตนไปยังบริการดังกล่าวในสภาพแวดล้อมพัฒนา
+    \item \textbf{Platform API Endpoints} ให้บริการโดย Momoi ครอบคลุมโดเมนหลัก เช่น Academic Management, Request Workflow, Instance Management, Reverse Proxy Management และ Storage Management
+    \item \textbf{Documentation and Telemetry Endpoints} ใช้สำหรับสร้าง OpenAPI Documentation, Metrics และ Traces เพื่อสนับสนุนการทดสอบและการติดตามสถานะของระบบ
 \end{mycustomitem}
+
+\hspace*{1.3em} %ย่อหน้า
+ตารางที่ \ref{tab3:api_groups} สรุปกลุ่ม API หลักของ Momoi พร้อมระดับการยืนยันตัวตนที่ต้องการ โดย Momoi เปิดเผย API เหล่านี้ผ่าน Elysia.js ซึ่งสร้าง OpenAPI Specification โดยอัตโนมัติ ทำให้ Midori สามารถนำข้อมูล Schema ไปสร้างชนิดข้อมูลฝั่ง Client ได้โดยตรงโดยไม่ต้องเขียนซ้ำ
+
+\begin{table}[H]
+    \caption{\fontSixTeen{สรุปกลุ่ม API หลักของบริการ Momoi}}\label{tab3:api_groups}
+    \fontSixTeen
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{กลุ่ม API} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{คำอธิบาย}} \\
+        \hline
+        Public & ข้อมูลสาธารณะ เช่น ภาคการศึกษาปัจจุบันและที่กำลังจะมาถึง \\
+        Auth & Login, Logout, Session, OAuth callback จาก Arisu \\
+        Academic & รายวิชา ภาคการศึกษา ผู้สอน และการเปิดสอน \\
+        Request & สร้างและจัดการคำร้องขอเครื่องเสมือน ทั้ง Request และ ExtendedRequest \\
+        Instance & เครื่องเสมือน Reverse Proxy Audit Log และ SSH Key \\
+        Storage & ไฟล์ โฟลเดอร์ การแบ่งปัน และสิทธิ์การเข้าถึง \\
+        Admin & จัดการ PVE Node PVE Template PVE Network และ Platform User \\
+        \hline
+    \end{tabularx}
+\end{table}
+
+\hspace*{1.3em} %ย่อหน้า
+การยืนยันตัวตนอาศัย Session ที่ออกโดย Arisu ซึ่งเป็น OAuth2-compatible authentication service โดย Midori จะ proxy คำขอ login ไปยัง Arisu และรับ session cookie กลับมา เมื่อเรียก API ของ Momoi ต่อไป Momoi จะตรวจสอบ session ผ่าน Arisu และดึงข้อมูล PlatformUser จากฐานข้อมูลเพื่อกำหนดบทบาท (ADMIN, INSTRUCTOR, STUDENT) ก่อนอนุมัติคำขอ การออกแบบในลักษณะนี้ทำให้ระบบ authentication อยู่ที่ Arisu เป็นศูนย์กลาง ขณะที่ Momoi รับผิดชอบเฉพาะ authorization ตามบทบาทที่กำหนดไว้ใน PlatformUser
 
 % 3.3.4
 \subsection{การออกแบบระบบ Message Queue}
 
 \hspace*{1.3em} %ย่อหน้า
-รองรับการประมวลผลแบบ Asynchronous โดยใช้ RabbitMQ เป็น Message Broker ออกแบบคิวหลักดังนี้
+ระบบรองรับการประมวลผลแบบ Asynchronous โดยใช้ Redis ร่วมกับ BullMQ เป็นกลไก Message Queue ระหว่าง Momoi และ Yuzu คิวหลักในฉบับพัฒนาปัจจุบันประกอบด้วย
 \begin{mycustomitem}
-    \item \textbf{Instance Creation Queue} สำหรับงานการสร้างเครื่องเสมือน
-    \item \textbf{Instance Deletion Queue} สำหรับงานการลบเครื่องเสมือน
-    \item \textbf{Instance Update Queue} สำหรับงานอัปเดตสถานะของเครื่องเสมือน
+    \item \textbf{Provision Queue} สำหรับงานสร้างและจัดสรรเครื่องเสมือนใหม่
+    \item \textbf{Deprovision Queue} สำหรับงานลบหรือคืนทรัพยากรของเครื่องเสมือน
+    \item \textbf{Toggle Status Queue} สำหรับงานเปลี่ยนสถานะของเครื่อง เช่น Start, Stop และ Restart
 \end{mycustomitem}
 
+\hspace*{1.3em} %ย่อหน้า
+ข้อมูลที่ถูกส่งเข้าแต่ละงานจะเก็บเฉพาะตัวระบุที่จำเป็น เช่น instanceId, userId และสถานะที่ต้องการเปลี่ยนแปลง จากนั้น Yuzu จะอ่านข้อมูลฉบับเต็มจากฐานข้อมูลก่อนดำเนินการบน Proxmox VE วิธีการนี้ช่วยลดความซ้ำซ้อนของข้อมูลในคิวและทำให้การ retry งานมีความปลอดภัยมากขึ้น
+
+\hspace*{1.3em} %ย่อหน้า
+ระบบกำหนดนโยบายการทำซ้ำงาน (retry policy) เพื่อรองรับความล้มเหลวชั่วคราว เช่น การเชื่อมต่อ Proxmox VE ขัดข้อง หรือ VM อยู่ระหว่างเปลี่ยนสถานะ โดยงานที่ล้มเหลวจะถูก retry ตามจำนวนครั้งที่กำหนด พร้อมการหน่วงเวลาแบบ exponential backoff ระหว่างครั้ง หากยังล้มเหลวเกินจำนวนที่กำหนดจะถูกย้ายเข้า failed job queue เพื่อให้ผู้ดูแลระบบตรวจสอบในภายหลัง ตารางที่ \ref{tab3:queue_jobs} สรุปคิวงานหลักพร้อมข้อมูลที่ส่งพร้อมแต่ละงานและผลลัพธ์ที่คาดหวัง
+
+\begin{table}[H]
+    \caption{\fontSixTeen{สรุปคิวงานหลักและโครงสร้างข้อมูลงาน}}\label{tab3:queue_jobs}
+    \fontSixTeen
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabularx}{\textwidth}{|l|X|X|}
+        \hline
+        \textbf{ชื่อคิว} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ข้อมูลหลักในงาน}} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{ผลลัพธ์ที่คาดหวัง}} \\
+        \hline
+        Provision & instanceId, userId & VM ถูกสร้างและพร้อมใช้งาน สถานะ Instance อัปเดตเป็น ACTIVE \\
+        Deprovision & instanceId, userId & VM ถูกลบออกจากระบบ สถานะ Instance อัปเดตเป็น DELETED \\
+        Toggle Status & instanceId, userId, targetStatus & สถานะ VM เปลี่ยนเป็น RUNNING STOPPED หรือ SUSPENDED ตามที่ระบุ \\
+        \hline
+    \end{tabularx}
+\end{table}
 
 % Tools and Technologies Used
 \section{เครื่องมือและเทคโนโลยีที่ใช้ในการพัฒนา}
@@ -628,19 +361,19 @@
 \subsection{เทคโนโลยี Frontend}
 
 \hspace*{1.3em} %ย่อหน้า
-\textbf{Next.js 14} เป็น React Framework ที่เลือกใช้เนื่องจากคุณสมบัติดังนี้
+\textbf{Next.js 16 และ React 19} เป็นเทคโนโลยีหลักของส่วน Frontend เนื่องจากมีคุณสมบัติที่เหมาะสมกับการพัฒนาเว็บแอปพลิเคชันเชิงระบบดังนี้
 \begin{mycustomitem}
     \item \textbf{App Router} สำหรับการจัดการ Routing แบบใหม่
-    % \item \textbf{Server Components} ลดปริมาณ JavaScript ที่ส่งไปยัง Client
-    % \item \textbf{Static Site Generation} เพิ่มประสิทธิภาพการโหลดหน้าเว็บ
     \item \textbf{Built-in TypeScript Support} รองรับ Type Safety
+    \item \textbf{Integration with API Proxy and OpenAPI Types} ช่วยให้ส่วน Frontend สามารถเชื่อมต่อกับ Momoi และ Arisu ได้อย่างมีชนิดข้อมูลที่ชัดเจน
 \end{mycustomitem}
 
 \hspace*{1.3em} %ย่อหน้า
-\textbf{Tailwind CSS} ใช้สำหรับการจัดการ Styling เนื่องจาก
+\textbf{Tailwind CSS และชุดคอมโพเนนต์บน Radix UI} ใช้สำหรับการจัดการส่วนติดต่อผู้ใช้ เนื่องจาก
 \begin{mycustomitem}
     \item \textbf{Utility-first} เขียน CSS ได้เร็วและมีประสิทธิภาพ
     \item \textbf{Responsive Design} รองรับการแสดงผลบนอุปกรณ์ต่าง ๆ
+    \item \textbf{Composable UI Primitives} ช่วยให้สร้างฟอร์ม แดชบอร์ด และกล่องโต้ตอบที่ปรับใช้ซ้ำได้ง่าย
 \end{mycustomitem}
 
 % 3.4.2
@@ -652,7 +385,7 @@
     \item \textbf{High Performance} มีประสิทธิภาพสูงกว่า Node.js Framework ทั่วไป
     \item \textbf{Type Safety} รองรับ TypeScript แบบเต็มรูปแบบ
     \item \textbf{OpenAPI Integration} สร้าง API Documentation อัตโนมัติ
-    % \item \textbf{Plugin Ecosystem} มี Plugin หลากหลายสำหรับการพัฒนา
+    \item \textbf{Observability Integration} รองรับการเชื่อมต่อกับ OpenTelemetry และการเก็บข้อมูลด้านประสิทธิภาพของบริการ
 \end{mycustomitem}
 
 \hspace*{1.3em} %ย่อหน้า
@@ -660,14 +393,14 @@
 \begin{mycustomitem}
     \item \textbf{Type-safe Database Client} ป้องกันข้อผิดพลาดในการเขียน Query
     \item \textbf{Database Migrations} จัดการการเปลี่ยนแปลง Schema อย่างเป็นระบบ
-    \item \textbf{Database Introspection} สร้าง Schema จากฐานข้อมูลที่มีอยู่
+    \item \textbf{Centralized Domain Model} ช่วยให้สคีมาของข้อมูลด้านผู้ใช้ คำร้อง เครื่องเสมือน และพื้นที่จัดเก็บอยู่ในรูปแบบเดียวกัน
 \end{mycustomitem}
 
 % 3.4.3
 \subsection{Infrastructure และ DevOps}
 
 \hspace*{1.3em} %ย่อหน้า
-\textbf{Docker} ใช้สำหรับการ Containerization ของแอปพลิเคชัน เพื่อ
+\textbf{Docker} ใช้สำหรับการ Containerization ของแอปพลิเคชันและบริการสนับสนุน เพื่อ
 \begin{mycustomitem}
     \item \textbf{Environment Consistency} สภาพแวดล้อมการพัฒนาและ Production เหมือนกัน
     \item \textbf{Easy Deployment} ง่ายต่อการ Deploy และ Scale
@@ -675,11 +408,21 @@
 \end{mycustomitem}
 
 \hspace*{1.3em} %ย่อหน้า
-\textbf{Docker Compose} ใช้สำหรับการจัดการ Multi-container Application
+\textbf{Docker Compose และ Kubernetes Manifests} ใช้สำหรับการจัดการ Multi-container Application และสภาพแวดล้อมการติดตั้งจริง
 \begin{mycustomitem}
     \item \textbf{Service Orchestration} จัดการการเริ่มต้นและหยุดทำงานของ Service
     \item \textbf{Network Management} จัดการเครือข่ายระหว่าง Container
     \item \textbf{Volume Management} จัดการการแชร์ข้อมูลระหว่าง Container
+    \item \textbf{Platform Deployment} กำหนดการติดตั้งบริการหลัก เช่น PostgreSQL, Redis, RustFS และชุดระบบสังเกตการณ์การทำงาน
+\end{mycustomitem}
+
+\hspace*{1.3em} %ย่อหน้า
+\textbf{Observability Stack} ถูกนำมาใช้เพื่อวัดผลและติดตามสภาวะของระบบอย่างต่อเนื่อง โดยประกอบด้วย
+\begin{mycustomitem}
+    \item \textbf{Prometheus} สำหรับเก็บ Metrics จากแต่ละบริการ
+    \item \textbf{Grafana} สำหรับแสดง Dashboard และภาพรวมของระบบ
+    \item \textbf{Loki และ Jaeger} สำหรับเก็บ Logs และ Traces
+    \item \textbf{InfluxDB และ Exporters} สำหรับรองรับข้อมูลเชิงสังเกตการณ์เพิ่มเติมในระดับโครงสร้างพื้นฐาน
 \end{mycustomitem}
 
 % 3.4.4
@@ -696,6 +439,7 @@
 \hspace*{1.3em} %ย่อหน้า
 \textbf{Code Quality และ Testing}
 \begin{mycustomitem}
-    \item \textbf{ESLint และ Prettier} สำหรับการตรวจสอบและจัดรูปแบบโค้ด
-    \item \textbf{TypeScript} สำหรับ Static Type Checking
+    \item \textbf{TypeScript-first Development} สำหรับ Static Type Checking ตลอดทุกบริการ
+    \item \textbf{OpenAPI Code Generation} สำหรับสร้างชนิดข้อมูลและลดความคลาดเคลื่อนระหว่าง Frontend กับ Backend
+    \item \textbf{Repository-specific Linting and Formatting} ใช้เครื่องมือที่เหมาะสมกับแต่ละบริการเพื่อควบคุมคุณภาพของโค้ดก่อนนำขึ้นใช้งาน
 \end{mycustomitem}

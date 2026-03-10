@@ -1,0 +1,81 @@
+---
+title: Instance Management Domain
+config:
+  layout: elk
+  theme: neutral
+---
+erDiagram
+
+  PLATFORM_USER {
+    int    id   PK
+    string role "ADMIN | INSTRUCTOR | STUDENT"
+  }
+
+  PVE_VM {
+    int    id       PK
+    int    vmId     UK
+    string hostname UK
+    string status   "RUNNING | STOPPED | SUSPENDED"
+  }
+
+  PVE_TEMPLATE {
+    int    id   PK
+    string name
+    string type "QEMU | LXC"
+  }
+
+  COURSE_OFFERING {
+    int id PK
+  }
+
+  SEMESTER {
+    int    id   PK
+    string name
+  }
+
+  INSTANCE {
+    int      id               PK
+    int      platformUserId   FK
+    int      pveVMId          FK "nullable"
+    int      pveTemplateId    FK
+    int      cpus
+    int      memoryMB
+    int      diskGB
+    int      courseOfferingId FK "nullable"
+    int      requestId        FK "unique, nullable"
+    int      semesterId       FK "nullable"
+    string   status           "PENDING | ACTIVE | PROMOTED | INACTIVE | DELETED"
+    string   provisionStatus  "NOT_STARTED | QUEUED | PROVISIONING | COMPLETED | FAILED"
+    string   provisionError
+    string   defaultPassword
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  INSTANCE_REVERSE_PROXY {
+    int      id          PK
+    int      targetPort
+    string   type        "HTTPS | HTTP"
+    string   description
+    int      instanceId  FK
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  INSTANCE_AUDIT_LOG {
+    int      id            PK
+    int      instanceId    FK
+    string   action
+    int      performedById FK
+    datetime timestamp
+    string   notes
+  }
+
+  PLATFORM_USER   ||--o{ INSTANCE               : "owns"
+  PVE_TEMPLATE    ||--o{ INSTANCE               : "defines"
+  PVE_VM          |o--o{ INSTANCE               : "backs"
+  COURSE_OFFERING |o--o{ INSTANCE               : "linked to"
+  SEMESTER        |o--o{ INSTANCE               : "belongs to"
+  INSTANCE        ||--o{ INSTANCE_REVERSE_PROXY  : "exposes via"
+  INSTANCE        ||--o{ INSTANCE_AUDIT_LOG      : "audited by"
+  PLATFORM_USER   ||--o{ INSTANCE_AUDIT_LOG      : "performed by"

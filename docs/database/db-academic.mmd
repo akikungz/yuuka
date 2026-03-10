@@ -1,0 +1,57 @@
+---
+title: Academic Domain
+config:
+  layout: elk
+  theme: neutral
+---
+erDiagram
+
+  PLATFORM_USER {
+    int    id   PK
+    string role "ADMIN | INSTRUCTOR | STUDENT"
+  }
+
+  INSTRUCTOR_SEARCH {
+    int     id             PK
+    string  email          UK
+    boolean havePlatformId
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  COURSE {
+    int     id          PK
+    string  code        UK
+    string  title
+    string  description
+    boolean isActive
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  SEMESTER {
+    int      id        PK
+    string   name
+    datetime startDate
+    datetime endDate
+    boolean  isCurrent
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  COURSE_OFFERING {
+    int      id         PK
+    int      courseId   FK
+    int      semesterId FK
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  COURSE_INSTRUCTORS {
+    int courseId       FK
+    int platformUserId FK
+  }
+
+  PLATFORM_USER   }o--o{ COURSE            : "teaches (CourseInstructors)"
+  COURSE          ||--|{ COURSE_OFFERING   : "offered in"
+  SEMESTER        ||--|{ COURSE_OFFERING   : "contains"

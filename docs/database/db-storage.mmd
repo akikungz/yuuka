@@ -1,0 +1,41 @@
+---
+title: Platform File Storage Domain
+config:
+  theme: neutral
+  layout: elk
+---
+erDiagram
+
+  PLATFORM_USER {
+    int    id   PK
+    string role "ADMIN | INSTRUCTOR | STUDENT"
+  }
+
+  PLATFORM_FILE {
+    string   id              PK "cuid"
+    string   name
+    string   type            "FILE | FOLDER"
+    string   mimeType
+    string   extension
+    string   description
+    int      ownerId         FK
+    string   parentId        FK "nullable (self-ref)"
+    int      latestVersionId FK "unique, nullable"
+    int      sizeBytes
+    string   visibility      "PRIVATE | SHARED | PUBLIC"
+    datetime trashedAt
+    datetime deletedAt
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  PLATFORM_USER         ||--o{ PLATFORM_FILE               : "owns"
+%%   PLATFORM_FILE         |o--o{ PLATFORM_FILE               : "parent (folder)"
+%%   PLATFORM_FILE         ||--o{ PLATFORM_FILE_VERSION       : "has versions"
+%%   PLATFORM_FILE         |o--|| PLATFORM_FILE_VERSION       : "latest version"
+%%   PLATFORM_USER         |o--o{ PLATFORM_FILE_VERSION       : "created by"
+%%   PLATFORM_FILE         ||--o{ PLATFORM_FILE_PERMISSION    : "has permissions"
+%%   PLATFORM_USER         |o--o{ PLATFORM_FILE_PERMISSION    : "granted to"
+%%   PLATFORM_USER         |o--o{ PLATFORM_FILE_PERMISSION    : "granted by"
+%%   PLATFORM_FILE         ||--o{ PLATFORM_FILE_SHARE_LINK    : "shared via"
+%%   PLATFORM_USER         ||--o{ PLATFORM_FILE_SHARE_LINK    : "created by"

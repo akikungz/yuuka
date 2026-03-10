@@ -1,0 +1,151 @@
+%*************************************
+% ภาคผนวก ช.
+%*************************************
+\vspace{-0.5in}
+
+\appendixChapterTitle{ข}{การเริ่มต้นระบบแบบ Development ในสภาพแวดล้อมหลายรีโพซิทอรี}
+\section{การเริ่มต้นบริการประกอบจากรีโพซิทอรี Yuuka}
+\hspace*{1.3em}
+รีโพซิทอรี Yuuka ทำหน้าที่เก็บไฟล์สำหรับโครงสร้างพื้นฐานของระบบ เช่น Docker Compose, Kubernetes manifests, ตัวอย่าง environment และเครื่องมือ observability ดังนั้นในสภาพแวดล้อมพัฒนา ผู้พัฒนาควรเริ่มต้นบริการประกอบจากรีโพซิทอรีนี้ก่อน เพื่อให้ฐานข้อมูล Redis, RustFS และเครื่องมือสำหรับติดตามระบบพร้อมใช้งาน
+
+\begin{figure}[htbp]
+\centering
+\adjustbox{frame, width=0.95\textwidth}{
+    \begin{minipage}{0.9\textwidth}
+        \texttt{\footnotesize
+        cd yuuka\\
+        docker compose -f docker/docker-compose.yaml up -d
+        }
+    \end{minipage}
+}
+\caption{\fontSixTeen{การเริ่มต้นบริการประกอบจากรีโพซิทอรี Yuuka}}
+\label{figG:StartInfra}
+\end{figure}
+
+\section{การเริ่มต้นบริการหลักของระบบ}
+\hspace*{1.3em}
+หลังจากบริการประกอบพร้อมใช้งานแล้ว ให้เริ่มต้นบริการหลักทั้งสามรีโพซิทอรีใน Terminal แยกกัน เพื่อให้สามารถตรวจสอบ log และควบคุมการทำงานของแต่ละบริการได้อย่างชัดเจน
+
+\begin{mycustomenum2}
+    \item เริ่มต้น Momoi จากรีโพซิทอรี momoi ดังภาพที่ \ref{figG:StartMomoi}
+    \item เริ่มต้น Yuzu จากรีโพซิทอรี yuzu ดังภาพที่ \ref{figG:StartYuzu}
+    \item เริ่มต้น Midori จากรีโพซิทอรี midori ดังภาพที่ \ref{figG:StartMidori}
+\end{mycustomenum2}
+
+\begin{figure}[htbp]
+\centering
+\adjustbox{frame, width=0.9\textwidth}{
+    \begin{minipage}{0.85\textwidth}
+        \texttt{\footnotesize
+        cd momoi\\
+        bun run dev
+        }
+    \end{minipage}
+}
+\caption{\fontSixTeen{การเริ่มต้น Momoi ในโหมดพัฒนา}}
+\label{figG:StartMomoi}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\adjustbox{frame, width=0.9\textwidth}{
+    \begin{minipage}{0.85\textwidth}
+        \texttt{\footnotesize
+        cd yuzu\\
+        bun run dev
+        }
+    \end{minipage}
+}
+\caption{\fontSixTeen{การเริ่มต้น Yuzu ในโหมดพัฒนา}}
+\label{figG:StartYuzu}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\adjustbox{frame, width=0.9\textwidth}{
+    \begin{minipage}{0.85\textwidth}
+        \texttt{\footnotesize
+        cd midori\\
+        bun run dev
+        }
+    \end{minipage}
+}
+\caption{\fontSixTeen{การเริ่มต้น Midori ในโหมดพัฒนา}}
+\label{figG:StartMidori}
+\end{figure}
+
+\section{ลำดับการเริ่มต้นที่เหมาะสม}
+\hspace*{1.3em}
+ลำดับการเริ่มต้นระบบที่เหมาะสมสำหรับการพัฒนา คือ เริ่มจาก Yuuka เพื่อให้บริการประกอบพร้อมก่อน จากนั้นเริ่ม Momoi และ Yuzu แล้วจึงเริ่ม Midori เป็นลำดับสุดท้าย เนื่องจาก Midori ต้องอาศัย API จาก Momoi ในการเรียกข้อมูลบางส่วน และ Yuzu ต้องอาศัย Redis รวมถึงฐานข้อมูลในการประมวลผลงานจากคิว
+
+\section{จุดเชื่อมต่อสำคัญในสภาพแวดล้อมพัฒนา}
+\hspace*{1.3em}
+เมื่อติดตั้งและเริ่มบริการครบแล้ว ผู้พัฒนาสามารถเข้าถึงบริการสำคัญได้จากพอร์ตมาตรฐานของระบบดังนี้
+
+\begin{mycustomenum2}
+    \item Midori ที่ \url{http://localhost:3000}
+    \item Momoi ที่ \url{http://localhost:3001}
+    \item Grafana ที่ \url{http://localhost:3002}
+    \item RustFS Console ที่ \url{http://localhost:9001}
+    \item Prometheus ที่ \url{http://localhost:9090}
+    \item Jaeger ที่ \url{http://localhost:16686}
+\end{mycustomenum2}
+
+\section{การอัปเดตชนิดข้อมูลระหว่าง frontend และ backend}
+\hspace*{1.3em}
+เมื่อมีการเปลี่ยนแปลง OpenAPI ของ Momoi ควรเริ่ม Momoi ให้พร้อมก่อน แล้วจึงสั่งสร้างชนิดข้อมูลฝั่ง Midori ใหม่ เพื่อให้ type definitions ของ frontend สอดคล้องกับ API ล่าสุด ลดความคลาดเคลื่อนระหว่างการพัฒนาแต่ละรีโพซิทอรี
+
+\begin{figure}[htbp]
+\centering
+\adjustbox{frame, width=0.9\textwidth}{
+    \begin{minipage}{0.85\textwidth}
+        \texttt{\footnotesize
+        cd midori\\
+        bun run api:gen
+        }
+    \end{minipage}
+}
+\caption{\fontSixTeen{การสร้างชนิดข้อมูล API ของ Midori ใหม่จาก OpenAPI}}
+\label{figG:ApiGen}
+\end{figure}
+
+\begin{mycustomenum2}
+    \item \textbf{Port ถูกใช้งานแล้ว}
+    \begin{mycustomenum2}
+        \item ตรวจสอบ Port ที่ใช้งานด้วยคำสั่ง: lsof -i :3000 (สำหรับ macOS/Linux)
+        \item หยุดกระบวนการที่ใช้ Port หรือเปลี่ยน Port ในไฟล์ .env
+    \end{mycustomenum2}
+
+    \item \textbf{Docker Services ไม่สามารถเริ่มได้}
+    \begin{mycustomenum2}
+        \item ตรวจสอบสถานะด้วยคำสั่ง: docker-compose ps
+        \item ดู Log ด้วยคำสั่ง: docker-compose logs [service\_name]
+        \item รีสตาร์ท Services ด้วยคำสั่ง: docker-compose restart
+    \end{mycustomenum2}
+
+    \item \textbf{Database Connection Error}
+    \begin{mycustomenum2}
+        \item ตรวจสอบว่า PostgreSQL Container ทำงานอยู่
+        \item ตรวจสอบการตั้งค่าใน Environment Variables
+        \item รันคำสั่ง Database Migration (หากจำเป็น)
+    \end{mycustomenum2}
+
+    \item \textbf{Frontend ไม่สามารถเชื่อมต่อ API ได้}
+    \begin{mycustomenum2}
+        \item ตรวจสอบว่า Momoi API Service ทำงานอยู่ที่ Port 3001
+        \item ตรวจสอบการตั้งค่า API URL ในไฟล์ Environment
+        \item ตรวจสอบ CORS Settings ใน API Service
+    \end{mycustomenum2}
+\end{mycustomenum2}
+
+% \newpage
+\vspace{0.5em}
+\textbf{การเข้าถึงข้อมูลเพิ่มเติม}
+\vspace{0.5em}
+
+\begin{mycustomenum2}
+    \item อ่าน Documentation เพิ่มเติมใน README.md ของแต่ละ Component
+    \item ตรวจสอบ Log Files สำหรับข้อมูลการ Debug
+    \item ใช้ Jaeger UI สำหรับติดตามการทำงานของ API
+    \item ใช้ Grafana Dashboard สำหรับติดตามประสิทธิภาพระบบ
+\end{mycustomenum2}

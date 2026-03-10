@@ -1,0 +1,53 @@
+---
+title: Database Schema Overview (All Domains)
+config:
+  theme: neutral
+  layout: elk
+---
+erDiagram
+
+  %% ── Auth ────────────────────────────────────────────────────────────────────
+  USER            ||--o{ SESSION              : ""
+  USER            ||--o{ ACCOUNT              : ""
+  USER            ||--o| PLATFORM_USER        : ""
+
+  %% ── Academic ─────────────────────────────────────────────────────────────────
+  PLATFORM_USER   }o--o{ COURSE               : "teaches"
+  COURSE          ||--|{ COURSE_OFFERING      : ""
+  SEMESTER        ||--|{ COURSE_OFFERING      : ""
+
+  %% ── PVE Infrastructure ───────────────────────────────────────────────────────
+  PVE_NODE        ||--|{ PVE_TEMPLATE         : ""
+  PVE_NODE        ||--|{ PVE_VM               : ""
+  PVE_NETWORK     ||--|{ PVE_NETWORK_IP       : ""
+  PVE_NETWORK_IP  ||--o| PVE_VM              : "IP assigned"
+
+  %% ── Instance ─────────────────────────────────────────────────────────────────
+  PLATFORM_USER   ||--o{ INSTANCE             : "owns"
+  PVE_TEMPLATE    ||--o{ INSTANCE             : "defines"
+  PVE_VM          |o--o{ INSTANCE             : "backs"
+  COURSE_OFFERING |o--o{ INSTANCE             : ""
+  SEMESTER        |o--o{ INSTANCE             : ""
+  INSTANCE        ||--o{ INSTANCE_REVERSE_PROXY  : ""
+  INSTANCE        ||--o{ INSTANCE_AUDIT_LOG   : ""
+
+  %% ── Request ──────────────────────────────────────────────────────────────────
+  PLATFORM_USER   ||--o{ REQUEST              : "requester"
+  COURSE_OFFERING ||--o{ REQUEST              : ""
+  PVE_TEMPLATE    ||--o{ REQUEST              : ""
+  REQUEST         |o--o| INSTANCE             : "creates"
+  REQUEST         ||--o{ REQUEST_AUDIT_LOG    : ""
+
+  INSTANCE        ||--o{ EXTENDED_REQUEST     : "extends"
+  SEMESTER        ||--o{ EXTENDED_REQUEST     : "next semester"
+  PLATFORM_USER   ||--o{ EXTENDED_REQUEST     : "requester"
+  EXTENDED_REQUEST ||--o{ EXTENDED_REQUEST_AUDIT_LOG : ""
+
+  PLATFORM_USER   ||--o{ PLATFORM_SSH_KEY     : "owns"
+
+  %% ── File Storage ─────────────────────────────────────────────────────────────
+  PLATFORM_USER   ||--o{ PLATFORM_FILE        : "owns"
+%%   PLATFORM_FILE   |o--o{ PLATFORM_FILE        : "parent folder"
+%%   PLATFORM_FILE   ||--o{ PLATFORM_FILE_VERSION   : "versions"
+%%   PLATFORM_FILE   ||--o{ PLATFORM_FILE_PERMISSION : "permissions"
+%%   PLATFORM_FILE   ||--o{ PLATFORM_FILE_SHARE_LINK : "share links"

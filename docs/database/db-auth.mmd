@@ -1,0 +1,65 @@
+---
+title: Authentication & User Domain
+config:
+  layout: elk
+  theme: neutral
+---
+erDiagram
+
+  USER {
+    string  id           PK
+    string  name
+    string  email        UK
+    boolean emailVerified
+    string  image
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  SESSION {
+    string   id        PK
+    datetime expiresAt
+    string   token     UK
+    string   ipAddress
+    string   userAgent
+    string   userId    FK
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  ACCOUNT {
+    string   id                    PK
+    string   accountId
+    string   providerId
+    string   userId                FK
+    string   accessToken
+    string   refreshToken
+    string   idToken
+    datetime accessTokenExpiresAt
+    datetime refreshTokenExpiresAt
+    string   scope
+    string   password
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  VERIFICATION {
+    string   id         PK
+    string   identifier
+    string   value
+    datetime expiresAt
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  PLATFORM_USER {
+    int      id        PK
+    string   userId    FK "unique"
+    string   role      "ADMIN | INSTRUCTOR | STUDENT"
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  USER ||--o{ SESSION         : "has"
+  USER ||--o{ ACCOUNT         : "has"
+  USER ||--o| PLATFORM_USER   : "has"
