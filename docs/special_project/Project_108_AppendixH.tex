@@ -35,23 +35,14 @@
 \hspace*{1.3em}
 ในทางปฏิบัติ การไล่ตรวจสอบจากชั้นนอกเข้าสู่ชั้นในจะช่วยลดเวลาในการหาสาเหตุของปัญหาได้ โดยอาจเริ่มจาก browser, frontend, API, queue worker, database และ infrastructure ตามลำดับ ดังนี้
 
-\begin{figure}[htbp]
-\centering
-\adjustbox{frame, width=0.95\textwidth}{
-    \begin{minipage}{0.9\textwidth}
-        \texttt{\footnotesize
-        1. ตรวจสอบว่า Midori ทำงานที่ localhost:3000\\
-        2. ตรวจสอบว่า Momoi ทำงานที่ localhost:3001\\
-        3. ตรวจสอบ docker compose services ในรีโพซิทอรี Yuuka\\
-        4. ตรวจสอบ Redis และ PostgreSQL\\
-        5. ตรวจสอบ log ของ Yuzu และสถานะ queue\\
-        6. ตรวจสอบ Jaeger, Prometheus และ Grafana
-        }
-    \end{minipage}
-}
-\caption{\fontSixTeen{ตัวอย่างลำดับการตรวจสอบปัญหาในระบบแบบหลายรีโพซิทอรี}}
-\label{figH:TroubleshootingOrder}
-\end{figure}
+\begin{mycustomenum2}
+    \item ตรวจสอบว่า Midori ทำงานที่ localhost:3000
+    \item ตรวจสอบว่า Momoi ทำงานที่ localhost:3001
+    \item ตรวจสอบ docker compose services ในรีโพซิทอรี Yuuka
+    \item ตรวจสอบ Redis และ PostgreSQL
+    \item ตรวจสอบ log ของ Yuzu และสถานะ queue
+    \item ตรวจสอบ Jaeger, Prometheus และ Grafana
+\end{mycustomenum2}
 
 \section{ข้อควรระวังเรื่องความสอดคล้องระหว่างรีโพซิทอรี}
 \hspace*{1.3em}

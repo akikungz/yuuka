@@ -13,8 +13,11 @@
     \item \textbf{Frontend (Midori)} เว็บแอปพลิเคชันสำหรับผู้ใช้งาน พัฒนาด้วย Next.js และ React ทำหน้าที่เป็นส่วนติดต่อผู้ใช้สำหรับนักศึกษา อาจารย์ และผู้ดูแลระบบ
     \item \textbf{API Service (Momoi)} เซิร์ฟเวอร์หลักของระบบ พัฒนาด้วย Bun, Elysia.js และ Prisma รับผิดชอบโดเมนด้านข้อมูลวิชาการ คำร้องขอเครื่องเสมือน การจัดการเครื่องเสมือน พื้นที่จัดเก็บไฟล์ และการเชื่อมต่อกับบริการภายนอก
     \item \textbf{Worker / VM Management (Yuzu)} เซอร์วิสประมวลผลงานเบื้องหลังสำหรับการสร้าง ลบ และเปลี่ยนสถานะเครื่องเสมือน โดยสื่อสารกับ Proxmox VE แบบ Asynchronous
-    \item \textbf{Supporting Services and Deployment (Yuuka)} ชุดโครงสร้างพื้นฐานและไฟล์สำหรับการติดตั้งใช้งานจริง เช่น Arisu สำหรับการยืนยันตัวตน PostgreSQL, Redis, RustFS และระบบสังเกตการณ์การทำงานของแพลตฟอร์ม
+    \item \textbf{Supporting Services and Deployment (Yuuka)} ชุดโครงสร้างพื้นฐานและไฟล์สำหรับการติดตั้งใช้งานจริง เช่น PostgreSQL, Redis, RustFS และระบบสังเกตการณ์การทำงานของแพลตฟอร์ม
 \end{mycustomitem}
+
+\hspace*{1.3em} %ย่อหน้า
+ในสภาพแวดล้อมที่ติดตั้งใช้งานจริง เส้นทางการทำงานหลักของระบบสามารถสรุปได้เป็น Browser $\rightarrow$ Midori $\rightarrow$ Momoi สำหรับคำขอด้านข้อมูล ตรรกะทางธุรกิจ และคำขอด้านการยืนยันตัวตนตาม ingress ของคลัสเตอร์ และงานที่ใช้เวลานาน เช่น การสร้าง ลบ หรือเปลี่ยนสถานะเครื่องเสมือน จะถูก Momoi ส่งเข้าสู่ Redis-backed BullMQ ก่อนที่ Yuzu จะรับงานไปดำเนินการกับ Proxmox VE ต่อไป การแยกเส้นทางแบบนี้ทำให้ระบบส่วนติดต่อผู้ใช้และ API ตอบสนองได้รวดเร็ว แม้งานด้านโครงสร้างพื้นฐานจะมีระยะเวลาดำเนินการยาวนานกว่ามาก
 
 % \begin{figure}[H]
 %     \centering
@@ -32,7 +35,7 @@
 \end{figure}
 
 \hspace*{1.3em} %ย่อหน้า
-จากภาพที่ \ref{fig3:context_diagram} ระบบถูกมองเป็นกระบวนการเดียวในลักษณะ Black Box เพื่อแสดงเฉพาะความสัมพันธ์ระหว่างระบบกับเอนทิตีภายนอก ได้แก่ นักศึกษา อาจารย์หรือผู้ดูแลระบบ บริการยืนยันตัวตน Proxmox VE Cluster และ Object Storage โดยไม่มีการแสดงแหล่งเก็บข้อมูลภายในตามหลักของ Context Diagram จากนั้นในภาพที่ \ref{fig3:data_flow_level_0} – \ref{fig3:data_flow_level_0_storage} ได้ทำการแตกกระบวนการหลักของระบบออกเป็น 5 กระบวนการ พร้อมเพิ่มแหล่งเก็บข้อมูลที่จำเป็น โดยแยกแสดงเป็น 3 มุมมองเพื่อความชัดเจน และในภาพที่ \ref{fig3:data_flow_level_1_auth} – \ref{fig3:data_flow_level_1_vm} ได้ขยายรายละเอียดทั้ง 5 กระบวนการหลัก เพื่อรักษาความสมดุลของกระแสข้อมูลระหว่างแต่ละระดับของ DFD ให้สอดคล้องกัน
+จากภาพที่ \ref{fig3:context_diagram} ระบบถูกมองเป็นกระบวนการเดียวในลักษณะ Black Box เพื่อแสดงเฉพาะความสัมพันธ์ระหว่างระบบกับเอนทิตีภายนอก ได้แก่ นักศึกษา อาจารย์หรือผู้ดูแลระบบ บริการยืนยันตัวตน Proxmox VE Cluster และ Object Storage โดยไม่มีการแสดงแหล่งเก็บข้อมูลภายในตามหลักของ Context Diagram จากนั้นในภาพที่ \ref{fig3:data_flow_level_0} ได้ทำการแตกกระบวนการหลักของระบบออกเป็น 5 กระบวนการ พร้อมเพิ่มแหล่งเก็บข้อมูลที่จำเป็น โดยแยกแสดงเป็น 3 มุมมองเพื่อความชัดเจน และในภาพที่ \ref{fig3:data_flow_level_1_auth} – \ref{fig3:data_flow_level_1_vm} ได้ขยายรายละเอียดทั้ง 5 กระบวนการหลัก เพื่อรักษาความสมดุลของกระแสข้อมูลระหว่างแต่ละระดับของ DFD ให้สอดคล้องกัน
 
 % แผนภาพนี้ควรรีเจนจากไฟล์ Mermaid: docs/diagram/chapter3-dataflow-level0.mmd
 \begin{figure}[H]
@@ -101,28 +104,28 @@
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1.0\textwidth]{Image/diagram/chapter3-dataflow-level2-request-approval.png}
+    \includegraphics[width=1.0\textwidth]{Image/diagram/chapter3-dataflow-level2-process2-3.png}
     \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับที่ 2 ของกระบวนการ 2.3 การพิจารณาอนุมัติคำร้อง}}
     \label{fig3:data_flow_level_2_approval}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.5\textwidth]{Image/diagram/chapter3-dataflow-level2-request-provision.png}
+    \includegraphics[width=0.55\textwidth]{Image/diagram/chapter3-dataflow-level2-process3-1.png}
     \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับที่ 2 ของกระบวนการ 3.1 การรับคำร้องที่อนุมัติแล้วและจัดเตรียมงาน}}
     \label{fig3:data_flow_level_2_provision}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.5\textwidth]{Image/diagram/chapter3-dataflow-level2-instance-queue.png}
+    \includegraphics[width=0.45\textwidth]{Image/diagram/chapter3-dataflow-level2-process3-3.png}
     \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับที่ 2 ของกระบวนการ 3.3 การส่งงานเข้าคิว}}
     \label{fig3:data_flow_level_2_queue}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.35\textwidth]{Image/diagram/chapter3-dataflow-level2-pve-execution.png}
+    \includegraphics[width=0.45\textwidth]{Image/diagram/chapter3-dataflow-level2-process5-3.png}
     \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับที่ 2 ของกระบวนการ 5.3 การดำเนินการบน Proxmox VE}}
     \label{fig3:data_flow_level_2_pve}
 \end{figure}
@@ -233,7 +236,7 @@
 % แผนภาพนี้ถูกสร้างจากไฟล์ Mermaid: docs/database/db-request.mmd
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1.0\textwidth]{Image/diagram/database/db-request.png}
+    \includegraphics[width=0.8\textwidth]{Image/diagram/database/db-request.png}
     \caption{\fontSixTeen{แผนภาพ ER กลุ่มข้อมูลคำร้องขอและกระบวนการอนุมัติ}}
     \label{fig3:database_schema-5}
 \end{figure}
@@ -294,11 +297,11 @@
 \begin{mycustomitem}
     \item \textbf{Authentication Endpoints} ให้บริการโดย Momoi สำหรับ Login, Logout, Session และ OAuth flow โดย Midori จะ proxy คำขอยืนยันตัวตนไปยังบริการดังกล่าวในสภาพแวดล้อมพัฒนา
     \item \textbf{Platform API Endpoints} ให้บริการโดย Momoi ครอบคลุมโดเมนหลัก เช่น Academic Management, Request Workflow, Instance Management, Reverse Proxy Management และ Storage Management
-    \item \textbf{Documentation and Telemetry Endpoints} ใช้สำหรับสร้าง OpenAPI Documentation, Metrics และ Traces เพื่อสนับสนุนการทดสอบและการติดตามสถานะของระบบ
+    \item \textbf{Documentation and Telemetry Endpoints} ใช้สำหรับสร้าง OpenAPI Documentation, Metrics และ Traces เพื่อสนับสนุนการทดสอบและการติดตามสถานะของระบบ โดยกระจายอยู่ตามบทบาทของแต่ละบริการ
 \end{mycustomitem}
 
 \hspace*{1.3em} %ย่อหน้า
-ตารางที่ \ref{tab3:api_groups} สรุปกลุ่ม API หลักของ Momoi พร้อมระดับการยืนยันตัวตนที่ต้องการ โดย Momoi เปิดเผย API เหล่านี้ผ่าน Elysia.js ซึ่งสร้าง OpenAPI Specification โดยอัตโนมัติ ทำให้ Midori สามารถนำข้อมูล Schema ไปสร้างชนิดข้อมูลฝั่ง Client ได้โดยตรงโดยไม่ต้องเขียนซ้ำ
+ตารางที่ \ref{tab3:api_groups} สรุปกลุ่ม API หลักของ Momoi พร้อมระดับการยืนยันตัวตนที่ต้องการ โดย Momoi เปิดเผย API ด้านแพลตฟอร์มเหล่านี้ผ่าน Elysia.js ซึ่งสร้าง OpenAPI Specification โดยอัตโนมัติ ทำให้ Midori สามารถนำข้อมูล Schema ไปสร้างชนิดข้อมูลฝั่ง Client ได้โดยตรงโดยไม่ต้องเขียนซ้ำ
 
 \begin{table}[H]
     \caption{\fontSixTeen{สรุปกลุ่ม API หลักของบริการ Momoi}}\label{tab3:api_groups}
@@ -309,7 +312,7 @@
         \textbf{กลุ่ม API} & \multicolumn{1}{|>{\centering\arraybackslash}X|}{\textbf{คำอธิบาย}} \\
         \hline
         Public & ข้อมูลสาธารณะ เช่น ภาคการศึกษาปัจจุบันและที่กำลังจะมาถึง \\
-        Auth & Login, Logout, Session, OAuth callback จาก Arisu \\
+        Auth & Login, Logout, Session, OAuth callback \\
         Academic & รายวิชา ภาคการศึกษา ผู้สอน และการเปิดสอน \\
         Request & สร้างและจัดการคำร้องขอเครื่องเสมือน ทั้ง Request และ ExtendedRequest \\
         Instance & เครื่องเสมือน Reverse Proxy Audit Log และ SSH Key \\
@@ -320,7 +323,7 @@
 \end{table}
 
 \hspace*{1.3em} %ย่อหน้า
-การยืนยันตัวตนอาศัย Session ที่ออกโดย Arisu ซึ่งเป็น OAuth2-compatible authentication service โดย Midori จะ proxy คำขอ login ไปยัง Arisu และรับ session cookie กลับมา เมื่อเรียก API ของ Momoi ต่อไป Momoi จะตรวจสอบ session ผ่าน Arisu และดึงข้อมูล PlatformUser จากฐานข้อมูลเพื่อกำหนดบทบาท (ADMIN, INSTRUCTOR, STUDENT) ก่อนอนุมัติคำขอ การออกแบบในลักษณะนี้ทำให้ระบบ authentication อยู่ที่ Arisu เป็นศูนย์กลาง ขณะที่ Momoi รับผิดชอบเฉพาะ authorization ตามบทบาทที่กำหนดไว้ใน PlatformUser
+การยืนยันตัวตนของระบบออกแบบให้ใช้ Session ผ่านชุด endpoint `/api/auth` ที่ให้บริการโดย Momoi ซึ่งภายในผสานการทำงานของ `better-auth` และข้อมูลผู้ใช้ในฐานข้อมูล จากนั้นเมื่อ Midori เรียก API ของ Momoi ต่อไป Momoi จะตรวจสอบ session และดึงข้อมูล PlatformUser จากฐานข้อมูลเพื่อกำหนดบทบาท (ADMIN, INSTRUCTOR, STUDENT) ก่อนอนุมัติคำขอ ในบางสภาพแวดล้อมเคยมีการแยกเส้นทาง auth ออกไปเป็นบริการช่วยชั่วคราวเพื่อหลีกเลี่ยงปัญหา TLS ของ Bun แต่ในเชิงสถาปัตยกรรมของระบบ เอกสารฉบับนี้ถือให้ Momoi เป็นผู้รับผิดชอบทั้ง authentication integration และ authorization ของแพลตฟอร์ม
 
 % 3.3.4
 \subsection{การออกแบบระบบ Message Queue}
@@ -334,7 +337,10 @@
 \end{mycustomitem}
 
 \hspace*{1.3em} %ย่อหน้า
-ข้อมูลที่ถูกส่งเข้าแต่ละงานจะเก็บเฉพาะตัวระบุที่จำเป็น เช่น instanceId, userId และสถานะที่ต้องการเปลี่ยนแปลง จากนั้น Yuzu จะอ่านข้อมูลฉบับเต็มจากฐานข้อมูลก่อนดำเนินการบน Proxmox VE วิธีการนี้ช่วยลดความซ้ำซ้อนของข้อมูลในคิวและทำให้การ retry งานมีความปลอดภัยมากขึ้น
+ในระดับการติดตั้งใช้งานจริง คิวเหล่านี้จะถูกตั้งชื่อแบบผูกกับ environment นำหน้าชื่อคิวเพื่อแยกงานของแต่ละสภาพแวดล้อมออกจากกันอย่างชัดเจน
+
+\hspace*{1.3em} %ย่อหน้า
+ข้อมูลที่ถูกส่งเข้าแต่ละงานจะเก็บเฉพาะตัวระบุที่จำเป็น เช่น `instanceId`, `userId` และ action ที่ต้องการเปลี่ยนแปลง จากนั้น Yuzu จะอ่านข้อมูลฉบับเต็มจากฐานข้อมูลก่อนดำเนินการบน Proxmox VE วิธีการนี้ช่วยลดความซ้ำซ้อนของข้อมูลในคิว ลดโอกาสใช้ข้อมูลที่ล้าสมัย และทำให้การ retry งานมีความปลอดภัยมากขึ้น
 
 \hspace*{1.3em} %ย่อหน้า
 ระบบกำหนดนโยบายการทำซ้ำงาน (retry policy) เพื่อรองรับความล้มเหลวชั่วคราว เช่น การเชื่อมต่อ Proxmox VE ขัดข้อง หรือ VM อยู่ระหว่างเปลี่ยนสถานะ โดยงานที่ล้มเหลวจะถูก retry ตามจำนวนครั้งที่กำหนด พร้อมการหน่วงเวลาแบบ exponential backoff ระหว่างครั้ง หากยังล้มเหลวเกินจำนวนที่กำหนดจะถูกย้ายเข้า failed job queue เพื่อให้ผู้ดูแลระบบตรวจสอบในภายหลัง ตารางที่ \ref{tab3:queue_jobs} สรุปคิวงานหลักพร้อมข้อมูลที่ส่งพร้อมแต่ละงานและผลลัพธ์ที่คาดหวัง
@@ -349,7 +355,7 @@
         \hline
         Provision & instanceId, userId & VM ถูกสร้างและพร้อมใช้งาน สถานะ Instance อัปเดตเป็น ACTIVE \\
         Deprovision & instanceId, userId & VM ถูกลบออกจากระบบ สถานะ Instance อัปเดตเป็น DELETED \\
-        Toggle Status & instanceId, userId, targetStatus & สถานะ VM เปลี่ยนเป็น RUNNING STOPPED หรือ SUSPENDED ตามที่ระบุ \\
+        Toggle Status & instanceId, userId, action (START STOP RESTART) & สถานะ VM และ Instance ถูกอัปเดตให้สอดคล้องกับการสั่ง Start Stop หรือ Restart \\
         \hline
     \end{tabularx}
 \end{table}
@@ -365,7 +371,7 @@
 \begin{mycustomitem}
     \item \textbf{App Router} สำหรับการจัดการ Routing แบบใหม่
     \item \textbf{Built-in TypeScript Support} รองรับ Type Safety
-    \item \textbf{Integration with API Proxy and OpenAPI Types} ช่วยให้ส่วน Frontend สามารถเชื่อมต่อกับ Momoi และ Arisu ได้อย่างมีชนิดข้อมูลที่ชัดเจน
+    \item \textbf{Integration with API Proxy and OpenAPI Types} ช่วยให้ส่วน Frontend สามารถเชื่อมต่อกับ Momoi ได้อย่างมีชนิดข้อมูลที่ชัดเจนและลดความซ้ำซ้อนของ schema ระหว่าง frontend กับ backend
 \end{mycustomitem}
 
 \hspace*{1.3em} %ย่อหน้า
@@ -417,7 +423,7 @@
 \end{mycustomitem}
 
 \hspace*{1.3em} %ย่อหน้า
-\textbf{Observability Stack} ถูกนำมาใช้เพื่อวัดผลและติดตามสภาวะของระบบอย่างต่อเนื่อง โดยประกอบด้วย
+\textbf{Observability Stack} ถูกนำมาใช้เพื่อวัดผลและติดตามสภาวะของระบบอย่างต่อเนื่อง
 \begin{mycustomitem}
     \item \textbf{Prometheus} สำหรับเก็บ Metrics จากแต่ละบริการ
     \item \textbf{Grafana} สำหรับแสดง Dashboard และภาพรวมของระบบ
