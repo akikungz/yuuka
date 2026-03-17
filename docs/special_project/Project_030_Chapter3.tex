@@ -17,7 +17,7 @@
 \end{mycustomitem}
 
 \hspace*{1.3em} %ย่อหน้า
-ในสภาพแวดล้อมที่ติดตั้งใช้งานจริง เส้นทางการทำงานหลักของระบบสามารถสรุปได้เป็น Browser $\rightarrow$ Midori $\rightarrow$ Momoi สำหรับคำขอด้านข้อมูล ตรรกะทางธุรกิจ และคำขอด้านการยืนยันตัวตนตาม ingress ของคลัสเตอร์ และงานที่ใช้เวลานาน เช่น การสร้าง ลบ หรือเปลี่ยนสถานะเครื่องเสมือน จะถูก Momoi ส่งเข้าสู่ Redis-backed BullMQ ก่อนที่ Yuzu จะรับงานไปดำเนินการกับ Proxmox VE ต่อไป การแยกเส้นทางแบบนี้ทำให้ระบบส่วนติดต่อผู้ใช้และ API ตอบสนองได้รวดเร็ว แม้งานด้านโครงสร้างพื้นฐานจะมีระยะเวลาดำเนินการยาวนานกว่ามาก
+ในสภาพแวดล้อมที่ติดตั้งใช้งานจริง เส้นทางการทำงานหลักของระบบสามารถสรุปได้เป็น Browser > Midori > Momoi สำหรับคำขอด้านข้อมูล ตรรกะทางธุรกิจ และคำขอด้านการยืนยันตัวตนตาม ingress ของคลัสเตอร์ และงานที่ใช้เวลานาน เช่น การสร้าง ลบ หรือเปลี่ยนสถานะเครื่องเสมือน จะถูก Momoi ส่งเข้าสู่ Redis-backed BullMQ ก่อนที่ Yuzu จะรับงานไปดำเนินการกับ Proxmox VE ต่อไป การแยกเส้นทางแบบนี้ทำให้ระบบส่วนติดต่อผู้ใช้และ API ตอบสนองได้รวดเร็ว แม้งานด้านโครงสร้างพื้นฐานจะมีระยะเวลาดำเนินการยาวนานกว่ามาก
 
 % \begin{figure}[H]
 %     \centering
@@ -59,6 +59,9 @@
 %     \label{fig3:data_flow_level_0_storage}
 % \end{figure}
 
+\hspace*{1.3em} %ย่อหน้า
+ในระดับแผนภาพการไหลของข้อมูลระดับที่ 1 (DFD Level 1) ตามภาพที่ \ref{fig3:data_flow_level_1_auth} – \ref{fig3:data_flow_level_1_vm} ได้ทำการขยายกระบวนการหลักจากระดับ 0 ให้เห็นรายละเอียดของกระแสข้อมูลภายในระบบมากขึ้น โดยยังคงรักษาหลัก \textit{Balancing} กล่าวคือ ข้อมูลเข้าและข้อมูลออกของแต่ละกระบวนการหลักต้องสอดคล้องกับสิ่งที่ปรากฏใน DFD ระดับ 0 และไม่สร้าง/ลบกระแสข้อมูลที่ไม่มีอยู่ในระดับก่อนหน้า ทั้งนี้สามารถสรุปแนวคิดสำคัญของกระบวนการระดับที่ 1 ได้ดังนี้
+
 \begin{figure}[H]
     \centering
     % แผนภาพนี้ควรรีเจนจากไฟล์ Mermaid: docs/diagram/chapter3-dataflow-level1-process1.mmd
@@ -66,6 +69,9 @@
     \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับที่ 1 ของกระบวนการ 1.0 การยืนยันตัวตนและกำหนดสิทธิ์ผู้ใช้}}
     \label{fig3:data_flow_level_1_auth}
 \end{figure}
+
+\hspace*{1.3em} %ย่อหน้า
+\textbf{กระบวนการ 1.0 การยืนยันตัวตนและกำหนดสิทธิ์ผู้ใช้} (ภาพที่ \ref{fig3:data_flow_level_1_auth}) ทำหน้าที่เป็น \textit{gatekeeper} ของ API ทั้งระบบ โดยรับข้อมูลยืนยันตัวตนจากผู้ใช้ผ่าน Midori และ/หรือบริการยืนยันตัวตน จากนั้นสร้าง/ตรวจสอบ Session และผูกกับข้อมูลผู้ใช้ในฐานข้อมูลเพื่อกำหนดบทบาท (ADMIN/INSTRUCTOR/STUDENT) ผลลัพธ์คือ token/session ที่ใช้ซ้ำได้ในการเรียก API อื่น ๆ และข้อมูลสิทธิ์ที่ใช้ประกอบการอนุมัติการเข้าถึงทรัพยากร
 
 \begin{figure}[H]
     \centering
@@ -75,13 +81,19 @@
     \label{fig3:data_flow_level_1_frontend}
 \end{figure}
 
+\hspace*{1.3em} %ย่อหน้า
+\textbf{กระบวนการ 2.0 การจัดการคำร้องและข้อมูลวิชาการ} (ภาพที่ \ref{fig3:data_flow_level_1_frontend}) เน้นการจัดการข้อมูลเชิงโดเมนที่เกี่ยวข้องกับผู้ใช้และการเรียนการสอน เช่น รายวิชา/ภาคการศึกษา/ผู้สอน รวมถึงวงจรคำร้องขอเครื่องเสมือนและการตรวจสอบสิทธิ์ของผู้ยื่นคำร้อง จุดสำคัญคือข้อมูลคำร้องและประวัติการอนุมัติจะถูกจัดเก็บแบบเป็นโครงสร้างเพื่อให้สามารถตรวจสอบย้อนหลังได้ และสถานะคำร้องถูกส่งกลับไปยัง UI เพื่อสื่อสารความคืบหน้าให้ผู้ใช้
+
 \begin{figure}[H]
     \centering
     % แผนภาพนี้ควรรีเจนจากไฟล์ Mermaid: docs/diagram/chapter3-dataflow-level1-process3.mmd
-    \includegraphics[width=1.0\textwidth]{Image/diagram/chapter3-dataflow-level1-process3.png}
+    \includegraphics[width=0.95\textwidth]{Image/diagram/chapter3-dataflow-level1-process3.png}
     \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับที่ 1 ของกระบวนการ 3.0 การจัดการข้อมูลเครื่องเสมือน}}
     \label{fig3:data_flow_level_1_backend}
 \end{figure}
+
+\hspace*{1.3em} %ย่อหน้า
+\textbf{กระบวนการ 3.0 การจัดการข้อมูลเครื่องเสมือน} (ภาพที่ \ref{fig3:data_flow_level_1_backend}) เป็นส่วนกลางของการจัดการ VM ในเชิงธุรกรรม โดยอ่าน/เขียนข้อมูล Instance และความสัมพันธ์กับทรัพยากร Proxmox VE ในฐานข้อมูล รวมถึงการตัดสินใจว่างานใดควรประมวลผลแบบทันที (เช่นการอ่านสถานะจากฐานข้อมูล) และงานใดควรส่งไปประมวลผลแบบอะซิงโครนัสผ่านคิว (เช่นการสร้าง/ลบ/สั่งเริ่ม-หยุด VM) เพื่อให้ API ตอบสนองรวดเร็วและรองรับการ retry ได้อย่างปลอดภัย
 
 \begin{figure}[H]
     \centering
@@ -90,6 +102,9 @@
     \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับที่ 1 ของกระบวนการ 4.0 การจัดการไฟล์และสิทธิ์การเข้าถึง}}
     \label{fig3:data_flow_level_1_storage}
 \end{figure}
+
+\hspace*{1.3em} %ย่อหน้า
+\textbf{กระบวนการ 4.0 การจัดการไฟล์และสิทธิ์การเข้าถึง} (ภาพที่ \ref{fig3:data_flow_level_1_storage}) แยกการจัดการ \textit{เมทาดาทา} (เช่นชื่อไฟล์, owner, permission, เวลาอัปโหลด) ออกจาก \textit{ข้อมูลไฟล์จริง} ที่อยู่ใน Object Storage โดยกระบวนการนี้จึงต้องจัดการทั้งสิทธิ์เข้าถึงและการออกลิงก์/โทเคนการเข้าถึงตามนโยบายของระบบ เพื่อให้การควบคุมสิทธิ์สอดคล้องกับบทบาทผู้ใช้และบริบทของรายวิชา/คำร้อง
 
 \begin{figure}[H]
     \centering
@@ -100,7 +115,13 @@
 \end{figure}
 
 \hspace*{1.3em} %ย่อหน้า
+\textbf{กระบวนการ 5.0 การประมวลผลงานจัดสรรเครื่องเสมือน} (ภาพที่ \ref{fig3:data_flow_level_1_vm}) แสดงบทบาทของ worker (Yuzu) ในการรับงานจากคิวและเรียก Proxmox VE จริง โดยผลลัพธ์ที่ได้จาก Proxmox VE (สำเร็จ/ล้มเหลว/สถานะระหว่างทาง) จะถูกนำกลับมาอัปเดตฐานข้อมูล เพื่อให้ Midori และ Momoi แสดงสถานะล่าสุดแก่ผู้ใช้ได้จากแหล่งข้อมูลเดียวกัน (single source of truth)
+
+\hspace*{1.3em} %ย่อหน้า
 สำหรับการวิเคราะห์เชิงลึกเพิ่มเติม ได้จัดทำแผนภาพการไหลของข้อมูลระดับที่ 2 เพื่อขยายกระบวนการย่อยที่มีความซับซ้อน ได้แก่ การพิจารณาอนุมัติคำร้องในกระบวนการ 2.3 การรับคำร้องที่อนุมัติแล้วและจัดเตรียมงานในกระบวนการ 3.1 การส่งงานเข้าคิวในกระบวนการ 3.3 และการดำเนินการบน Proxmox VE ในกระบวนการ 5.3 ทั้งนี้การกำหนดชื่อกระแสข้อมูลในแต่ละระดับถูกจัดให้สอดคล้องกันตามหลัก Balancing ของ DFD ดังแสดงในภาพที่ \ref{fig3:data_flow_level_2_approval} – \ref{fig3:data_flow_level_2_pve}
+
+\hspace*{1.3em} %ย่อหน้า
+ในระดับ DFD Level 2 การขยายรายละเอียดมีเป้าหมายเพื่อทำให้เห็น \textbf{จุดตัดสินใจ (decision points)} และ \textbf{จุดที่ต้องรักษาความถูกต้องของข้อมูล (consistency points)} ของระบบอย่างชัดเจน โดยเฉพาะกระบวนการที่เกี่ยวข้องกับการอนุมัติ (ต้องตรวจสอบสิทธิ์และบันทึกประวัติ) และกระบวนการที่เกี่ยวข้องกับงานระยะยาว (ต้องส่งเข้าคิวและรองรับการ retry) ซึ่งสามารถอธิบายกลไกสำคัญได้ดังนี้
 
 \begin{figure}[H]
     \centering
@@ -109,26 +130,38 @@
     \label{fig3:data_flow_level_2_approval}
 \end{figure}
 
+\hspace*{1.3em} %ย่อหน้า
+\textbf{กระบวนการ 2.3 การพิจารณาอนุมัติคำร้อง} (ภาพที่ \ref{fig3:data_flow_level_2_approval}) เริ่มจากผู้ดูแลระบบ/อาจารย์ส่งคำสั่งอนุมัติหรือปฏิเสธคำร้อง ระบบจะตรวจสอบสิทธิ์ของผู้ดำเนินการและสถานะคำร้องปัจจุบันก่อน (เพื่อป้องกันการอนุมัติซ้ำหรืออนุมัติคำร้องที่ถูกยกเลิกแล้ว) จากนั้นจึงอัปเดตสถานะคำร้องในฐานข้อมูล พร้อมบันทึกประวัติการตัดสินใจลงในตาราง audit log เพื่อใช้ตรวจสอบย้อนหลัง และส่งผลลัพธ์/สถานะใหม่กลับไปยัง UI
+
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.55\textwidth]{Image/diagram/chapter3-dataflow-level2-process3-1.png}
+    \includegraphics[width=0.50\textwidth]{Image/diagram/chapter3-dataflow-level2-process3-1.png}
     \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับที่ 2 ของกระบวนการ 3.1 การรับคำร้องที่อนุมัติแล้วและจัดเตรียมงาน}}
     \label{fig3:data_flow_level_2_provision}
 \end{figure}
 
+\hspace*{1.3em} %ย่อหน้า
+\textbf{กระบวนการ 3.1 การรับคำร้องที่อนุมัติแล้วและจัดเตรียมงาน} (ภาพที่ \ref{fig3:data_flow_level_2_provision}) เมื่อคำร้องถูกอนุมัติ ระบบจะดึงข้อมูลที่จำเป็นจากฐานข้อมูล (เช่น รายละเอียดผู้ใช้ รายวิชา เทมเพลต VM โหนด/เครือข่ายที่เกี่ยวข้อง) เพื่อจัดเตรียม \textit{แผนการดำเนินงาน} (provision plan) และสร้างระเบียน Instance/งานที่เกี่ยวข้องในสถานะเริ่มต้น จุดนี้มักเน้นความสอดคล้องของข้อมูล เช่น ต้องผูกคำร้องกับ instanceId ที่ชัดเจน และกำหนดสถานะเพื่อรองรับการติดตามความคืบหน้าในขั้นถัดไป
+
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.45\textwidth]{Image/diagram/chapter3-dataflow-level2-process3-3.png}
+    \includegraphics[width=0.35\textwidth]{Image/diagram/chapter3-dataflow-level2-process3-3.png}
     \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับที่ 2 ของกระบวนการ 3.3 การส่งงานเข้าคิว}}
     \label{fig3:data_flow_level_2_queue}
 \end{figure}
 
+\hspace*{1.3em} %ย่อหน้า
+\textbf{กระบวนการ 3.3 การส่งงานเข้าคิว} (ภาพที่ \ref{fig3:data_flow_level_2_queue}) ระบบจะสร้าง payload ของงานโดยเก็บเฉพาะตัวระบุ (เช่น instanceId, userId, action) และข้อมูลที่จำเป็นขั้นต่ำ เพื่อหลีกเลี่ยงข้อมูลซ้ำซ้อนหรือข้อมูลล้าสมัยในคิว จากนั้นจึงส่งงานเข้าสู่ Redis-backed BullMQ พร้อมกำหนดชนิดงาน (เช่น provision/deprovision/toggle status) และอัปเดตสถานะงานในฐานข้อมูลเพื่อสะท้อนว่าอยู่ระหว่างรอประมวลผล วิธีนี้ช่วยให้การ retry มีความปลอดภัย เพราะ worker สามารถอ่านข้อมูลฉบับล่าสุดจากฐานข้อมูลก่อนลงมือปฏิบัติจริง
+
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.45\textwidth]{Image/diagram/chapter3-dataflow-level2-process5-3.png}
+    \includegraphics[width=0.35\textwidth]{Image/diagram/chapter3-dataflow-level2-process5-3.png}
     \caption{\fontSixTeen{แผนภาพการไหลของข้อมูลระดับที่ 2 ของกระบวนการ 5.3 การดำเนินการบน Proxmox VE}}
     \label{fig3:data_flow_level_2_pve}
 \end{figure}
+
+\hspace*{1.3em} %ย่อหน้า
+\textbf{กระบวนการ 5.3 การดำเนินการบน Proxmox VE} (ภาพที่ \ref{fig3:data_flow_level_2_pve}) เริ่มจาก worker (Yuzu) รับงานจากคิวและโหลดรายละเอียด instance จากฐานข้อมูลเพื่อประกอบคำสั่ง จากนั้นเรียก Proxmox VE API เพื่อดำเนินการตามชนิดงาน (สร้าง/ลบ/เริ่ม/หยุด/รีสตาร์ท) พร้อมตรวจสอบผลลัพธ์และบันทึกสถานะงานเป็นช่วง ๆ หากเกิดข้อผิดพลาด worker จะบันทึกเหตุการณ์และสถานะล้มเหลวเพื่อให้ระบบแจ้งกลับผู้ใช้ได้อย่างถูกต้อง และหากเป็นกรณีที่รองรับการ retry จะสามารถหยิบงานขึ้นมาทำซ้ำได้โดยอ้างอิงสถานะล่าสุดในฐานข้อมูลเพื่อหลีกเลี่ยงการสร้าง VM ซ้ำหรือเปลี่ยนสถานะผิดพลาด
 
 \newpage
 \subsection{การออกแบบหน้าจอการทำงาน}
@@ -228,7 +261,7 @@
 % แผนภาพนี้ถูกสร้างจากไฟล์ Mermaid: docs/database/db-instance.mmd
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1.0\textwidth]{Image/diagram/database/db-instance.png}
+    \includegraphics[width=0.75\textwidth]{Image/diagram/database/db-instance_90.png}
     \caption{\fontSixTeen{แผนภาพ ER กลุ่มข้อมูลการจัดการเครื่องเสมือน}}
     \label{fig3:database_schema-4}
 \end{figure}
@@ -236,7 +269,7 @@
 % แผนภาพนี้ถูกสร้างจากไฟล์ Mermaid: docs/database/db-request.mmd
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{Image/diagram/database/db-request.png}
+    \includegraphics[width=0.9\textwidth]{Image/diagram/database/db-request.png}
     \caption{\fontSixTeen{แผนภาพ ER กลุ่มข้อมูลคำร้องขอและกระบวนการอนุมัติ}}
     \label{fig3:database_schema-5}
 \end{figure}

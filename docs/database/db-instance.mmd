@@ -5,12 +5,17 @@ config:
   theme: neutral
 ---
 erDiagram
+	direction LR
+  %% Print-friendly (A4): attribute lists are trimmed to keep tables compact.
+  %% For full columns (timestamps, secrets, long text fields), refer to the Prisma schema.
 
+  %% ── Actors ─────────────────────────────────────────────────────────────────
   PLATFORM_USER {
     int    id   PK
     string role "ADMIN | INSTRUCTOR | STUDENT"
   }
 
+  %% ── PVE Infrastructure ─────────────────────────────────────────────────────
   PVE_VM {
     int    id       PK
     int    vmId     UK
@@ -24,6 +29,7 @@ erDiagram
     string type "QEMU | LXC"
   }
 
+  %% ── Academic Linkage ───────────────────────────────────────────────────────
   COURSE_OFFERING {
     int id PK
   }
@@ -33,6 +39,7 @@ erDiagram
     string name
   }
 
+  %% ── Instance Core ──────────────────────────────────────────────────────────
   INSTANCE {
     int      id               PK
     int      platformUserId   FK
@@ -46,36 +53,31 @@ erDiagram
     int      semesterId       FK "nullable"
     string   status           "PENDING | ACTIVE | PROMOTED | INACTIVE | DELETED"
     string   provisionStatus  "NOT_STARTED | QUEUED | PROVISIONING | COMPLETED | FAILED"
-    string   provisionError
-    string   defaultPassword
-    datetime createdAt
-    datetime updatedAt
   }
 
+  %% ── Networking ─────────────────────────────────────────────────────────────
   INSTANCE_REVERSE_PROXY {
     int      id          PK
     int      targetPort
     string   type        "HTTPS | HTTP"
-    string   description
     int      instanceId  FK
-    datetime createdAt
-    datetime updatedAt
   }
 
+  %% ── Audit ──────────────────────────────────────────────────────────────────
   INSTANCE_AUDIT_LOG {
     int      id            PK
     int      instanceId    FK
     string   action
     int      performedById FK
     datetime timestamp
-    string   notes
   }
 
-  PLATFORM_USER   ||--o{ INSTANCE               : "owns"
-  PVE_TEMPLATE    ||--o{ INSTANCE               : "defines"
-  PVE_VM          |o--o{ INSTANCE               : "backs"
-  COURSE_OFFERING |o--o{ INSTANCE               : "linked to"
-  SEMESTER        |o--o{ INSTANCE               : "belongs to"
-  INSTANCE        ||--o{ INSTANCE_REVERSE_PROXY  : "exposes via"
-  INSTANCE        ||--o{ INSTANCE_AUDIT_LOG      : "audited by"
-  PLATFORM_USER   ||--o{ INSTANCE_AUDIT_LOG      : "performed by"
+  %% ── Relationships ──────────────────────────────────────────────────────────
+  PLATFORM_USER   ||--o{ INSTANCE              : "owns"
+  PVE_TEMPLATE    ||--o{ INSTANCE              : "template"
+  PVE_VM          |o--o{ INSTANCE              : "vm"
+  COURSE_OFFERING |o--o{ INSTANCE              : "course"
+  SEMESTER        |o--o{ INSTANCE              : "semester"
+  INSTANCE        ||--o{ INSTANCE_REVERSE_PROXY : "routes"
+  INSTANCE        ||--o{ INSTANCE_AUDIT_LOG     : "audit"
+  PLATFORM_USER   ||--o{ INSTANCE_AUDIT_LOG     : "performed by"

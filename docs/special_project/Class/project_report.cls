@@ -737,17 +737,7 @@
 \RequirePackage[american]{babel}
 \RequirePackage{csquotes}
 \RequirePackage[style=apa,sortcites=true,sorting=nyt,backend=biber,giveninits=false]{biblatex}
-\DeclareLanguageMapping{american}{american-apa}
 
-\makeatletter
-\renewbibmacro*{name:apa:family-given}[5]{%
-  \mkbibnamegiven{#2}~\mkbibnamefamily{#1}%
-  \iffieldundef{suffix}{}{% เช็คว่ามี suffix หรือไม่
-    \setunit{\namepunct}%
-    \printfield{suffix}%
-  }%
-}
-\makeatother
 
 \AtEndPreamble{
   \addbibresource{Project_999_Bibliography.bib}

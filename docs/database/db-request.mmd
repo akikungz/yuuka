@@ -5,12 +5,17 @@ config:
   theme: neutral
 ---
 erDiagram
+	direction TB
+  %% Print-friendly (A4): attribute lists are trimmed to keep tables compact.
+  %% For full columns (timestamps, long text fields), refer to the Prisma schema.
 
+  %% ── Actors ─────────────────────────────────────────────────────────────────
   PLATFORM_USER {
     int    id   PK
     string role "ADMIN | INSTRUCTOR | STUDENT"
   }
 
+  %% ── Academic Context ───────────────────────────────────────────────────────
   COURSE_OFFERING {
     int id PK
   }
@@ -19,20 +24,21 @@ erDiagram
     int id PK
   }
 
+  %% ── PVE Template (requested spec) ──────────────────────────────────────────
   PVE_TEMPLATE {
     int    id   PK
     string name
   }
 
+  %% ── Instance (created/extended) ────────────────────────────────────────────
   INSTANCE {
     int    id     PK
     string status
   }
 
+  %% ── Requests ───────────────────────────────────────────────────────────────
   REQUEST {
     int      id               PK
-    string   title
-    string   description
     int      courseOfferingId FK
     int      pveTemplateId    FK
     int      cpus
@@ -41,32 +47,24 @@ erDiagram
     int      requesterId      FK
     int      reviewerId       FK "nullable"
     string   status           "PENDING | APPROVED | REJECTED | CANCELLED"
-    string   reason
-    datetime createdAt
-    datetime updatedAt
   }
 
   EXTENDED_REQUEST {
     int      id               PK
-    string   title
-    string   description
     int      targetInstanceId FK
     int      nextSemesterId   FK
     int      requesterId      FK
     int      reviewerId       FK "nullable"
     string   status           "PENDING | APPROVED | REJECTED | CANCELLED"
-    string   reason
-    datetime createdAt
-    datetime updatedAt
   }
 
+  %% ── Audit ──────────────────────────────────────────────────────────────────
   REQUEST_AUDIT_LOG {
     int      id            PK
     int      requestId     FK
     string   action        "ApprovalStatus"
     int      performedById FK
     datetime timestamp
-    string   notes
   }
 
   EXTENDED_REQUEST_AUDIT_LOG {
@@ -75,31 +73,30 @@ erDiagram
     string   action            "ApprovalStatus"
     int      performedById     FK
     datetime timestamp
-    string   notes
   }
 
+  %% ── SSH Keys ───────────────────────────────────────────────────────────────
   PLATFORM_SSH_KEY {
     int      id        PK
     string   name
     string   publicKey
     int      ownerId   FK
-    datetime createdAt
-    datetime updatedAt
   }
 
-  COURSE_OFFERING  ||--o{ REQUEST                    : "for"
-  PVE_TEMPLATE     ||--o{ REQUEST                    : "uses"
-  PLATFORM_USER    ||--o{ REQUEST                    : "requester"
-  PLATFORM_USER    |o--o{ REQUEST                    : "reviewer"
-  REQUEST          |o--o| INSTANCE                   : "creates"
-  REQUEST          ||--o{ REQUEST_AUDIT_LOG           : "audited by"
-  PLATFORM_USER    ||--o{ REQUEST_AUDIT_LOG           : "performed by"
+  %% ── Relationships ──────────────────────────────────────────────────────────
+  COURSE_OFFERING  ||--o{ REQUEST                   : "for"
+  PVE_TEMPLATE     ||--o{ REQUEST                   : "uses"
+  PLATFORM_USER    ||--o{ REQUEST                   : "requester"
+  PLATFORM_USER    |o--o{ REQUEST                   : "reviewer"
+  REQUEST          |o--o| INSTANCE                  : "creates"
+  REQUEST          ||--o{ REQUEST_AUDIT_LOG          : "audit"
+  PLATFORM_USER    ||--o{ REQUEST_AUDIT_LOG          : "performed by"
 
-  INSTANCE         ||--o{ EXTENDED_REQUEST            : "extended via"
-  SEMESTER         ||--o{ EXTENDED_REQUEST            : "extends to"
-  PLATFORM_USER    ||--o{ EXTENDED_REQUEST            : "requester"
-  PLATFORM_USER    |o--o{ EXTENDED_REQUEST            : "reviewer"
-  EXTENDED_REQUEST ||--o{ EXTENDED_REQUEST_AUDIT_LOG  : "audited by"
-  PLATFORM_USER    ||--o{ EXTENDED_REQUEST_AUDIT_LOG  : "performed by"
+  INSTANCE         ||--o{ EXTENDED_REQUEST           : "extends"
+  SEMESTER         ||--o{ EXTENDED_REQUEST           : "next"
+  PLATFORM_USER    ||--o{ EXTENDED_REQUEST           : "requester"
+  PLATFORM_USER    |o--o{ EXTENDED_REQUEST           : "reviewer"
+  EXTENDED_REQUEST ||--o{ EXTENDED_REQUEST_AUDIT_LOG : "audit"
+  PLATFORM_USER    ||--o{ EXTENDED_REQUEST_AUDIT_LOG : "performed by"
 
-  PLATFORM_USER    ||--o{ PLATFORM_SSH_KEY            : "owns"
+  PLATFORM_USER    ||--o{ PLATFORM_SSH_KEY           : "owns"
