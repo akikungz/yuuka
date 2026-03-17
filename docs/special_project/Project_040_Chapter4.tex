@@ -297,11 +297,37 @@
 \hspace*{1.3em}
 ระบบได้ติดตั้งชุดเครื่องมือสำหรับสังเกตการณ์การทำงาน (Observability Stack) โดยใช้ \textbf{Prometheus} สำหรับเก็บ metrics จากบริการหลัก \textbf{Grafana} สำหรับแสดงผลบนหน้า dashboard \textbf{Loki} สำหรับรวบรวมและค้นหา application log และ \textbf{Jaeger} สำหรับ distributed tracing ข้ามบริการ ทำให้ผู้ดูแลระบบสามารถติดตามสถานะและวิเคราะห์ปัญหาได้แบบ real-time
 
+\subsection{ผลการติดตามบน Grafana Dashboard}
 \hspace*{1.3em}
 แต่ละบริการหลักมีรูปแบบการสังเกตการณ์ที่แตกต่างกันตามบทบาทของตนเอง โดย Midori และ Momoi มีการส่ง traces ไปยัง Jaeger ผ่าน OpenTelemetry และมี metrics endpoint สำหรับ Prometheus ส่วน Yuzu เน้นการเปิดเผย metrics และ structured logs ของ queue worker และการเรียกใช้งาน Proxmox VE ผ่าน Prometheus-compatible endpoint ของตนเอง ตัวชี้วัดหลักที่ติดตาม ได้แก่ อัตราคำขอต่อวินาที latency percentile (p50, p95, p99) สถานะของ queue worker จำนวนงานในคิว เวลาในการทำ provision และอัตราความสำเร็จของการจัดสรรเครื่องเสมือน ข้อมูลเหล่านี้จะถูกนำเสนอใน Grafana dashboard ที่ออกแบบแยกตามบริการ และรวมไว้ในหน้าภาพรวมของระบบทั้งหมด
 
 \hspace*{1.3em}
+ภาพที่ \ref{fig4:MonitoringDashboard} แสดงตัวอย่างผลการติดตามบน Grafana ซึ่งช่วยให้ผู้ดูแลระบบเห็นภาพรวมของสถานะบริการและแนวโน้มของตัวชี้วัดสำคัญได้ในหน้าเดียว
+
+\begin{figure}[H]
+\centering
+\adjustbox{frame, width=0.5\textwidth}{
+    \includegraphics[width=1.0\textwidth]{Image/monitoring_dashboard.jpeg}
+}
+\caption{\fontSixTeen{ตัวอย่างผลการติดตามสถานะระบบบน Grafana Dashboard}}
+\label{fig4:MonitoringDashboard}
+\end{figure}
+
+\subsection{ผลการติดตามแบบ Distributed Tracing ด้วย Jaeger}
+\hspace*{1.3em}
 Jaeger ถูกนำมาใช้เพื่อ trace การประมวลผลคำขอในเส้นทางที่เกี่ยวข้องกับ Midori และ Momoi ซึ่งช่วยในการระบุคอขวดและวิเคราะห์ latency ระหว่าง frontend และ API ได้อย่างมีประสิทธิภาพ สำหรับกระบวนการสร้างเครื่องเสมือนที่ต่อเนื่องไปยัง Redis Queue และ Yuzu นั้น ปัจจุบันการติดตามฝั่ง worker ยังพึ่งพา metrics และ logs มากกว่าการ trace แบบ end-to-end เต็มรูปแบบ ดังนั้นการวิเคราะห์ความล่าช้าในช่วงปฏิบัติการบน Proxmox VE จะอาศัยข้อมูลจาก queue metrics, worker logs และสถานะงานร่วมกัน
+
+\hspace*{1.3em}
+ภาพที่ \ref{fig4:MonitoringTrace} แสดงตัวอย่าง trace ที่รวบรวม span ของการประมวลผลคำขอในแต่ละชั้นบริการ ทำให้สามารถตรวจสอบขั้นตอนที่ใช้เวลามากผิดปกติและช่วยวิเคราะห์สาเหตุของความล่าช้าได้อย่างเป็นระบบ
+
+\begin{figure}[H]
+\centering
+\adjustbox{frame, width=1.0\textwidth}{
+    \includegraphics[width=1.0\textwidth]{Image/monitoring_dashboard_trace.jpeg}
+}
+\caption{\fontSixTeen{ตัวอย่างผลการติดตามเส้นทางคำขอ (Trace) บน Jaeger}}
+\label{fig4:MonitoringTrace}
+\end{figure}
 
 \section{ผลการทดสอบประสิทธิภาพระบบ}
 \label{sec:system-perf}
