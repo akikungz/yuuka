@@ -124,4 +124,28 @@ spec:
       targetPort: redis
       protocol: TCP
 ---
-
+# NodePort Service for Redis (Optional, for external access)
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-nodeport
+  namespace: fitm-cloud
+  labels:
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: redis
+    app.kubernetes.io/managed-by: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,Prune=false
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: redis
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: redis
+      protocol: TCP
+      nodePort: 30008
+---

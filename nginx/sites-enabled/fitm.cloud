@@ -13,6 +13,7 @@ server {
 server {
     listen 443 ssl;
     server_name fitm.cloud dev.fitm.cloud grafana.fitm.cloud influxdb.fitm.cloud rustfs.fitm.cloud rustfs-console.fitm.cloud;
+    client_max_body_size 0;
 
     ssl_certificate /etc/ssl/certs/fitm.cloud.crt;
     ssl_certificate_key /etc/ssl/private/fitm.cloud.key;
@@ -20,7 +21,7 @@ server {
     add_header Strict-Transport-Security "max-age=2592000; includeSubDomains; preload";
 
     location / {
-        proxy_pass http://10.20.30.21:80; # Kubernetes Ingress Controller IP
+        proxy_pass https://10.20.30.21:443; # Kubernetes Ingress Controller IP
 
         # Critical headers for OAuth2
         proxy_set_header Host $host;

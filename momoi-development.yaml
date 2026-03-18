@@ -124,7 +124,9 @@ spec:
             - name: S3_BUCKET_NAME
               value: "fitm-cloud"
             - name: S3_ENDPOINT
-              value: "http://rustfs:9000"
+              value: "https://rustfs.fitm.cloud"
+            - name: S3_REGION
+              value: "us-east-1"
             - name: GOOGLE_CLIENT_ID
               valueFrom:
                 secretKeyRef:
@@ -151,6 +153,8 @@ spec:
               value: "json"
             - name: LOG_PRETTY
               value: "false"
+            - name: STORAGE_PROVIDER
+              value: "s3"
           command:
             - sh
             - -c
