@@ -40,6 +40,7 @@ jobs:
             --from-literal=google-client-secret="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
             --from-literal=pve-token-id="${{ secrets.PVE_TOKEN_ID }}" \
             --from-literal=pve-token-secret="${{ secrets.PVE_TOKEN_SECRET }}" \
+            --from-literal=otel-collector-basic-auth="${{ secrets.OTEL_COLLECTOR_PASSWORD }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
           kubectl label secret base-secrets \
@@ -169,7 +170,7 @@ jobs:
   #         while [ $ELAPSED -lt $TIMEOUT ]; do
   #           STATUS=$(kubectl get application fitm-cloud --namespace argocd -o jsonpath='{.status.sync.status}' 2>/dev/null || echo "Unknown")
   #           PHASE=$(kubectl get application fitm-cloud --namespace argocd -o jsonpath='{.status.operationState.phase}' 2>/dev/null || echo "")
-            
+
   #           echo "[$ELAPSED/$TIMEOUT s] Status: $STATUS, Phase: $PHASE"
 
   #           if [ "$PHASE" = "Succeeded" ] && [ "$STATUS" = "Synced" ]; then
@@ -199,7 +200,7 @@ jobs:
 
   #         while [ $ELAPSED -lt $TIMEOUT ]; do
   #           HEALTHY=$(kubectl get application fitm-cloud --namespace argocd -o jsonpath='{.status.health.status}' 2>/dev/null || echo "Unknown")
-            
+
   #           echo "[$ELAPSED/$TIMEOUT s] Health Status: $HEALTHY"
 
   #           if [ "$HEALTHY" = "Healthy" ]; then
@@ -247,7 +248,7 @@ jobs:
   #             --field-selector=status.phase!=Running,status.phase!=Succeeded \
   #             -o name 2>/dev/null \
   #             || echo "")
-            
+
   #           if [ -z "$UNHEALTHY_PODS" ]; then
   #             echo "All pods are healthy."
   #             exit 0

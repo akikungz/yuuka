@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-config
+  namespace: fitm-cloud
+  labels:
+    app.kubernetes.io/name: fitm-cloud
+    app.kubernetes.io/component: otel-collector
+    app.kubernetes.io/managed-by: argo-cd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+data:
+  config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+            auth:
+              authenticator: basicauth/server
+          http:
+            endpoint: 0.0.0.0:4318
+            auth:
+              authenticator: basicauth/server
+
+    processors:
+      memory_limiter:
+        check_interval: 1s
+        limit_mib: 256
+        spike_limit_mib: 64
+
+      batch:
+        timeout: 5s
+        send_batch_size: 1024
+
+    exporters:
+      # traces -> Jaeger using OTLP
+      otlp/jaeger:
+        endpoint: jaeger:4317
+        tls:
+          insecure: true
+
+      # metrics -> Prometheus scrape endpoint
+      prometheus:
+        endpoint: 0.0.0.0:8889
+        namespace: otelcol
+
+      # logs -> Loki native OTLP endpoint
+      otlphttp/loki:
+        endpoint: http://loki:3100/otlp
+
+    extensions:
+      basicauth/server:
+        htpasswd:
+          inline: |
+            ${env:OTEL_COLLECTOR_BASIC_AUTH_USERNAME:-otel}:${env:OTEL_COLLECTOR_BASIC_AUTH_PASSWORD:-otel-secret}
+      health_check:
+        endpoint: 0.0.0.0:13133
+
+    service:
+      extensions: [basicauth/server, health_check]
+
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [otlp/jaeger]
+
+        metrics:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [prometheus]
+
+        logs:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [otlphttp/loki]
