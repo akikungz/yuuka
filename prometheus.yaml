@@ -119,6 +119,10 @@ data:
         static_configs:
           - targets: ['yuzu-development:9464']
 
+      - job_name: 'otel-collector'
+        static_configs:
+          - targets: ['otel-collector:8889']
+
       - job_name: 'kubernetes-apiserver'
         kubernetes_sd_configs:
           - role: endpointslice
@@ -333,4 +337,3 @@ spec:
       targetPort: 9090
       protocol: TCP
 ---
-

@@ -64,7 +64,7 @@ spec:
               containerPort: 13133
           volumeMounts:
             - name: otel-config-volume
-              mountPath: /etc/otelcol-contrib
+              mountPath: /etc/otelcol-contrib/config.yaml
               subPath: config.yaml
               readOnly: true
             - name: otel-data-volume
