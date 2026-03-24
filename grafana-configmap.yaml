@@ -362,13 +362,13 @@ data:
               "refId": "A"
             },
             {
-              "expr": "sum(rate(http_requests_total{job=\"momoi-development\"}[1m]))",
-              "legendFormat": "momoi-development",
+              "expr": "sum(rate(http_requests_total{service_name=\"momoi.development\"}[1m]))",
+              "legendFormat": "momoi.development",
               "refId": "B"
             },
             {
-              "expr": "sum(rate(http_requests_total{job=\"midori-development\"}[1m]))",
-              "legendFormat": "midori-development",
+              "expr": "sum(rate(http_requests_total{service_name=\"midori.development\"}[1m]))",
+              "legendFormat": "midori.development",
               "refId": "C"
             }
           ],
@@ -390,13 +390,13 @@ data:
               "refId": "A"
             },
             {
-              "expr": "sum(rate(http_request_errors_total{job=\"momoi-development\"}[5m]))",
-              "legendFormat": "momoi-development errors",
+              "expr": "sum(rate(http_requests_total{service_name=\"momoi.development\",status_code=~\"5..\"}[5m]))",
+              "legendFormat": "momoi.development 5xx",
               "refId": "B"
             },
             {
-              "expr": "sum(rate(http_requests_total{job=\"midori-development\",status_code=~\"5..\"}[5m]))",
-              "legendFormat": "midori-development 5xx",
+              "expr": "sum(rate(http_requests_total{service_name=\"midori.development\",status_code=~\"5..\"}[5m]))",
+              "legendFormat": "midori.development 5xx",
               "refId": "C"
             }
           ],
@@ -418,13 +418,13 @@ data:
               "refId": "A"
             },
             {
-              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"momoi-development\"}[5m])) by (le))",
-              "legendFormat": "momoi-development",
+              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{service_name=\"momoi.development\"}[5m])) by (le))",
+              "legendFormat": "momoi.development",
               "refId": "B"
             },
             {
-              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"midori-development\"}[5m])) by (le))",
-              "legendFormat": "midori-development",
+              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{service_name=\"midori.development\"}[5m])) by (le))",
+              "legendFormat": "midori.development",
               "refId": "C"
             }
           ],
@@ -441,7 +441,7 @@ data:
           "datasource": "Prometheus",
           "targets": [
             {
-              "expr": "sum(rate(yuzu_jobs_processed_total{job=\"yuzu\"}[5m])) by (queue, status)",
+              "expr": "sum(rate(otelcol_yuzu_jobs_processed_total[5m])) by (queue, status)",
               "legendFormat": "{{queue}} {{status}}",
               "refId": "A"
             }
@@ -459,12 +459,12 @@ data:
           "datasource": "Prometheus",
           "targets": [
             {
-              "expr": "sum(yuzu_active_jobs{job=\"yuzu\"}) by (queue)",
+              "expr": "sum(otelcol_yuzu_active_jobs) by (queue)",
               "legendFormat": "{{queue}} active",
               "refId": "A"
             },
             {
-              "expr": "sum(yuzu_waiting_jobs{job=\"yuzu\"}) by (queue)",
+              "expr": "0",
               "legendFormat": "{{queue}} waiting",
               "refId": "B"
             }
@@ -482,7 +482,7 @@ data:
           "datasource": "Prometheus",
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum(rate(yuzu_job_duration_seconds_bucket{job=\"yuzu\"}[5m])) by (le, queue))",
+              "expr": "histogram_quantile(0.95, sum(rate(otelcol_yuzu_job_duration_seconds_bucket[5m])) by (le, queue))",
               "legendFormat": "{{queue}}",
               "refId": "A"
             }
@@ -500,7 +500,7 @@ data:
           "datasource": "Prometheus",
           "targets": [
             {
-              "expr": "sum(rate(yuzu_pve_api_calls_total{job=\"yuzu\",status=~\"5..\"}[5m])) by (endpoint)",
+              "expr": "sum(rate(otelcol_yuzu_pve_api_calls_total{status=~\"5..\"}[5m])) by (endpoint)",
               "legendFormat": "{{endpoint}}",
               "refId": "A"
             }
@@ -1170,7 +1170,7 @@ data:
           },
           "targets": [
             {
-              "expr": "sum(rate(yuzu_jobs_processed_total[5m])) by (queue, status)",
+              "expr": "sum(rate(otelcol_yuzu_jobs_processed_total[5m])) by (queue, status)",
               "legendFormat": "{{queue}} {{status}}",
               "refId": "A"
             }
@@ -1201,7 +1201,7 @@ data:
           },
           "targets": [
             {
-              "expr": "sum(yuzu_active_jobs) by (queue)",
+              "expr": "sum(otelcol_yuzu_active_jobs) by (queue)",
               "legendFormat": "{{queue}}",
               "refId": "A"
             }
@@ -1232,7 +1232,7 @@ data:
           },
           "targets": [
             {
-              "expr": "sum(yuzu_waiting_jobs) by (queue)",
+              "expr": "0",
               "legendFormat": "{{queue}}",
               "refId": "A"
             }
@@ -1263,7 +1263,7 @@ data:
           },
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum(rate(yuzu_job_duration_seconds_bucket[5m])) by (le, queue))",
+              "expr": "histogram_quantile(0.95, sum(rate(otelcol_yuzu_job_duration_seconds_bucket[5m])) by (le, queue))",
               "legendFormat": "{{queue}}",
               "refId": "A"
             }
@@ -1294,7 +1294,7 @@ data:
           },
           "targets": [
             {
-              "expr": "sum(rate(yuzu_pve_api_calls_total{status=~\"5..\"}[5m])) by (endpoint)",
+              "expr": "sum(rate(otelcol_yuzu_pve_api_calls_total{status=~\"5..\"}[5m])) by (endpoint)",
               "legendFormat": "{{endpoint}}",
               "refId": "A"
             }
@@ -1850,8 +1850,8 @@ data:
           },
           "targets": [
             {
-              "expr": "sum by (job) (rate(http_requests_total{job=~\"$app_job\"}[5m]))",
-              "legendFormat": "{{job}}",
+              "expr": "sum by (service_name) (rate(http_requests_total{service_name=~\"$app_service\"}[5m]))",
+              "legendFormat": "{{service_name}}",
               "refId": "A"
             }
           ],
@@ -1885,8 +1885,8 @@ data:
           },
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum by (job, le) (rate(http_request_duration_seconds_bucket{job=~\"$app_job\"}[5m])))",
-              "legendFormat": "{{job}}",
+              "expr": "histogram_quantile(0.95, sum by (service_name, le) (rate(http_request_duration_seconds_bucket{service_name=~\"$app_service\"}[5m])))",
+              "legendFormat": "{{service_name}}",
               "refId": "A"
             }
           ],
@@ -1920,12 +1920,12 @@ data:
           },
           "targets": [
             {
-              "expr": "sum by (job) (http_active_connections{job=~\"$app_job\"})",
-              "legendFormat": "{{job}}",
+              "expr": "sum by (service_name) (increase(http_requests_total{service_name=~\"$app_service\"}[5m]))",
+              "legendFormat": "{{service_name}}",
               "refId": "A"
             }
           ],
-          "title": "Active HTTP Connections",
+          "title": "Application Requests (5m)",
           "type": "timeseries"
         },
         {
@@ -1955,12 +1955,12 @@ data:
           },
           "targets": [
             {
-              "expr": "sum by (level) (rate(log_entries_total[5m]))",
-              "legendFormat": "{{level}}",
+              "expr": "sum by (service_name, level) (rate(log_entries_total{service_name=~\"$app_service\"}[5m]))",
+              "legendFormat": "{{service_name}} {{level}}",
               "refId": "A"
             }
           ],
-          "title": "Log Volume by Level",
+          "title": "Application Log Volume",
           "type": "timeseries"
         },
         {
@@ -2509,10 +2509,10 @@ data:
             },
             "datasource": "Prometheus",
             "includeAll": true,
-            "label": "Application Job",
+            "label": "Application Service",
             "multi": true,
-            "name": "app_job",
-            "query": "label_values(http_requests_total, job)",
+            "name": "app_service",
+            "query": "label_values(http_requests_total, service_name)",
             "refresh": 2,
             "sort": 1,
             "type": "query"

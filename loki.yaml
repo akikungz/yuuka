@@ -50,7 +50,7 @@ spec:
         runAsGroup: 10001
       containers:
         - name: loki
-          image: grafana/loki:2.8.2
+          image: grafana/loki:3
           args:
             - -config.file=/etc/loki/local-config.yaml
           ports:
@@ -112,4 +112,3 @@ spec:
       targetPort: 3100
       protocol: TCP
 ---
-
