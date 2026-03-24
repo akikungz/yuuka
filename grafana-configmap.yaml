@@ -1371,9 +1371,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "id": null,
       "links": [],
-      "liveNow": false,
       "panels": [
         {
           "datasource": "Prometheus",
@@ -1382,12 +1380,13 @@ data:
               "color": {
                 "mode": "thresholds"
               },
+              "mappings": [],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
                   {
                     "color": "red",
-                    "value": null
+                    "value": 0
                   },
                   {
                     "color": "yellow",
@@ -1414,6 +1413,8 @@ data:
             "colorMode": "value",
             "graphMode": "none",
             "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
             "reduceOptions": {
               "calcs": [
                 "lastNotNull"
@@ -1421,8 +1422,11 @@ data:
               "fields": "",
               "values": false
             },
-            "textMode": "auto"
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "sum(kube_node_status_condition{condition=\"Ready\",status=\"true\"})",
@@ -1439,12 +1443,13 @@ data:
               "color": {
                 "mode": "thresholds"
               },
+              "mappings": [],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
                   {
                     "color": "green",
-                    "value": null
+                    "value": 0
                   },
                   {
                     "color": "yellow",
@@ -1471,6 +1476,8 @@ data:
             "colorMode": "value",
             "graphMode": "none",
             "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
             "reduceOptions": {
               "calcs": [
                 "lastNotNull"
@@ -1478,8 +1485,11 @@ data:
               "fields": "",
               "values": false
             },
-            "textMode": "auto"
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "sum(kube_pod_status_phase{namespace=~\"$namespace\",phase=\"Pending\"})",
@@ -1496,12 +1506,13 @@ data:
               "color": {
                 "mode": "thresholds"
               },
+              "mappings": [],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
                   {
                     "color": "green",
-                    "value": null
+                    "value": 0
                   },
                   {
                     "color": "yellow",
@@ -1528,6 +1539,8 @@ data:
             "colorMode": "value",
             "graphMode": "none",
             "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
             "reduceOptions": {
               "calcs": [
                 "lastNotNull"
@@ -1535,8 +1548,11 @@ data:
               "fields": "",
               "values": false
             },
-            "textMode": "auto"
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=~\"$namespace\"}[30m]))",
@@ -1553,12 +1569,13 @@ data:
               "color": {
                 "mode": "thresholds"
               },
+              "mappings": [],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
                   {
                     "color": "green",
-                    "value": null
+                    "value": 0
                   },
                   {
                     "color": "yellow",
@@ -1585,6 +1602,8 @@ data:
             "colorMode": "value",
             "graphMode": "none",
             "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
             "reduceOptions": {
               "calcs": [
                 "lastNotNull"
@@ -1592,8 +1611,11 @@ data:
               "fields": "",
               "values": false
             },
-            "textMode": "auto"
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "count(up{job=~\"$job\"} == 0)",
@@ -1607,6 +1629,57 @@ data:
           "datasource": "Prometheus",
           "fieldConfig": {
             "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "showValues": false,
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
               "unit": "short"
             },
             "overrides": []
@@ -1620,14 +1693,18 @@ data:
           "id": 5,
           "options": {
             "legend": {
+              "calcs": [],
               "displayMode": "table",
-              "placement": "bottom"
+              "placement": "bottom",
+              "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "desc"
             }
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "sum by (phase) (kube_pod_status_phase{namespace=~\"$namespace\"})",
@@ -1642,6 +1719,57 @@ data:
           "datasource": "Prometheus",
           "fieldConfig": {
             "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "showValues": false,
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
               "unit": "short"
             },
             "overrides": []
@@ -1655,14 +1783,18 @@ data:
           "id": 6,
           "options": {
             "legend": {
+              "calcs": [],
               "displayMode": "table",
-              "placement": "bottom"
+              "placement": "bottom",
+              "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "desc"
             }
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "sum by (deployment) (kube_deployment_spec_replicas{namespace=~\"$namespace\"})",
@@ -1682,6 +1814,57 @@ data:
           "datasource": "Prometheus",
           "fieldConfig": {
             "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "showValues": false,
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
               "unit": "decmbytes"
             },
             "overrides": []
@@ -1695,14 +1878,18 @@ data:
           "id": 7,
           "options": {
             "legend": {
+              "calcs": [],
               "displayMode": "table",
-              "placement": "bottom"
+              "placement": "bottom",
+              "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "desc"
             }
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\",instance=~\"$node\"}[5m])) * 100)",
@@ -1717,6 +1904,57 @@ data:
           "datasource": "Prometheus",
           "fieldConfig": {
             "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "showValues": false,
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
               "unit": "decmbytes"
             },
             "overrides": []
@@ -1730,14 +1968,18 @@ data:
           "id": 8,
           "options": {
             "legend": {
+              "calcs": [],
               "displayMode": "table",
-              "placement": "bottom"
+              "placement": "bottom",
+              "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "desc"
             }
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "100 * (1 - (node_memory_MemAvailable_bytes{instance=~\"$node\"} / node_memory_MemTotal_bytes{instance=~\"$node\"}))",
@@ -1752,6 +1994,57 @@ data:
           "datasource": "Prometheus",
           "fieldConfig": {
             "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "showValues": false,
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
               "unit": "decmbytes"
             },
             "overrides": []
@@ -1765,14 +2058,18 @@ data:
           "id": 9,
           "options": {
             "legend": {
+              "calcs": [],
               "displayMode": "table",
-              "placement": "bottom"
+              "placement": "bottom",
+              "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "desc"
             }
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "100 - ((node_filesystem_avail_bytes{instance=~\"$node\",mountpoint=\"/\",fstype!~\"tmpfs|overlay\"} / node_filesystem_size_bytes{instance=~\"$node\",mountpoint=\"/\",fstype!~\"tmpfs|overlay\"}) * 100)",
@@ -1787,6 +2084,57 @@ data:
           "datasource": "Prometheus",
           "fieldConfig": {
             "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "showValues": false,
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
               "unit": "Bps"
             },
             "overrides": []
@@ -1800,14 +2148,18 @@ data:
           "id": 10,
           "options": {
             "legend": {
+              "calcs": [],
               "displayMode": "table",
-              "placement": "bottom"
+              "placement": "bottom",
+              "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "desc"
             }
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "sum by (instance) (rate(node_network_receive_bytes_total{instance=~\"$node\",device!=\"lo\"}[5m]))",
@@ -1827,6 +2179,57 @@ data:
           "datasource": "Prometheus",
           "fieldConfig": {
             "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "showValues": false,
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
               "unit": "reqps"
             },
             "overrides": []
@@ -1840,14 +2243,18 @@ data:
           "id": 11,
           "options": {
             "legend": {
+              "calcs": [],
               "displayMode": "table",
-              "placement": "bottom"
+              "placement": "bottom",
+              "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "desc"
             }
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "sum by (service_name) (rate(http_requests_total{service_name=~\"$app_service\"}[5m]))",
@@ -1862,6 +2269,57 @@ data:
           "datasource": "Prometheus",
           "fieldConfig": {
             "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "showValues": false,
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
               "unit": "s"
             },
             "overrides": []
@@ -1875,14 +2333,18 @@ data:
           "id": 12,
           "options": {
             "legend": {
+              "calcs": [],
               "displayMode": "table",
-              "placement": "bottom"
+              "placement": "bottom",
+              "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "desc"
             }
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "histogram_quantile(0.95, sum by (service_name, le) (rate(http_request_duration_seconds_bucket{service_name=~\"$app_service\"}[5m])))",
@@ -1897,6 +2359,57 @@ data:
           "datasource": "Prometheus",
           "fieldConfig": {
             "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "showValues": false,
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
               "unit": "short"
             },
             "overrides": []
@@ -1910,14 +2423,18 @@ data:
           "id": 13,
           "options": {
             "legend": {
+              "calcs": [],
               "displayMode": "table",
-              "placement": "bottom"
+              "placement": "bottom",
+              "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "desc"
             }
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "sum by (service_name) (increase(http_requests_total{service_name=~\"$app_service\"}[5m]))",
@@ -1932,6 +2449,57 @@ data:
           "datasource": "Prometheus",
           "fieldConfig": {
             "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "showValues": false,
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
               "unit": "ops"
             },
             "overrides": []
@@ -1945,14 +2513,18 @@ data:
           "id": 14,
           "options": {
             "legend": {
+              "calcs": [],
               "displayMode": "table",
-              "placement": "bottom"
+              "placement": "bottom",
+              "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "desc"
             }
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "sum by (service_name, level) (rate(log_entries_total{service_name=~\"$app_service\"}[5m]))",
@@ -1965,6 +2537,10 @@ data:
         },
         {
           "datasource": "Loki",
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": []
+          },
           "gridPos": {
             "h": 8,
             "w": 12,
@@ -1974,14 +2550,18 @@ data:
           "id": 15,
           "options": {
             "dedupStrategy": "none",
+            "enableInfiniteScrolling": false,
             "enableLogDetails": true,
             "prettifyLogMessage": true,
             "showCommonLabels": false,
+            "showControls": false,
             "showLabels": false,
             "showTime": true,
             "sortOrder": "Descending",
+            "unwrappedColumns": false,
             "wrapLogMessage": true
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "{namespace=~\"$namespace\"} |= \"error\"",
@@ -1998,12 +2578,13 @@ data:
               "color": {
                 "mode": "thresholds"
               },
+              "mappings": [],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
                   {
                     "color": "green",
-                    "value": null
+                    "value": 0
                   }
                 ]
               },
@@ -2022,6 +2603,8 @@ data:
             "colorMode": "value",
             "graphMode": "none",
             "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
             "reduceOptions": {
               "calcs": [
                 "lastNotNull"
@@ -2029,8 +2612,11 @@ data:
               "fields": "",
               "values": false
             },
-            "textMode": "auto"
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "sum(otelcol_proxmox_node_memory_memtotal_bytes{node=~\"$proxmox_node\"})",
@@ -2047,12 +2633,13 @@ data:
               "color": {
                 "mode": "thresholds"
               },
+              "mappings": [],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
                   {
                     "color": "green",
-                    "value": null
+                    "value": 0
                   }
                 ]
               },
@@ -2071,6 +2658,8 @@ data:
             "colorMode": "value",
             "graphMode": "none",
             "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
             "reduceOptions": {
               "calcs": [
                 "lastNotNull"
@@ -2078,8 +2667,11 @@ data:
               "fields": "",
               "values": false
             },
-            "textMode": "auto"
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "count(count by (node, vmid) (otelcol_proxmox_vm_cpu_percent{node=~\"$proxmox_node\",type=~\"qemu|vm\"}))",
@@ -2096,12 +2688,13 @@ data:
               "color": {
                 "mode": "thresholds"
               },
+              "mappings": [],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
                   {
                     "color": "green",
-                    "value": null
+                    "value": 0
                   }
                 ]
               },
@@ -2120,6 +2713,8 @@ data:
             "colorMode": "value",
             "graphMode": "none",
             "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
             "reduceOptions": {
               "calcs": [
                 "lastNotNull"
@@ -2127,8 +2722,11 @@ data:
               "fields": "",
               "values": false
             },
-            "textMode": "auto"
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "count(count by (node, vmid) (otelcol_proxmox_vm_cpu_percent{node=~\"$proxmox_node\",type=~\"lxc|ct|container\"}))",
@@ -2145,12 +2743,13 @@ data:
               "color": {
                 "mode": "thresholds"
               },
+              "mappings": [],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
                   {
                     "color": "red",
-                    "value": null
+                    "value": 0
                   },
                   {
                     "color": "yellow",
@@ -2177,6 +2776,8 @@ data:
             "colorMode": "value",
             "graphMode": "none",
             "justifyMode": "auto",
+            "orientation": "auto",
+            "percentChangeColorMode": "standard",
             "reduceOptions": {
               "calcs": [
                 "lastNotNull"
@@ -2184,8 +2785,11 @@ data:
               "fields": "",
               "values": false
             },
-            "textMode": "auto"
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "floor(sum(otelcol_proxmox_node_memory_memavailable_bytes{node=~\"$proxmox_node\"}) / ($proxmox_slot_memory_gib * 1073741824))",
@@ -2199,8 +2803,59 @@ data:
           "datasource": "Prometheus",
           "fieldConfig": {
             "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "showValues": false,
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
               "max": 100,
               "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
               "unit": "percent"
             },
             "overrides": []
@@ -2214,14 +2869,18 @@ data:
           "id": 20,
           "options": {
             "legend": {
+              "calcs": [],
               "displayMode": "table",
-              "placement": "bottom"
+              "placement": "bottom",
+              "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "desc"
             }
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "avg by (node) (otelcol_proxmox_node_cpustat_cpu_percent{node=~\"$proxmox_node\"})",
@@ -2236,9 +2895,59 @@ data:
           "datasource": "Prometheus",
           "fieldConfig": {
             "defaults": {
-              "max": 100,
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "showValues": false,
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
               "min": 0,
-              "unit": "percent"
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "decmbytes"
             },
             "overrides": []
           },
@@ -2251,14 +2960,18 @@ data:
           "id": 21,
           "options": {
             "legend": {
+              "calcs": [],
               "displayMode": "table",
-              "placement": "bottom"
+              "placement": "bottom",
+              "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "desc"
             }
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "avg by (node) ((otelcol_proxmox_node_memory_memtotal_bytes{node=~\"$proxmox_node\"} - otelcol_proxmox_node_memory_memavailable_bytes{node=~\"$proxmox_node\"}) / 1000000)",
@@ -2273,7 +2986,59 @@ data:
           "datasource": "Prometheus",
           "fieldConfig": {
             "defaults": {
-              "unit": "decmbytes"
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "showValues": false,
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": false,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "percent"
             },
             "overrides": []
           },
@@ -2286,14 +3051,18 @@ data:
           "id": 22,
           "options": {
             "legend": {
+              "calcs": [],
               "displayMode": "table",
-              "placement": "bottom"
+              "placement": "bottom",
+              "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "desc"
             }
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "100 * avg by (node) (otelcol_proxmox_storage_used_bytes{node=~\"$proxmox_node\"} / otelcol_proxmox_storage_total_bytes{node=~\"$proxmox_node\"})",
@@ -2308,8 +3077,59 @@ data:
           "datasource": "Prometheus",
           "fieldConfig": {
             "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "showValues": false,
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
               "max": 100,
               "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
               "unit": "percent"
             },
             "overrides": []
@@ -2323,14 +3143,18 @@ data:
           "id": 23,
           "options": {
             "legend": {
+              "calcs": [],
               "displayMode": "table",
-              "placement": "bottom"
+              "placement": "bottom",
+              "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "desc"
             }
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "avg by (node, type, vmid) (otelcol_proxmox_vm_cpu_percent{node=~\"$proxmox_node\",type=~\"$proxmox_guest_type\",vmid=~\"$proxmox_guest\"})",
@@ -2345,9 +3169,59 @@ data:
           "datasource": "Prometheus",
           "fieldConfig": {
             "defaults": {
-              "max": 100,
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "showValues": false,
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
               "min": 0,
-              "unit": "percent"
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "decmbytes"
             },
             "overrides": []
           },
@@ -2360,14 +3234,18 @@ data:
           "id": 24,
           "options": {
             "legend": {
+              "calcs": [],
               "displayMode": "table",
-              "placement": "bottom"
+              "placement": "bottom",
+              "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "desc"
             }
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "avg by (node, type, vmid) (otelcol_proxmox_vm_mem_bytes{node=~\"$proxmox_node\",type=~\"$proxmox_guest_type\",vmid=~\"$proxmox_guest\"} / 1000000)",
@@ -2382,6 +3260,57 @@ data:
           "datasource": "Prometheus",
           "fieldConfig": {
             "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "showValues": false,
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
               "unit": "Bps"
             },
             "overrides": []
@@ -2395,14 +3324,18 @@ data:
           "id": 25,
           "options": {
             "legend": {
+              "calcs": [],
               "displayMode": "table",
-              "placement": "bottom"
+              "placement": "bottom",
+              "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "desc"
             }
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "sum by (node, type, vmid) (rate(otelcol_proxmox_vm_netin_bytes_total{node=~\"$proxmox_node\",type=~\"$proxmox_guest_type\",vmid=~\"$proxmox_guest\"}[5m]))",
@@ -2422,6 +3355,57 @@ data:
           "datasource": "Prometheus",
           "fieldConfig": {
             "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "showValues": false,
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
               "unit": "Bps"
             },
             "overrides": []
@@ -2435,14 +3419,18 @@ data:
           "id": 26,
           "options": {
             "legend": {
+              "calcs": [],
               "displayMode": "table",
-              "placement": "bottom"
+              "placement": "bottom",
+              "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "desc"
             }
           },
+          "pluginVersion": "12.4.1",
           "targets": [
             {
               "expr": "sum by (node, type, vmid) (rate(otelcol_proxmox_vm_diskread_bytes_total{node=~\"$proxmox_node\",type=~\"$proxmox_guest_type\",vmid=~\"$proxmox_guest\"}[5m]))",
@@ -2459,9 +3447,9 @@ data:
           "type": "timeseries"
         }
       ],
+      "preload": false,
       "refresh": "30s",
-      "schemaVersion": 39,
-      "style": "dark",
+      "schemaVersion": 42,
       "tags": [
         "platform",
         "observability",
@@ -2472,16 +3460,21 @@ data:
           {
             "allValue": ".*",
             "current": {
-              "text": "fitm-cloud",
-              "value": "fitm-cloud"
+              "text": [
+                "fitm-cloud"
+              ],
+              "value": [
+                "fitm-cloud"
+              ]
             },
-            "datasource": "Prometheus",
             "includeAll": true,
             "label": "Namespace",
             "multi": true,
             "name": "namespace",
+            "options": [],
             "query": "label_values(kube_pod_info, namespace)",
             "refresh": 2,
+            "regexApplyTo": "value",
             "sort": 1,
             "type": "query"
           },
@@ -2491,13 +3484,14 @@ data:
               "text": "All",
               "value": "$__all"
             },
-            "datasource": "Prometheus",
             "includeAll": true,
             "label": "Job",
             "multi": true,
             "name": "job",
+            "options": [],
             "query": "label_values(up, job)",
             "refresh": 2,
+            "regexApplyTo": "value",
             "sort": 1,
             "type": "query"
           },
@@ -2507,13 +3501,14 @@ data:
               "text": "All",
               "value": "$__all"
             },
-            "datasource": "Prometheus",
             "includeAll": true,
             "label": "Application Service",
             "multi": true,
             "name": "app_service",
+            "options": [],
             "query": "label_values(http_requests_total, service_name)",
             "refresh": 2,
+            "regexApplyTo": "value",
             "sort": 1,
             "type": "query"
           },
@@ -2523,13 +3518,14 @@ data:
               "text": "All",
               "value": "$__all"
             },
-            "datasource": "Prometheus",
             "includeAll": true,
             "label": "Node",
             "multi": true,
             "name": "node",
+            "options": [],
             "query": "label_values(node_cpu_seconds_total, instance)",
             "refresh": 2,
+            "regexApplyTo": "value",
             "sort": 1,
             "type": "query"
           },
@@ -2539,13 +3535,14 @@ data:
               "text": "All",
               "value": "$__all"
             },
-            "datasource": "Prometheus",
             "includeAll": true,
             "label": "Proxmox Node",
             "multi": true,
             "name": "proxmox_node",
+            "options": [],
             "query": "label_values(otelcol_proxmox_node_cpustat_cpu_percent, node)",
             "refresh": 2,
+            "regexApplyTo": "value",
             "sort": 1,
             "type": "query"
           },
@@ -2555,13 +3552,14 @@ data:
               "text": "All",
               "value": "$__all"
             },
-            "datasource": "Prometheus",
             "includeAll": true,
             "label": "Guest Type",
             "multi": true,
             "name": "proxmox_guest_type",
+            "options": [],
             "query": "label_values(otelcol_proxmox_vm_cpu_percent{node=~\"$proxmox_node\"}, type)",
             "refresh": 2,
+            "regexApplyTo": "value",
             "sort": 1,
             "type": "query"
           },
@@ -2571,13 +3569,14 @@ data:
               "text": "All",
               "value": "$__all"
             },
-            "datasource": "Prometheus",
             "includeAll": true,
             "label": "Guest VM/LXC",
             "multi": true,
             "name": "proxmox_guest",
+            "options": [],
             "query": "label_values(otelcol_proxmox_vm_cpu_percent{node=~\"$proxmox_node\",type=~\"$proxmox_guest_type\"}, vmid)",
             "refresh": 2,
+            "regexApplyTo": "value",
             "sort": 1,
             "type": "query"
           },
@@ -2586,78 +3585,37 @@ data:
               "text": "1000",
               "value": "1000"
             },
-            "hide": 0,
             "label": "Guest Shares",
             "name": "proxmox_guest_shares",
-            "options": [
-              {
-                "selected": false,
-                "text": "512",
-                "value": "512"
-              },
-              {
-                "selected": true,
-                "text": "1000",
-                "value": "1000"
-              },
-              {
-                "selected": false,
-                "text": "1024",
-                "value": "1024"
-              },
-              {
-                "selected": false,
-                "text": "2048",
-                "value": "2048"
-              }
-            ],
+            "options": [],
             "query": "512,1000,1024,2048",
-            "type": "custom"
+            "type": "custom",
+            "valuesFormat": "csv"
           },
           {
             "current": {
-              "text": "4",
-              "value": "4"
+              "text": "2",
+              "value": "2"
             },
-            "hide": 0,
             "label": "Slot Size GiB",
             "name": "proxmox_slot_memory_gib",
-            "options": [
-              {
-                "selected": false,
-                "text": "2",
-                "value": "2"
-              },
-              {
-                "selected": true,
-                "text": "4",
-                "value": "4"
-              },
-              {
-                "selected": false,
-                "text": "8",
-                "value": "8"
-              },
-              {
-                "selected": false,
-                "text": "16",
-                "value": "16"
-              }
-            ],
+            "options": [],
             "query": "2,4,8,16",
-            "type": "custom"
+            "type": "custom",
+            "valuesFormat": "csv"
           }
         ]
       },
       "time": {
-        "from": "now-6h",
+        "from": "now-30m",
         "to": "now"
       },
       "timepicker": {},
-      "timezone": "",
+      "timezone": "browser",
       "title": "Platform Observability",
       "uid": "platform-observability",
-      "version": 1
+      "version": 17,
+      "weekStart": ""
     }
 ---
 apiVersion: v1
@@ -2686,4 +3644,3 @@ data:
         options:
           path: /var/lib/grafana/dashboards/fitm-cloud
 ---
-
