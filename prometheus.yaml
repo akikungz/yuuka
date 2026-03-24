@@ -102,22 +102,9 @@ data:
         static_configs:
           - targets: ['localhost:9090']
 
-      - job_name: 'momoi-development'
-        static_configs:
-          - targets: ['momoi-development:3000']
-
-      - job_name: 'midori-development'
-        metrics_path: /api/metrics
-        static_configs:
-          - targets: ['midori-development:3000']
-
       - job_name: 'arisu'
         static_configs:
           - targets: ['arisu:3000', 'arisu:3001']
-
-      - job_name: 'yuzu'
-        static_configs:
-          - targets: ['yuzu-development:9464']
 
       - job_name: 'otel-collector'
         static_configs:

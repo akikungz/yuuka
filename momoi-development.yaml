@@ -138,11 +138,7 @@ spec:
                   name: base-secrets
                   key: google-client-secret
             - name: ALLOW_CORS_ORIGINS
-              value: "https://dev.fitm.cloud,http://localhost:3000,http://midori-development:3000"
-            - name: OTEL_SERVICE_NAME
-              value: "momoi.development"
-            - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: "http://jaeger:4317"
+              value: "https://dev.fitm.cloud"
             - name: BETTER_AUTH_URL
               value: "https://dev.fitm.cloud"
             - name: LOKI_URL
@@ -155,6 +151,12 @@ spec:
               value: "false"
             - name: STORAGE_PROVIDER
               value: "s3"
+            - name: OTEL_SERVICE_NAME
+              value: "momoi.development"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otel-collector:4317"
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: "grpc"
           command:
             - sh
             - -c

@@ -48,7 +48,9 @@ spec:
             - name: AUTH_API_URL
               value: "http://arisu:3001"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: "http://jaeger:4318/v1/traces"
+              value: "http://otel-collector:4317"
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: "grpc"
             - name: OTEL_SERVICE_NAME
               value: "midori.development"
             - name: NEXT_PUBLIC_API_URL

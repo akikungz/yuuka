@@ -138,13 +138,3 @@ spec:
                 name: otel-collector
                 port:
                   number: 4318
-    - host: grpc-otel-collector.fitm.cloud
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: otel-collector
-                port:
-                  number: 4317

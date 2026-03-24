@@ -92,10 +92,6 @@ spec:
           env:
             - name: NODE_ENV
               value: "development"
-            - name: OTEL_SERVICE_NAME
-              value: "yuzu.development"
-            - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: "http://jaeger:4317"
             - name: PVE_API_URL
               value: "https://10.20.30.201:8006"
             - name: PVE_API_TOKEN_ID
@@ -108,16 +104,12 @@ spec:
                 secretKeyRef:
                   name: base-secrets
                   key: pve-token-secret
-            - name: METRICS_PORT
-              value: "9464"
-            - name: LOKI_ENABLED
-              value: "true"
-            - name: LOKI_HOST
-              value: "http://loki:3100"
-            - name: LOG_PRETTY
-              value: "false"
-            - name: LOKI_LABELS
-              value: "app=yuzu,env=development"
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: "grpc"
+            - name: OTEL_SERVICE_NAME
+              value: "yuzu.development"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otel-collector:4317"
           command:
             - sh
             - -c
