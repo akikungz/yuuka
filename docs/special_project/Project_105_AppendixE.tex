@@ -133,7 +133,7 @@
         \hspace*{3em}- "\$\{MIDORI\_PORT:-3000\}:3000"\\
         \hspace*{2em}environment:\\
         \hspace*{3em}- NODE\_ENV=production\\
-        \hspace*{3em}- MOMOI\_API\_URL=http://momoi:3001\\
+        \hspace*{3em}- MOMOI\_API\_URL=http://momoi:3000\\
         \hspace*{2em}depends\_on:\\
         \hspace*{3em}- momoi\\
         \hspace*{2em}restart: unless-stopped\\
@@ -143,7 +143,7 @@
         \hspace*{3em}context: .\\
         \hspace*{3em}dockerfile: docker/momoi.dockerfile\\
         \hspace*{2em}ports:\\
-        \hspace*{3em}- "\$\{MOMOI\_PORT:-3001\}:3001"\\
+        \hspace*{3em}- "\$\{MOMOI\_PORT:-3000\}:3000"\\
         \hspace*{2em}environment:\\
         \hspace*{3em}- NODE\_ENV=production\\
         \hspace*{2em}depends\_on:\\

@@ -8,7 +8,7 @@
 ในบทนี้จึงนำเสนอผลการดำเนินงานในมุมของโครงสร้างรีโพซิทอรี องค์ประกอบของแต่ละบริการ เทคโนโลยีที่ใช้ เอกสารประกอบการใช้งาน และตัวอย่างหน้าจอของระบบที่พัฒนาขึ้นจริง โดยยึดตามสภาพแวดล้อมของโค้ดปัจจุบันซึ่งแยกเป็นหลายรีโพซิทอรีและติดตั้งใช้งานร่วมกันในลักษณะ Microservices Architecture
 \section{โครงสร้างโครงงานหลัก}
 \hspace*{1.3em}
-จากการออกแบบและพัฒนาระบบแพลตฟอร์มคลาวด์เพื่อสนับสนุนกิจกรรมการเรียนการสอนและงานวิชาการ โครงงานฉบับปัจจุบันไม่ได้จัดเก็บแบบ Monorepo แต่แบ่งออกเป็น 4 รีโพซิทอรีหลักที่ทำงานร่วมกัน ได้แก่ \textbf{Midori}, \textbf{Momoi}, \textbf{Yuzu} และ \textbf{Yuuka} เพื่อให้สามารถพัฒนา ทดสอบ และติดตั้งใช้งานแต่ละส่วนได้อย่างเป็นอิสระ
+จากการออกแบบและพัฒนาระบบแพลตฟอร์มคลาวด์เพื่อสนับสนุนกิจกรรมการเรียนการสอนและงานวิชาการ โครงงานฉบับปัจจุบันไม่ได้จัดเก็บแบบ Monorepo แต่แบ่งออกเป็นหลายรีโพซิทอรีที่ทำงานร่วมกัน ได้แก่ \textbf{Midori}, \textbf{Momoi}, \textbf{Yuzu}, \textbf{Satsuki} และ \textbf{Yuuka} เพื่อให้สามารถพัฒนา ทดสอบ และติดตั้งใช้งานแต่ละส่วนได้อย่างเป็นอิสระ โดยในเชิงหน้าที่สามารถมองได้ว่า Midori, Momoi และ Yuzu เป็นบริการหลักเชิงธุรกิจ ขณะที่ Satsuki และ Yuuka เป็นส่วนสนับสนุนด้าน reverse proxy หน้าด่าน การเชื่อมต่อโครงสร้างพื้นฐาน และการติดตั้งใช้งานจริง
 
 \subsection{รีโพซิทอรี Midori}
 \hspace*{1.3em}
@@ -30,7 +30,7 @@
     \item \textbf{Storage และ Observability} สำหรับจัดการไฟล์ การเชื่อมต่อ S3-compatible storage และการเปิดเผย OpenAPI, metrics, tracing
 \end{mycustomenum2}
 \hspace*{1.3em}
-รีโพซิทอรีนี้ยังเป็นจุดเชื่อมต่อกับ PostgreSQL, Redis และบริการจัดเก็บไฟล์ ทำให้ Momoi ทำหน้าที่เป็นแกนกลางของแพลตฟอร์มในเชิงข้อมูลและการประสานงานระหว่างบริการ
+รีโพซิทอรีนี้ยังเป็นจุดเชื่อมต่อกับ PostgreSQL, Redis และบริการจัดเก็บไฟล์ ทำให้ Momoi ทำหน้าที่เป็นแกนกลางของแพลตฟอร์มในเชิงข้อมูลและการประสานงานระหว่างบริการ รวมถึงดูแลเส้นทางการยืนยันตัวตน `/api/auth` ภายในบริการเดียวกันเพื่อลดความซับซ้อนของ topology
 
 \subsection{รีโพซิทอรี Yuzu}
 \hspace*{1.3em}
@@ -45,6 +45,17 @@
 \hspace*{1.3em}
 การแยก Yuzu ออกมาเป็น worker service ช่วยให้สามารถจัดการงานที่ใช้เวลานานและงานที่ต้อง retry ได้อย่างเหมาะสม โดยไม่ทำให้ API หลักต้องรอผลการทำงานจาก Proxmox VE โดยตรง
 
+\subsection{รีโพซิทอรี Satsuki}
+\hspace*{1.3em}
+รีโพซิทอรี \textbf{Satsuki} เป็นบริการสนับสนุนด้านโครงสร้างพื้นฐานที่รับผิดชอบการสร้างไฟล์กำหนดค่า reverse proxy และไฟล์ `authorized\_keys` แบบอัตโนมัติจากข้อมูลในฐานข้อมูล พัฒนาด้วย Bun และจัดโครงสร้างภายในตามแนว clean architecture โดยมี `src/domain`, `src/application`, `src/infrastructure` และ `src/bootstrap` แยกตามบทบาทชัดเจน ในการติดตั้งใช้งานจริง Satsuki จะถูกนำไปติดตั้งบนเครื่อง Nginx ภายนอกซึ่งทำหน้าที่เป็น reverse proxy หน้าด่านของระบบ เพื่อให้สามารถเขียนไฟล์ configuration และ reload Nginx ได้โดยตรง
+\begin{mycustomenum2}
+    \item \textbf{Reverse Proxy Config Generator} สำหรับสร้าง Nginx stream/http configuration จากข้อมูล Instance และ reverse proxy mapping บนเครื่อง proxy ภายนอก
+    \item \textbf{Authorized Keys Generator} สำหรับสร้างไฟล์กุญแจ SSH ที่ใช้กับ bastion หรือเครื่องกลางของระบบบนโฮสต์เดียวกัน
+    \item \textbf{PostgreSQL LISTEN/NOTIFY Integration} สำหรับติดตามการเปลี่ยนแปลงของข้อมูลและ trigger การ regenerate configuration พร้อม reload Nginx โดยอัตโนมัติ
+\end{mycustomenum2}
+\hspace*{1.3em}
+บริการนี้ทำให้ความสามารถด้าน reverse proxy และ SSH access ที่ถูกกล่าวถึงในเชิงฟังก์ชันของแพลตฟอร์มมี implementation ที่แยกเป็นระบบย่อยชัดเจนมากขึ้น และเหมาะกับการทำงานบนเครื่องหน้าด่านที่ต้องถือครองไฟล์กำหนดค่าจริงของ Nginx
+
 \subsection{รีโพซิทอรี Yuuka}
 \hspace*{1.3em}
 รีโพซิทอรี \textbf{Yuuka} ใช้สำหรับเก็บไฟล์กำหนดค่าการติดตั้งระบบและบริการสนับสนุน เช่น manifest สำหรับ Kubernetes, ตัวอย่าง environment file, เอกสาร observability และไฟล์ docker-compose.yaml สำหรับสภาพแวดล้อมพัฒนา ภายในรีโพซิทอรีนี้มีบริการสำคัญ เช่น PostgreSQL, Redis, RustFS, Prometheus, Grafana, Loki, Jaeger, InfluxDB รวมถึงไฟล์ deployment ของ midori, momoi และ yuzu
@@ -58,7 +69,7 @@
 นอกจากการแยกรีโพซิทอรีตามหน้าที่แล้ว แต่ละบริการยังมีไฟล์กำหนดค่าหลักของตนเองเพื่อควบคุมการพัฒนาและการติดตั้งใช้งาน เช่น package.json สำหรับจัดการ dependency และ script, tsconfig.json สำหรับกำหนดค่า TypeScript, Dockerfile สำหรับการสร้าง container image และ README.md สำหรับอธิบายวิธีใช้งานและขั้นตอนการติดตั้ง
 
 \hspace*{1.3em}
-ในส่วนของ Momoi และ Yuzu ยังมีไฟล์ prisma.config.ts สำหรับกำหนดค่า Prisma และการเชื่อมต่อฐานข้อมูล ขณะที่ Midori มีไฟล์ next.config.ts, components.json และ postcss.config.mjs เพื่อควบคุมการทำงานของเฟรมเวิร์กและระบบออกแบบส่วนติดต่อผู้ใช้ ส่วน Yuuka ใช้ไฟล์ .yaml จำนวนมากเพื่ออธิบาย topology ของบริการที่ติดตั้งจริง
+ในส่วนของ Momoi, Yuzu และ Satsuki ยังมีไฟล์ prisma.config.ts หรือไฟล์กำหนดค่าฐานข้อมูลที่เกี่ยวข้องสำหรับการเชื่อมต่อข้อมูล ขณะที่ Midori มีไฟล์ next.config.ts, components.json และ postcss.config.mjs เพื่อควบคุมการทำงานของเฟรมเวิร์กและระบบออกแบบส่วนติดต่อผู้ใช้ ส่วน Yuuka ใช้ไฟล์ .yaml จำนวนมากเพื่ออธิบาย topology ของบริการที่ติดตั้งจริง
 
 \subsection{โครงสร้างระบบทั้งหมด}
 \hspace*{1.3em}
@@ -92,18 +103,18 @@
 \section{สถาปัตยกรรมระบบและเทคโนโลยี}
 \subsection{การออกแบบสถาปัตยกรรมแบบ Microservices}
 \hspace*{1.3em}
-ระบบแพลตฟอร์มคลาวด์ที่พัฒนาขึ้นใช้สถาปัตยกรรมแบบ Microservices ซึ่งประกอบด้วยบริการหลัก 3 ตัว คือ Midori, Momoi และ Yuzu โดยมีบริการสนับสนุนเพิ่มเติม เช่น PostgreSQL สำหรับข้อมูลธุรกรรม Redis สำหรับ cache และคิวงาน RustFS สำหรับพื้นที่จัดเก็บไฟล์ และชุด observability สำหรับติดตามสถานะของระบบ แต่ละบริการทำงานอิสระและสื่อสารกันผ่าน HTTP API และระบบคิวงานแบบ asynchronous เพื่อให้ระบบมีความยืดหยุ่นและรองรับการขยายตัวได้ง่าย
+ระบบแพลตฟอร์มคลาวด์ที่พัฒนาขึ้นใช้สถาปัตยกรรมแบบ Microservices ซึ่งประกอบด้วยบริการหลักเชิงธุรกิจ 3 ตัว คือ Midori, Momoi และ Yuzu และมีบริการสนับสนุนเพิ่มเติม ได้แก่ Satsuki สำหรับ reverse proxy/SSH configuration บนเครื่อง Nginx ภายนอก, PostgreSQL สำหรับข้อมูลธุรกรรม Redis สำหรับ cache และคิวงาน RustFS สำหรับพื้นที่จัดเก็บไฟล์ และชุด observability สำหรับติดตามสถานะของระบบ แต่ละบริการทำงานอิสระและสื่อสารกันผ่าน HTTP API ระบบคิวงานแบบ asynchronous และกลไก event จากฐานข้อมูล เพื่อให้ระบบมีความยืดหยุ่นและรองรับการขยายตัวได้ง่าย
 
 \hspace*{1.3em}
-เมื่อพิจารณาการทำงานจริงของระบบในคลัสเตอร์ ผู้ใช้จะเริ่มจาก Browser ไปยัง Midori จากนั้น Midori จะเรียก Momoi สำหรับทั้ง API ด้านข้อมูล ตรรกะทางธุรกิจ และการยืนยันตัวตนผ่านเส้นทาง `/api/auth` ขณะที่ Momoi จะทำหน้าที่บันทึกข้อมูลธุรกรรมและส่งงานระยะยาวเข้าสู่ BullMQ บน Redis แล้วให้ Yuzu รับงานไปดำเนินการต่อกับ Proxmox VE รูปแบบนี้ทำให้ API หลักตอบสนองต่อผู้ใช้ได้รวดเร็ว แม้งานโครงสร้างพื้นฐานจะใช้เวลานานและต้อง retry หลายครั้ง
+เมื่อพิจารณาการทำงานจริงของระบบในคลัสเตอร์ ผู้ใช้จะเริ่มจาก Browser ไปยัง Midori จากนั้น Midori จะเรียก Momoi สำหรับ API ด้านข้อมูล ตรรกะทางธุรกิจ และการยืนยันตัวตนผ่าน `/api/auth` ส่วนงานที่ใช้เวลานาน เช่น การสร้าง ลบ หรือเปลี่ยนสถานะเครื่องเสมือน Momoi จะส่งเข้าสู่ BullMQ บน Redis แล้วให้ Yuzu รับงานไปดำเนินการต่อกับ Proxmox VE ขณะเดียวกัน Satsuki ซึ่งทำงานอยู่บนเครื่อง Nginx ภายนอกจะติดตามการเปลี่ยนแปลงของข้อมูล reverse proxy และ SSH key จากฐานข้อมูลเพื่อ regenerate ไฟล์กำหนดค่าที่เกี่ยวข้องและ reload reverse proxy หน้าด่านโดยอัตโนมัติ รูปแบบนี้ทำให้ API หลักตอบสนองต่อผู้ใช้ได้รวดเร็ว แม้งานโครงสร้างพื้นฐานจะใช้เวลานานและต้อง retry หลายครั้ง
 
 \hspace*{1.3em}
-ภาพที่ \ref{fig4:SystemArchitecture} แสดงสถาปัตยกรรมระบบโดยรวม โดยมี \textbf{Midori} เป็นส่วนติดต่อผู้ใช้ที่พัฒนาด้วย Next.js และ React \textbf{Momoi} เป็นบริการ API หลักที่รับผิดชอบตรรกะทางธุรกิจ การเชื่อมต่อฐานข้อมูล และการส่งงานเข้าคิว \textbf{Yuzu} เป็นบริการประมวลผลงานจัดการเครื่องเสมือนที่เชื่อมต่อกับ Proxmox VE และ \textbf{Yuuka} เป็นแหล่งเก็บไฟล์กำหนดค่าการติดตั้งบริการประกอบทั้งหมดของแพลตฟอร์ม
+ภาพที่ \ref{fig4:SystemArchitecture} แสดงสถาปัตยกรรมระบบโดยรวม โดยมี \textbf{Midori} เป็นส่วนติดต่อผู้ใช้ที่พัฒนาด้วย Next.js และ React \textbf{Momoi} เป็นบริการ API หลักที่รับผิดชอบตรรกะทางธุรกิจ การเชื่อมต่อฐานข้อมูล การยืนยันตัวตน และการส่งงานเข้าคิว \textbf{Yuzu} เป็นบริการประมวลผลงานจัดการเครื่องเสมือนที่เชื่อมต่อกับ Proxmox VE \textbf{Satsuki} เป็นบริการสร้าง configuration สำหรับ reverse proxy และ SSH access ที่ถูกติดตั้งบนเครื่อง Nginx ภายนอก และ \textbf{Yuuka} เป็นแหล่งเก็บไฟล์กำหนดค่าการติดตั้งบริการประกอบทั้งหมดของแพลตฟอร์ม
 
 \begin{figure}[H]
 \centering
-\adjustbox{frame, width=0.75\textwidth}{
-    \includegraphics[width=0.75\textwidth]{Image/diagram/system_architecture_90.png}
+\adjustbox{frame, width=1.0\textwidth}{
+    \includegraphics[width=1.0\textwidth]{Image/current_system_diagram.png}
 }
 \caption{\fontSixTeen{สถาปัตยกรรมระบบโดยรวม}}
 \label{fig4:SystemArchitecture}
@@ -292,42 +303,6 @@
 
 \hspace*{1.3em}
 การออกแบบระบบในลักษณะนี้ช่วยให้การจัดการความปลอดภัยของข้อมูลเป็นไปอย่างมีประสิทธิภาพ และผู้ใช้แต่ละกลุ่มจะเห็นเฉพาะข้อมูลและฟังก์ชันที่เกี่ยวข้องกับหน้าที่ของตนเอง ทำให้การใช้งานง่ายขึ้นและลดความเสี่ยงในการเข้าถึงข้อมูลที่ไม่เหมาะสม
-
-\section{ระบบติดตามและสังเกตการณ์การทำงาน (Observability)}
-\hspace*{1.3em}
-ระบบได้ติดตั้งชุดเครื่องมือสำหรับสังเกตการณ์การทำงาน (Observability Stack) โดยใช้ \textbf{Prometheus} สำหรับเก็บ metrics จากบริการหลัก \textbf{Grafana} สำหรับแสดงผลบนหน้า dashboard \textbf{Loki} สำหรับรวบรวมและค้นหา application log และ \textbf{Jaeger} สำหรับ distributed tracing ข้ามบริการ ทำให้ผู้ดูแลระบบสามารถติดตามสถานะและวิเคราะห์ปัญหาได้แบบ real-time
-
-\subsection{ผลการติดตามบน Grafana Dashboard}
-\hspace*{1.3em}
-แต่ละบริการหลักมีรูปแบบการสังเกตการณ์ที่แตกต่างกันตามบทบาทของตนเอง โดย Midori และ Momoi มีการส่ง traces ไปยัง Jaeger ผ่าน OpenTelemetry และมี metrics endpoint สำหรับ Prometheus ส่วน Yuzu เน้นการเปิดเผย metrics และ structured logs ของ queue worker และการเรียกใช้งาน Proxmox VE ผ่าน Prometheus-compatible endpoint ของตนเอง ตัวชี้วัดหลักที่ติดตาม ได้แก่ อัตราคำขอต่อวินาที latency percentile (p50, p95, p99) สถานะของ queue worker จำนวนงานในคิว เวลาในการทำ provision และอัตราความสำเร็จของการจัดสรรเครื่องเสมือน ข้อมูลเหล่านี้จะถูกนำเสนอใน Grafana dashboard ที่ออกแบบแยกตามบริการ และรวมไว้ในหน้าภาพรวมของระบบทั้งหมด
-
-\hspace*{1.3em}
-ภาพที่ \ref{fig4:MonitoringDashboard} แสดงตัวอย่างผลการติดตามบน Grafana ซึ่งช่วยให้ผู้ดูแลระบบเห็นภาพรวมของสถานะบริการและแนวโน้มของตัวชี้วัดสำคัญได้ในหน้าเดียว
-
-\begin{figure}[H]
-\centering
-\adjustbox{frame, width=0.5\textwidth}{
-    \includegraphics[width=1.0\textwidth]{Image/monitoring_dashboard.jpeg}
-}
-\caption{\fontSixTeen{ตัวอย่างผลการติดตามสถานะระบบบน Grafana Dashboard}}
-\label{fig4:MonitoringDashboard}
-\end{figure}
-
-\subsection{ผลการติดตามแบบ Distributed Tracing ด้วย Jaeger}
-\hspace*{1.3em}
-Jaeger ถูกนำมาใช้เพื่อ trace การประมวลผลคำขอในเส้นทางที่เกี่ยวข้องกับ Midori และ Momoi ซึ่งช่วยในการระบุคอขวดและวิเคราะห์ latency ระหว่าง frontend และ API ได้อย่างมีประสิทธิภาพ สำหรับกระบวนการสร้างเครื่องเสมือนที่ต่อเนื่องไปยัง Redis Queue และ Yuzu นั้น ปัจจุบันการติดตามฝั่ง worker ยังพึ่งพา metrics และ logs มากกว่าการ trace แบบ end-to-end เต็มรูปแบบ ดังนั้นการวิเคราะห์ความล่าช้าในช่วงปฏิบัติการบน Proxmox VE จะอาศัยข้อมูลจาก queue metrics, worker logs และสถานะงานร่วมกัน
-
-\hspace*{1.3em}
-ภาพที่ \ref{fig4:MonitoringTrace} แสดงตัวอย่าง trace ที่รวบรวม span ของการประมวลผลคำขอในแต่ละชั้นบริการ ทำให้สามารถตรวจสอบขั้นตอนที่ใช้เวลามากผิดปกติและช่วยวิเคราะห์สาเหตุของความล่าช้าได้อย่างเป็นระบบ
-
-\begin{figure}[H]
-\centering
-\adjustbox{frame, width=1.0\textwidth}{
-    \includegraphics[width=1.0\textwidth]{Image/monitoring_dashboard_trace.jpeg}
-}
-\caption{\fontSixTeen{ตัวอย่างผลการติดตามเส้นทางคำขอ (Trace) บน Jaeger}}
-\label{fig4:MonitoringTrace}
-\end{figure}
 
 \section{ผลการทดสอบประสิทธิภาพระบบ}
 \label{sec:system-perf}

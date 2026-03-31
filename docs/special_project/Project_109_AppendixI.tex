@@ -289,7 +289,7 @@ Reverse proxy ใช้สำหรับเปิดเผยบริการ
     \item เพิ่ม proxy โดยระบุ:
     \begin{mycustomenum2}
         \item \textbf{Target port}: พอร์ตที่แอปของคุณฟังอยู่ใน VM (เช่น 3000)
-        \item \textbf{Type}: HTTP หรือ HTTPS
+        \item \textbf{Type}: HTTP หรือ TCP (สำหรับบริการที่ไม่ใช่ HTTP)
         \item \textbf{Description} (ถ้ามี)
     \end{mycustomenum2}
 \end{mycustomenum2}
@@ -300,6 +300,107 @@ Reverse proxy ใช้สำหรับเปิดเผยบริการ
 
 \begin{mycustomenum2}
     \item ลบ proxy ที่ไม่ใช้งานแล้วเพื่อลดความเสี่ยงการเปิดเผยบริการเกินจำเป็น
+\end{mycustomenum2}
+
+\vspace{0.5em}
+\textbf{การเข้าถึงบริการแบบ TCP Reverse Proxy ด้วย TLS Tunneling}
+\vspace{0.5em}
+
+\hspace*{1.3em}
+สำหรับบริการที่ไม่ใช่ HTTP/HTTPS โดยตรง เช่น database, IDE remote server, custom TCP service หรือ web application ที่ต้องการส่งผ่านทราฟฟิกแบบดิบ (raw TCP) ระบบสามารถเปิดเผยปลายทางผ่าน TCP reverse proxy ของคลัสเตอร์ได้ โดยใน implementation ปัจจุบันจะใช้ชื่อปลายทางในรูปแบบ \textbf{p\textless port\textgreater-\textless instance-hostname\textgreater.fitm.cloud} แล้วรับทราฟฟิกด้วย TLS จากภายนอกก่อนส่งต่อไปยังพอร์ตภายในของ instance
+
+\hspace*{1.3em}
+ตัวอย่างเช่น หาก instance ชื่อ \textbf{vm-01} เปิดบริการที่พอร์ต \textbf{8443} ชื่อปลายทางของ TCP reverse proxy อาจอยู่ในรูปแบบ \textbf{p8443-vm-01.fitm.cloud} จากนั้นผู้ใช้สามารถสร้าง local tunnel ไปยังปลายทางดังกล่าวเพื่อให้โปรแกรมฝั่งเครื่องตนเองเชื่อมต่อผ่าน \textbf{localhost} ได้
+
+\vspace{0.5em}
+\textbf{ตัวอย่างด้วย ncat}
+\vspace{0.5em}
+
+\hspace*{1.3em}
+กรณีที่เครื่องมือฝั่ง client ไม่สามารถเชื่อมต่อ TLS tunnel โดยตรงหรือไม่สะดวกในการกำหนด host ปลายทาง ให้เปิด local listener ด้วย \textbf{ncat} แล้ว forward ต่อไปยัง reverse proxy ภายนอก
+
+\begin{figure}[H]
+\centering
+\adjustbox{frame, width=0.95\textwidth}{
+    \begin{minipage}{0.9\textwidth}
+        \texttt{\footnotesize
+        ncat -l 127.0.0.1 18443 --keep-open --sh-exec "ncat --ssl p8443-vm-01.fitm.cloud 443"
+        }
+    \end{minipage}
+}
+\caption{\fontSixTeen{ตัวอย่างการเปิด local TLS tunnel ด้วย ncat}}
+\label{figI:TcpTunnelNcat}
+\end{figure}
+
+\begin{mycustomenum2}
+    \item เครื่องจะเปิด listener ที่ \textbf{127.0.0.1:18443}
+    \item ทุกการเชื่อมต่อที่เข้ามายังพอร์ตนี้จะถูกส่งต่อผ่าน TLS ไปยัง \textbf{p8443-vm-01.fitm.cloud:443}
+    \item จากนั้นให้โปรแกรมของคุณชี้ไปยัง \textbf{localhost:18443} แทนการเรียกปลายทางภายนอกโดยตรง
+    \item ควรใช้ชื่อ host ปลายทางจริงแทน \textbf{p8443-vm-01.fitm.cloud} ให้ตรงกับ instance และพอร์ตที่ได้รับจากระบบ
+\end{mycustomenum2}
+
+\hspace*{1.3em}
+หมายเหตุ: พฤติกรรมของ \textbf{ncat} อาจแตกต่างกันตามเวอร์ชันและแพลตฟอร์ม หากสภาพแวดล้อมของผู้ใช้ต้องการการควบคุม TLS/SNI ชัดเจนกว่าค่า default แนะนำให้ใช้ \textbf{socat} หรือ \textbf{stunnel} แทน
+
+\vspace{0.5em}
+\textbf{ตัวอย่างด้วย socat}
+\vspace{0.5em}
+
+\begin{figure}[H]
+\centering
+\adjustbox{frame, width=0.95\textwidth}{
+    \begin{minipage}{0.9\textwidth}
+        \texttt{\footnotesize
+        socat TCP-LISTEN:18443,bind=127.0.0.1,fork OPENSSL:p8443-vm-01.fitm.cloud:443,verify=0,snihost=p8443-vm-01.fitm.cloud
+        }
+    \end{minipage}
+}
+\caption{\fontSixTeen{ตัวอย่างการเปิด local TLS tunnel ด้วย socat}}
+\label{figI:TcpTunnelSocat}
+\end{figure}
+
+\hspace*{1.3em}
+\textbf{socat} เหมาะกับกรณีที่ต้องการกำหนด \textbf{SNI} ชัดเจน หรือใช้กับ client application ที่ต้องเชื่อมต่อไปยัง \textbf{localhost} อย่างต่อเนื่อง
+
+\vspace{0.5em}
+\textbf{ตัวอย่างด้วย stunnel}
+\vspace{0.5em}
+
+\hspace*{1.3em}
+สำหรับผู้ใช้ที่ต้องการ service tunnel แบบถาวรหรือใช้งานบนเครื่องผู้ใช้ในระยะยาว สามารถใช้ \textbf{stunnel} โดยสร้างไฟล์ตั้งค่าตัวอย่างดังนี้
+
+\begin{figure}[H]
+\centering
+\adjustbox{frame, width=0.95\textwidth}{
+    \begin{minipage}{0.9\textwidth}
+        \texttt{\footnotesize
+        [fitm-tcp-tunnel]\\
+        client = yes\\
+        accept = 127.0.0.1:18443\\
+        connect = p8443-vm-01.fitm.cloud:443\\
+        sni = p8443-vm-01.fitm.cloud\\
+        verifyChain = no
+        }
+    \end{minipage}
+}
+\caption{\fontSixTeen{ตัวอย่างไฟล์ตั้งค่า stunnel สำหรับ TCP reverse proxy}}
+\label{figI:TcpTunnelStunnel}
+\end{figure}
+
+\begin{mycustomenum2}
+    \item บันทึกไฟล์ตั้งค่าข้างต้น เช่น \textbf{fitm-tunnel.conf}
+    \item เริ่มต้น \textbf{stunnel} ด้วยไฟล์ดังกล่าว
+    \item ให้โปรแกรมปลายทางเชื่อมต่อมาที่ \textbf{127.0.0.1:18443}
+\end{mycustomenum2}
+
+\vspace{0.5em}
+\textbf{แนวทางเลือกเครื่องมือ}
+\vspace{0.5em}
+
+\begin{mycustomenum2}
+    \item ใช้ \textbf{ncat} เมื่อต้องการทดสอบเร็วและเปิด tunnel ชั่วคราวจาก command line
+    \item ใช้ \textbf{socat} เมื่อต้องการกำหนดค่า TLS/SNI ให้ชัดเจนและทำงานกับ client ทั่วไปได้ง่าย
+    \item ใช้ \textbf{stunnel} เมื่อต้องการ tunnel แบบถาวรหรือรันเป็น background service บนเครื่องผู้ใช้
 \end{mycustomenum2}
 
 \section{การจัดการพื้นที่จัดเก็บไฟล์}
@@ -384,6 +485,18 @@ Storage เป็นหน้าเว็บสำหรับจัดการ
 
 \begin{mycustomenum2}
     \item role อาจไม่มี permission ที่เกี่ยวข้อง หรือ instance อยู่ในสถานะที่ feature ยังไม่พร้อม
+\end{mycustomenum2}
+
+\vspace{0.5em}
+\textbf{TCP reverse proxy เชื่อมต่อไม่ได้ หรือ TLS tunnel ใช้งานไม่ได้}
+\vspace{0.5em}
+
+\begin{mycustomenum2}
+    \item ตรวจสอบว่าใช้ชื่อปลายทางถูกต้องตามรูปแบบ \textbf{p\textless port\textgreater-\textless instance-hostname\textgreater.fitm.cloud}
+    \item ตรวจสอบว่าพอร์ตภายในของบริการใน instance เปิดใช้งานอยู่จริงและฟังบน interface ที่ถูกต้อง
+    \item หากใช้ \textbf{ncat} แล้วเชื่อมต่อไม่สำเร็จ ให้ลองเปลี่ยนไปใช้ \textbf{socat} หรือ \textbf{stunnel} เพื่อกำหนดค่า TLS/SNI ชัดเจนขึ้น
+    \item ตรวจสอบว่า firewall, security group หรือ network policy ไม่ได้บล็อกการเข้าถึงพอร์ตภายนอก \textbf{443}
+    \item หาก reverse proxy ถูกสร้างแล้วแต่ยังใช้งานไม่ได้ ให้ผู้ดูแลตรวจสอบ Satsuki, ไฟล์ Nginx stream configuration บนเครื่อง reverse proxy ภายนอก และสถานะ reload ของ Nginx หน้าด่าน
 \end{mycustomenum2}
 
 \section{คำศัพท์สำคัญ}

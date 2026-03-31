@@ -10,14 +10,15 @@
 
 \begin{mycustomenum2}
     \item \textbf{Midori} รับผิดชอบส่วนติดต่อผู้ใช้ การเรียก API ของระบบ และประสบการณ์ผู้ใช้บนเว็บ
-    \item \textbf{Momoi} รับผิดชอบตรรกะทางธุรกิจ การเชื่อมต่อฐานข้อมูล การเปิดเผย OpenAPI และการส่งงานเข้าสู่คิว
+    \item \textbf{Momoi} รับผิดชอบตรรกะทางธุรกิจ การเชื่อมต่อฐานข้อมูล การเปิดเผย OpenAPI การยืนยันตัวตนผ่าน `/api/auth` และการส่งงานเข้าสู่คิว
     \item \textbf{Yuzu} รับผิดชอบการประมวลผลงานเบื้องหลัง เช่น provision, deprovision และการเปลี่ยนสถานะเครื่องเสมือน
+    \item \textbf{Satsuki} รับผิดชอบการสร้างไฟล์ reverse proxy configuration และ `authorized\_keys` จากข้อมูลในฐานข้อมูล โดยติดตั้งบนเครื่อง Nginx ภายนอกที่เป็น reverse proxy หน้าด่านของระบบ
     \item \textbf{Yuuka} รับผิดชอบ manifest, Docker Compose, ตัวอย่าง environment และการตั้งค่า observability ของระบบ
 \end{mycustomenum2}
 
 \section{ส่วนประกอบสนับสนุนที่เกี่ยวข้องกับหลายรีโพซิทอรี}
 \hspace*{1.3em}
-แม้ว่าบริการหลักจะมีเพียงสามตัว แต่การทำงานจริงยังขึ้นกับบริการสนับสนุนหลายตัวที่เชื่อมโยงกันระหว่างรีโพซิทอรี เช่น PostgreSQL สำหรับข้อมูลเชิงธุรกรรม Redis และ BullMQ สำหรับคิวงาน RustFS สำหรับพื้นที่จัดเก็บไฟล์ และ Jaeger, Prometheus, Grafana, Loki สำหรับการติดตามสถานะของระบบ
+แม้ว่าบริการหลักเชิงธุรกิจจะมีเพียงสามตัว แต่การทำงานจริงยังขึ้นกับบริการสนับสนุนหลายตัวที่เชื่อมโยงกันระหว่างรีโพซิทอรี เช่น Satsuki สำหรับ reverse proxy/SSH automation บนเครื่อง Nginx ภายนอก, PostgreSQL สำหรับข้อมูลเชิงธุรกรรม Redis และ BullMQ สำหรับคิวงาน RustFS สำหรับพื้นที่จัดเก็บไฟล์ และ Jaeger, Prometheus, Grafana, Loki สำหรับการติดตามสถานะของระบบ
 
 \section{แนวทางการตรวจสอบปัญหาเบื้องต้น}
 \hspace*{1.3em}
@@ -25,8 +26,10 @@
 
 \begin{mycustomenum2}
     \item \textbf{เปิดหน้าเว็บไม่ได้หรือข้อมูลไม่แสดง} ให้ตรวจสอบ Midori ก่อนว่าเริ่มต้นได้สมบูรณ์ และค่า endpoint ของ Momoi ถูกต้อง
+    \item \textbf{เข้าสู่ระบบไม่ได้หรือ session ผิดปกติ} ให้ตรวจสอบ Momoi, การตั้งค่า Google OAuth, cookie domain/path และการเชื่อมต่อฐานข้อมูลของข้อมูลผู้ใช้
     \item \textbf{API ตอบกลับผิดพลาด} ให้ตรวจสอบ log ของ Momoi รวมถึงสถานะของ PostgreSQL, Redis และค่าที่อยู่ในไฟล์ environment
     \item \textbf{งาน provision หรือเปลี่ยนสถานะ VM ไม่ทำงาน} ให้ตรวจสอบ Yuzu, Redis queue และการเชื่อมต่อไปยัง Proxmox VE
+    \item \textbf{reverse proxy หรือการเข้าใช้งานผ่าน SSH มีปัญหา} ให้ตรวจสอบ Satsuki, trigger/notification จาก PostgreSQL, ไฟล์ configuration ที่ถูกสร้างบนเครื่อง Nginx ภายนอก และสถานะการ reload ของบริการ proxy
     \item \textbf{อัปโหลดไฟล์หรือเรียกไฟล์ไม่ได้} ให้ตรวจสอบการตั้งค่า RustFS/S3-compatible storage ทั้งฝั่ง Momoi และบริการประกอบใน Yuuka
     \item \textbf{ข้อมูล observability ไม่ขึ้น dashboard} ให้ตรวจสอบการ export metrics และ traces ของแต่ละบริการ รวมถึงสถานะของ Prometheus, Loki และ Jaeger
 \end{mycustomenum2}
@@ -37,10 +40,11 @@
 
 \begin{mycustomenum2}
     \item ตรวจสอบว่า Midori ทำงานที่ localhost:3000
-    \item ตรวจสอบว่า Momoi ทำงานที่ localhost:3001
+    \item ตรวจสอบว่า endpoint ของ Momoi ตรงกับค่าที่ตั้งในไฟล์ environment ของ Midori
     \item ตรวจสอบ docker compose services ในรีโพซิทอรี Yuuka
     \item ตรวจสอบ Redis และ PostgreSQL
     \item ตรวจสอบ log ของ Yuzu และสถานะ queue
+    \item ตรวจสอบ log ของ Satsuki และผลลัพธ์ของไฟล์ reverse proxy/authorized\_keys บนเครื่อง Nginx ภายนอกหรือ bastion ปลายทาง
     \item ตรวจสอบ Jaeger, Prometheus และ Grafana
 \end{mycustomenum2}
 
@@ -50,7 +54,7 @@
 
 \section{เอกสารอ้างอิงที่ควรใช้ประกอบ}
 \hspace*{1.3em}
-ในการทำงานจริง ผู้พัฒนาควรอ่าน README และเอกสารในแต่ละรีโพซิทอรีร่วมกัน โดยเฉพาะเอกสารใน Yuuka ที่สรุปตัวอย่าง environment และการติดตั้งเครื่องมือประกอบ ส่วน Midori, Momoi และ Yuzu ควรใช้ร่วมกับเอกสาร API, queue และ observability เพื่อให้เห็นภาพรวมของระบบครบถ้วน
+ในการทำงานจริง ผู้พัฒนาควรอ่าน README และเอกสารในแต่ละรีโพซิทอรีร่วมกัน โดยเฉพาะเอกสารใน Yuuka ที่สรุปตัวอย่าง environment และการติดตั้งเครื่องมือประกอบ ส่วน Midori, Momoi, Yuzu และ Satsuki ควรใช้ร่วมกับเอกสาร API, queue, authentication flow, reverse proxy และ observability เพื่อให้เห็นภาพรวมของระบบครบถ้วน
 
 \begin{mycustomenum2}
     \item \textbf{Port ถูกใช้งานแล้ว}
@@ -75,9 +79,9 @@
 
     \item \textbf{Frontend ไม่สามารถเชื่อมต่อ API ได้}
     \begin{mycustomenum2}
-        \item ตรวจสอบว่า Momoi API Service ทำงานอยู่ที่ Port 3001
-        \item ตรวจสอบการตั้งค่า API URL ในไฟล์ Environment
-        \item ตรวจสอบ CORS Settings ใน API Service
+        \item ตรวจสอบว่า Momoi API Service ทำงานอยู่ตาม endpoint ที่กำหนดในไฟล์ Environment
+        \item ตรวจสอบการตั้งค่า API URL และ AUTH API URL ในไฟล์ Environment ให้ชี้มายังบริการ Momoi อย่างสอดคล้องกัน
+        \item ตรวจสอบ CORS Settings และ cookie configuration ของบริการปลายทาง
     \end{mycustomenum2}
 \end{mycustomenum2}
 
