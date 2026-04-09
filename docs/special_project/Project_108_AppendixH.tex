@@ -13,7 +13,7 @@
     \item \textbf{Momoi} รับผิดชอบตรรกะทางธุรกิจ การเชื่อมต่อฐานข้อมูล การเปิดเผย OpenAPI การยืนยันตัวตนผ่าน `/api/auth` และการส่งงานเข้าสู่คิว
     \item \textbf{Yuzu} รับผิดชอบการประมวลผลงานเบื้องหลัง เช่น provision, deprovision และการเปลี่ยนสถานะเครื่องเสมือน
     \item \textbf{Satsuki} รับผิดชอบการสร้างไฟล์ reverse proxy configuration และ `authorized\_keys` จากข้อมูลในฐานข้อมูล โดยติดตั้งบนเครื่อง Nginx ภายนอกที่เป็น reverse proxy หน้าด่านของระบบ
-    \item \textbf{Yuuka} รับผิดชอบ manifest, Docker Compose, ตัวอย่าง environment และการตั้งค่า observability ของระบบ
+    \item \textbf{Yuuka} รับผิดชอบ manifest, Docker Compose สำหรับบริการประกอบ, ตัวอย่าง environment และการตั้งค่า observability ของระบบ
 \end{mycustomenum2}
 
 \section{ส่วนประกอบสนับสนุนที่เกี่ยวข้องกับหลายรีโพซิทอรี}
@@ -28,7 +28,7 @@
     \item \textbf{เปิดหน้าเว็บไม่ได้หรือข้อมูลไม่แสดง} ให้ตรวจสอบ Midori ก่อนว่าเริ่มต้นได้สมบูรณ์ และค่า endpoint ของ Momoi ถูกต้อง
     \item \textbf{เข้าสู่ระบบไม่ได้หรือ session ผิดปกติ} ให้ตรวจสอบ Momoi, การตั้งค่า Google OAuth, cookie domain/path และการเชื่อมต่อฐานข้อมูลของข้อมูลผู้ใช้
     \item \textbf{API ตอบกลับผิดพลาด} ให้ตรวจสอบ log ของ Momoi รวมถึงสถานะของ PostgreSQL, Redis และค่าที่อยู่ในไฟล์ environment
-    \item \textbf{งาน provision หรือเปลี่ยนสถานะ VM ไม่ทำงาน} ให้ตรวจสอบ Yuzu, Redis queue และการเชื่อมต่อไปยัง Proxmox VE
+    \item \textbf{งาน provision หรือเปลี่ยนสถานะ VM ไม่ทำงาน} ให้ตรวจสอบ Yuzu, Redis queue, การเชื่อมต่อไปยัง Proxmox VE และสถานะของ resource locks ว่ามีงานอื่นถือ lock ของ `instanceId` หรือ `VMID` เดียวกันอยู่หรือไม่
     \item \textbf{reverse proxy หรือการเข้าใช้งานผ่าน SSH มีปัญหา} ให้ตรวจสอบ Satsuki, trigger/notification จาก PostgreSQL, ไฟล์ configuration ที่ถูกสร้างบนเครื่อง Nginx ภายนอก และสถานะการ reload ของบริการ proxy
     \item \textbf{อัปโหลดไฟล์หรือเรียกไฟล์ไม่ได้} ให้ตรวจสอบการตั้งค่า RustFS/S3-compatible storage ทั้งฝั่ง Momoi และบริการประกอบใน Yuuka
     \item \textbf{ข้อมูล observability ไม่ขึ้น dashboard} ให้ตรวจสอบการ export metrics และ traces ของแต่ละบริการ รวมถึงสถานะของ Prometheus, Loki และ Jaeger
@@ -41,9 +41,9 @@
 \begin{mycustomenum2}
     \item ตรวจสอบว่า Midori ทำงานที่ localhost:3000
     \item ตรวจสอบว่า endpoint ของ Momoi ตรงกับค่าที่ตั้งในไฟล์ environment ของ Midori
-    \item ตรวจสอบ docker compose services ในรีโพซิทอรี Yuuka
+    \item ตรวจสอบบริการประกอบจากคำสั่ง \textbf{docker compose -f docker/docker-compose.yaml ps} ในรีโพซิทอรี Yuuka
     \item ตรวจสอบ Redis และ PostgreSQL
-    \item ตรวจสอบ log ของ Yuzu และสถานะ queue
+    \item ตรวจสอบ log ของ Yuzu, ค่า concurrency ของแต่ละคิว และสถานะ queue/lock บน Redis
     \item ตรวจสอบ log ของ Satsuki และผลลัพธ์ของไฟล์ reverse proxy/authorized\_keys บนเครื่อง Nginx ภายนอกหรือ bastion ปลายทาง
     \item ตรวจสอบ Jaeger, Prometheus และ Grafana
 \end{mycustomenum2}
@@ -65,9 +65,9 @@
 
     \item \textbf{Docker Services ไม่สามารถเริ่มได้}
     \begin{mycustomenum2}
-        \item ตรวจสอบสถานะด้วยคำสั่ง: docker-compose ps
-        \item ดู Log ด้วยคำสั่ง: docker-compose logs [service\_name]
-        \item รีสตาร์ท Services ด้วยคำสั่ง: docker-compose restart
+        \item ตรวจสอบสถานะด้วยคำสั่ง: docker compose -f docker/docker-compose.yaml ps
+        \item ดู Log ด้วยคำสั่ง: docker compose -f docker/docker-compose.yaml logs [service\_name]
+        \item รีสตาร์ท Services ด้วยคำสั่ง: docker compose -f docker/docker-compose.yaml restart [service\_name]
     \end{mycustomenum2}
 
     \item \textbf{Database Connection Error}

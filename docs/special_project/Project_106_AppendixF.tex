@@ -6,41 +6,43 @@
 \appendixChapterTitle{ก}{การเตรียม Workspace สำหรับโครงงานแบบหลายรีโพซิทอรี}
 \section{ภาพรวมของโครงสร้างแบบหลายรีโพซิทอรี}
 \hspace*{1.3em}
-โครงงาน Cloud-Based Platform ในปัจจุบันไม่ได้จัดเก็บซอร์สโค้ดแบบรีโพซิทอรีเดียว แต่แยกออกเป็นหลายรีโพซิทอรีตามขอบเขตความรับผิดชอบของบริการเพื่อให้พัฒนา ทดสอบ และติดตั้งใช้งานได้อย่างยืดหยุ่นมากขึ้น รีโพซิทอรีหลักที่ใช้ในโครงงานประกอบด้วย Midori, Momoi, Yuzu และ Yuuka
+โครงงาน Cloud-Based Platform ในปัจจุบันไม่ได้จัดเก็บซอร์สโค้ดไว้ในรีโพซิทอรีเดียว แต่แยกออกเป็นหลายรีโพซิทอรีตามขอบเขตความรับผิดชอบของบริการ เพื่อให้พัฒนา ทดสอบ และติดตั้งใช้งานได้ยืดหยุ่นมากขึ้น รีโพซิทอรีที่เกี่ยวข้องกับระบบในฉบับปัจจุบันประกอบด้วย Midori, Momoi, Yuzu, Satsuki และ Yuuka
 
 \begin{mycustomenum2}
     \item \textbf{Midori} เป็นส่วนติดต่อผู้ใช้ พัฒนาด้วย Next.js และ React
     \item \textbf{Momoi} เป็นบริการ API หลัก พัฒนาด้วย Bun, Elysia.js และ Prisma
-    \item \textbf{Yuzu} เป็น worker service สำหรับงานจัดการเครื่องเสมือนและงานคิว
-    \item \textbf{Yuuka} เป็นรีโพซิทอรีสำหรับไฟล์ deploy, ตัวอย่าง environment, observability และโครงสร้างพื้นฐานที่เกี่ยวข้อง
+    \item \textbf{Yuzu} เป็น worker service สำหรับงาน VM lifecycle และ queue processing
+    \item \textbf{Satsuki} เป็นบริการ automation สำหรับ reverse proxy และ SSH access บนเครื่อง Nginx ภายนอก
+    \item \textbf{Yuuka} เป็นรีโพซิทอรีสำหรับ manifests, Docker Compose, observability และเอกสารที่เกี่ยวข้องกับ deployment
 \end{mycustomenum2}
 
 \section{ข้อกำหนดของระบบ}
 \hspace*{1.3em}
-ก่อนเริ่มต้นใช้งาน ควรติดตั้งซอฟต์แวร์พื้นฐานให้พร้อมสำหรับการทำงานร่วมกันของทุกรีโพซิทอรีดังนี้
+ก่อนเริ่มต้นใช้งาน ควรติดตั้งซอฟต์แวร์พื้นฐานดังนี้
 
 \begin{mycustomenum2}
-    \item Bun เวอร์ชัน 1.2 หรือสูงกว่า
+    \item Bun เวอร์ชัน 1.3 หรือสูงกว่า
     \item Docker และ Docker Compose Plugin
-    \item Git สำหรับโคลนซอร์สโค้ดแต่ละรีโพซิทอรี
-    \item PostgreSQL และ Redis ในกรณีที่ไม่ใช้งานผ่าน Docker Compose
-    \item Proxmox VE สำหรับการทดสอบงานที่เกี่ยวข้องกับการจัดการเครื่องเสมือนจริง
+    \item Git สำหรับโคลนแต่ละรีโพซิทอรี
+    \item PostgreSQL และ Redis ในกรณีที่ไม่ใช้งานผ่าน Docker Compose ของ Yuuka
+    \item Proxmox VE สำหรับการทดสอบงานที่เกี่ยวข้องกับการจัดการ VM จริง
 \end{mycustomenum2}
 
 \section{การโคลนรีโพซิทอรีทั้งหมด}
 \hspace*{1.3em}
-เนื่องจากระบบแยกเป็นหลายรีโพซิทอรี ผู้พัฒนาควรสร้างโฟลเดอร์หลักหนึ่งตำแหน่ง แล้วโคลนแต่ละรีโพซิทอรีลงในโฟลเดอร์เดียวกัน ดังภาพที่ \ref{figF:CloneRepos}
+ผู้พัฒนาควรสร้างโฟลเดอร์หลักหนึ่งตำแหน่ง แล้วโคลนแต่ละรีโพซิทอรีลงในโฟลเดอร์ระดับเดียวกัน ดังตัวอย่างต่อไปนี้
 
 \begin{figure}[htbp]
 \centering
 \adjustbox{frame, width=0.95\textwidth}{
     \begin{minipage}{0.9\textwidth}
         \texttt{\footnotesize
-        mkdir fitm-cloud-platform\\
-        cd fitm-cloud-platform\\
+        mkdir cloud-based-platform\\
+        cd cloud-based-platform\\
         git clone https://github.com/akikungz/midori.git\\
         git clone https://github.com/akikungz/momoi.git\\
         git clone https://github.com/akikungz/yuzu.git\\
+        git clone https://github.com/akikungz/satsuki.git\\
         git clone https://github.com/akikungz/yuuka.git
         }
     \end{minipage}
@@ -50,11 +52,11 @@
 \end{figure}
 
 \hspace*{1.3em}
-เมื่อโคลนครบแล้ว โครงสร้างของ workspace จะประกอบด้วยหลายโฟลเดอร์ระดับเดียวกัน เช่น \texttt{midori}, \texttt{momoi}, \texttt{yuzu} และ \texttt{yuuka} ซึ่งสะท้อนการแบ่งบริการตามหน้าที่ของระบบอย่างชัดเจน
+เมื่อโคลนครบแล้ว workspace จะประกอบด้วยหลายโฟลเดอร์ระดับเดียวกัน เช่น \textbf{midori}, \textbf{momoi}, \textbf{yuzu}, \textbf{satsuki} และ \textbf{yuuka}
 
 \section{การติดตั้ง dependencies ของแต่ละรีโพซิทอรี}
 \hspace*{1.3em}
-หลังจากโคลนซอร์สโค้ดแล้ว ต้องติดตั้ง dependencies แยกตามแต่ละรีโพซิทอรี ดังภาพที่ \ref{figF:InstallDeps}
+หลังจากโคลนซอร์สโค้ดแล้ว ต้องติดตั้ง dependencies แยกตามแต่ละรีโพซิทอรี เช่น
 
 \begin{figure}[htbp]
 \centering
@@ -63,7 +65,8 @@
         \texttt{\footnotesize
         cd midori \&\& bun install\\
         cd ../momoi \&\& bun install\\
-        cd ../yuzu \&\& bun install
+        cd ../yuzu \&\& bun install\\
+        cd ../satsuki \&\& bun install
         }
     \end{minipage}
 }
@@ -73,15 +76,17 @@
 
 \section{การเตรียมไฟล์ Environment}
 \hspace*{1.3em}
-ค่ากำหนดของระบบในสภาพแวดล้อมพัฒนาถูกแยกเก็บตามรีโพซิทอรี โดยไฟล์ตัวอย่างสำหรับบริการต่าง ๆ ถูกจัดเก็บไว้ในรีโพซิทอรี Yuuka ภายใต้โฟลเดอร์ docs/env ผู้พัฒนาสามารถใช้ไฟล์ตัวอย่างเหล่านี้เพื่อสร้างไฟล์ .env ในรีโพซิทอรีที่เกี่ยวข้องได้
+ค่ากำหนดของระบบถูกแยกเก็บตามรีโพซิทอรี และในรีโพซิทอรี Yuuka ยังมีไฟล์ตัวอย่างในโฟลเดอร์ \textbf{docs/env} เพื่อใช้ประกอบเอกสารและ onboarding ผู้พัฒนาควรใช้ไฟล์ตัวอย่างจากรีโพซิทอรีจริงของแต่ละบริการเป็นหลัก แล้วตรวจสอบให้ค่าต่อไปนี้สอดคล้องกัน
 
 \begin{mycustomenum2}
-    \item ใช้ตัวอย่าง midori.env.example สำหรับ Midori
-    \item ใช้ตัวอย่าง momoi.env.example สำหรับ Momoi
-    \item ใช้ตัวอย่าง yuzu.env.example สำหรับ Yuzu
-    \item ตรวจสอบค่า database, redis, storage และ endpoint ต่าง ๆ ให้สอดคล้องกันทุกรีโพซิทอรี
+    \item PostgreSQL connection string
+    \item Redis URL
+    \item S3-compatible storage endpoint และ credentials
+    \item API endpoint ที่ Midori เรียกใช้งาน
+    \item Proxmox VE credentials ของ Yuzu
+    \item path และ reload command ของ Satsuki บนเครื่อง Nginx ภายนอก
 \end{mycustomenum2}
 
 \section{ข้อสังเกตสำหรับการพัฒนาใน workspace เดียวกัน}
 \hspace*{1.3em}
-แม้ระบบจะเป็นหลายรีโพซิทอรี แต่สามารถเปิดใช้งานร่วมกันใน workspace เดียวของโปรแกรมพัฒนาได้ ซึ่งช่วยให้ค้นหาโค้ด อ้างอิงไฟล์ และติดตามการไหลของข้อมูลระหว่างบริการได้สะดวกขึ้น โดยเฉพาะเมื่อต้องตรวจสอบความสอดคล้องของ schema, API contract และการตั้งค่าของ infrastructure
+แม้ระบบจะเป็นหลายรีโพซิทอรี แต่สามารถเปิดใช้งานร่วมกันใน workspace เดียวของโปรแกรมพัฒนาได้ ซึ่งช่วยให้ค้นหาโค้ด อ้างอิงไฟล์ และติดตามการไหลของข้อมูลระหว่างบริการได้สะดวกขึ้น โดยเฉพาะเมื่อต้องตรวจสอบความสอดคล้องของ schema, API contract, queue names, environment variables และ deployment manifests

@@ -118,7 +118,6 @@ model instance {
   instance_audit_log     instance_audit_log[]
   instance_reverse_proxy instance_reverse_proxy[]
 
-  @@unique([platformUserId, courseOfferingId])
   @@index([status, provisionStatus, platformUserId, pveTemplateId, semesterId])
 }
 

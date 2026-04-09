@@ -2,299 +2,208 @@
 % ภาคผนวก ค.
 %*************************************
 \vspace{-0.5in}
-% \vspace*{-0.5in}
 
 \appendixChapterTitle{ก}{การติดตั้งและใช้งาน Cloud-Based Platform}
 \section{การติดตั้งและใช้งาน Cloud-Based Platform}
 \hspace*{1.3em}
-ในการติดตั้งและใช้งาน Cloud-Based Platform สำหรับการสนับสนุนกิจกรรมการเรียนการสอนและกิจกรรมทางวิชาการ ผู้ใช้งานจำเป็นต้องเตรียมความพร้อมของระบบและทำการติดตั้งตามขั้นตอนดังนี้
+การติดตั้งและใช้งานระบบในฉบับพัฒนาปัจจุบันควรมองเป็นการเตรียม \textbf{workspace แบบหลายรีโพซิทอรี} มากกว่าการติดตั้งโปรเจกต์เดี่ยว เนื่องจากบริการหลักและบริการประกอบถูกแยกออกจากกันตามขอบเขตความรับผิดชอบของแต่ละส่วน
 
 \vspace{0.5em}
 \textbf{ข้อกำหนดของระบบ (System Requirements)}
 \vspace{0.5em}
 
 \begin{mycustomenum2}
-    \item \textbf{ซอฟต์แวร์ที่จำเป็น:}
+    \item \textbf{ซอฟต์แวร์ที่จำเป็น}
     \begin{mycustomenum2}
-        \item Bun 1.2.0 หรือสูงกว่า (\href{https://bun.sh/}{https://bun.sh/})
-        \item Docker และ Docker Compose (\href{https://www.docker.com/}{https://www.docker.com/})
+        \item Bun 1.3 หรือสูงกว่า
+        \item Docker พร้อม Docker Compose Plugin
         \item PostgreSQL 15 หรือสูงกว่า
-        \item RabbitMQ 3.12 หรือสูงกว่า
-        \item Proxmox VE (สำหรับการใช้งานจริง)
+        \item Redis 7 หรือสูงกว่า
+        \item Proxmox VE สำหรับการทดสอบงานที่เกี่ยวข้องกับ VM จริง
     \end{mycustomenum2}
-
-    \item \textbf{ข้อกำหนดของฮาร์ดแวร์:}
+    \item \textbf{ฮาร์ดแวร์ขั้นต่ำ}
     \begin{mycustomenum2}
-        \item RAM: อย่างน้อย 8 GB (แนะนำ 16 GB หรือมากกว่า)
-        \item CPU: อย่างน้อย 4 cores
-        \item พื้นที่เก็บข้อมูล: อย่างน้อย 50 GB
-        \item เชื่อมต่ออินเทอร์เน็ตเสถียร
+        \item RAM อย่างน้อย 8 GB และแนะนำ 16 GB หรือมากกว่า
+        \item CPU อย่างน้อย 4 cores
+        \item พื้นที่จัดเก็บข้อมูลอย่างน้อย 50 GB
+        \item การเชื่อมต่อเครือข่ายที่เสถียร
     \end{mycustomenum2}
 \end{mycustomenum2}
 
-\vspace{0.5em}
-\textbf{การดาวน์โหลดและติดตั้งโปรเจ็กต์}
-\vspace{0.5em}
-
-\begin{mycustomenum2}
-    \item เปิด Terminal หรือ Command Prompt และทำการโคลนโปรเจ็กต์จาก GitHub Repository โดยใช้คำสั่งดังภาพที่ \ref{figC:GitClone}
+\section{การเตรียมรีโพซิทอรีและ workspace}
+\hspace*{1.3em}
+ระบบในฉบับปัจจุบันไม่ได้เก็บซอร์สโค้ดไว้ในรีโพซิทอรีเดียว ผู้พัฒนาจึงควรสร้างโฟลเดอร์หลักหนึ่งตำแหน่งแล้วโคลนรีโพซิทอรีที่เกี่ยวข้องลงในระดับเดียวกัน เช่น Midori, Momoi, Yuzu, Satsuki และ Yuuka
 
 \begin{figure}[htbp]
 \centering
 \adjustbox{frame, width=0.9\textwidth}{
     \begin{minipage}{0.85\textwidth}
         \texttt{\footnotesize
-        git clone https://github.com/akikungz/cloud-based-platform.git\\
-        cd cloud-based-platform
+        mkdir cloud-based-platform\\
+        cd cloud-based-platform\\
+        git clone https://github.com/akikungz/midori.git\\
+        git clone https://github.com/akikungz/momoi.git\\
+        git clone https://github.com/akikungz/yuzu.git\\
+        git clone https://github.com/akikungz/satsuki.git\\
+        git clone https://github.com/akikungz/yuuka.git
         }
     \end{minipage}
 }
-\caption{\fontSixTeen{คำสั่งสำหรับโคลนโปรเจ็กต์}}
+\caption{\fontSixTeen{ตัวอย่างการเตรียม workspace แบบหลายรีโพซิทอรี}}
 \label{figC:GitClone}
 \end{figure}
 
-    \item ติดตั้ง Dependencies ของโปรเจ็กต์ โดยใช้คำสั่งดังภาพที่ \ref{figC:BunInstall}
+\hspace*{1.3em}
+หลังจากโคลนรีโพซิทอรีแล้ว ให้ติดตั้ง dependencies แยกตามรีโพซิทอรีที่ต้องการใช้งานจริง
 
 \begin{figure}[htbp]
 \centering
 \adjustbox{frame, width=0.9\textwidth}{
     \begin{minipage}{0.85\textwidth}
         \texttt{\footnotesize
-        bun install
+        cd midori \&\& bun install\\
+        cd ../momoi \&\& bun install\\
+        cd ../yuzu \&\& bun install\\
+        cd ../satsuki \&\& bun install
         }
     \end{minipage}
 }
-\caption{\fontSixTeen{คำสั่งสำหรับติดตั้ง Dependencies}}
+\caption{\fontSixTeen{การติดตั้ง dependencies ของแต่ละรีโพซิทอรี}}
 \label{figC:BunInstall}
 \end{figure}
 
-    \item ตั้งค่า Environment Variables โดยคัดลอกไฟล์ตัวอย่าง โดยใช้คำสั่งดังภาพที่ \ref{figC:EnvSetup}
-
-\begin{figure}[htbp]
-\centering
-\adjustbox{frame, width=0.9\textwidth}{
-    \begin{minipage}{0.85\textwidth}
-        \texttt{\footnotesize
-        cp .env.example .env
-        }
-    \end{minipage}
-}
-\caption{\fontSixTeen{การตั้งค่า Environment Variables}}
-\label{figC:EnvSetup}
-\end{figure}
-\end{mycustomenum2}
-
-\section{การเริ่มต้นใช้งานระบบ}
+\section{การเตรียมไฟล์ Environment}
 \hspace*{1.3em}
-หลังจากติดตั้งโปรเจ็กต์เรียบร้อยแล้ว สามารถเริ่มต้นใช้งานระบบได้ดังนี้
-
-\vspace{0.5em}
-\textbf{การรันระบบในโหมด Development}
-\vspace{0.5em}
+ไฟล์ตัวอย่างสำหรับ environment ของระบบถูกแยกเก็บตามรีโพซิทอรี และในรีโพซิทอรี Yuuka ยังมีสำเนาตัวอย่างไว้ภายใต้โฟลเดอร์ docs/env เพื่อใช้ประกอบเอกสาร ผู้พัฒนาควรคัดลอกไฟล์ตัวอย่างจากรีโพซิทอรีจริงของแต่ละบริการแล้วปรับค่าให้สอดคล้องกัน
 
 \begin{mycustomenum2}
-    \item เริ่มต้น Infrastructure Services ด้วย Docker Compose โดยใช้คำสั่งดังภาพที่ \ref{figC:DockerUp}
+    \item Midori ใช้ไฟล์ \textbf{midori/.env.example}
+    \item Momoi ใช้ไฟล์ \textbf{momoi/.env.example}
+    \item Yuzu ใช้ไฟล์ \textbf{yuzu/.env.example}
+    \item Satsuki ใช้ไฟล์ environment สำหรับการเชื่อมต่อ PostgreSQL, การสร้างไฟล์ Nginx configuration และการ reload Nginx บนเครื่องภายนอก
+\end{mycustomenum2}
 
+\section{การเริ่มต้นใช้งานระบบในโหมดพัฒนา}
+\hspace*{1.3em}
+ในสภาพแวดล้อมพัฒนา ควรเริ่มต้นบริการประกอบจากรีโพซิทอรี Yuuka ก่อน แล้วจึงเริ่มบริการหลักของระบบใน terminal แยกกัน
+
+\begin{mycustomenum2}
+    \item เริ่มบริการประกอบในรีโพซิทอรี Yuuka
 \begin{figure}[htbp]
 \centering
 \adjustbox{frame, width=0.9\textwidth}{
     \begin{minipage}{0.85\textwidth}
         \texttt{\footnotesize
-        docker-compose up -d
+        cd yuuka\\
+        docker compose -f docker/docker-compose.yaml up -d
         }
     \end{minipage}
 }
-\caption{\fontSixTeen{การเริ่มต้น Infrastructure Services}}
+\caption{\fontSixTeen{การเริ่มต้นบริการประกอบจาก Yuuka}}
 \label{figC:DockerUp}
 \end{figure}
 
-    \item เริ่มต้น Midori (Frontend Application) โดยใช้คำสั่งดังภาพที่ \ref{figC:MidoriDev}
-
+    \item เริ่ม Momoi ใน terminal ใหม่
 \begin{figure}[htbp]
 \centering
 \adjustbox{frame, width=0.9\textwidth}{
     \begin{minipage}{0.85\textwidth}
         \texttt{\footnotesize
-        cd apps/midori\\
-        bun dev
+        cd momoi\\
+        bun run dev
         }
     \end{minipage}
 }
-\caption{\fontSixTeen{การเริ่มต้น Midori Frontend}}
-\label{figC:MidoriDev}
-\end{figure}
-
-    \item เริ่มต้น Momoi (API Service) ใน Terminal ใหม่ โดยใช้คำสั่งดังภาพที่ \ref{figC:MomoiDev}
-
-\begin{figure}[htbp]
-\centering
-\adjustbox{frame, width=0.9\textwidth}{
-    \begin{minipage}{0.85\textwidth}
-        \texttt{\footnotesize
-        cd apps/momoi\\
-        bun dev
-        }
-    \end{minipage}
-}
-\caption{\fontSixTeen{การเริ่มต้น Momoi API Service}}
+\caption{\fontSixTeen{การเริ่มต้น Momoi ในโหมดพัฒนา}}
 \label{figC:MomoiDev}
 \end{figure}
 
-    \item เริ่มต้น Yuzu (VM Operations Service) ใน Terminal ใหม่ โดยใช้คำสั่งดังภาพที่ \ref{figC:YuzuDev}
-
+    \item เริ่ม Yuzu ใน terminal ใหม่
 \begin{figure}[htbp]
 \centering
 \adjustbox{frame, width=0.9\textwidth}{
     \begin{minipage}{0.85\textwidth}
         \texttt{\footnotesize
-        cd apps/yuzu\\
-        bun dev
+        cd yuzu\\
+        bun run dev
         }
     \end{minipage}
 }
-\caption{\fontSixTeen{การเริ่มต้น Yuzu VM Operations Service}}
+\caption{\fontSixTeen{การเริ่มต้น Yuzu ในโหมดพัฒนา}}
 \label{figC:YuzuDev}
 \end{figure}
 
-    \item เข้าใช้งานระบบผ่าน Web Browser ที่ \url{http://localhost:3000}
+    \item เริ่ม Midori ใน terminal ใหม่
+\begin{figure}[htbp]
+\centering
+\adjustbox{frame, width=0.9\textwidth}{
+    \begin{minipage}{0.85\textwidth}
+        \texttt{\footnotesize
+        cd midori\\
+        bun run dev
+        }
+    \end{minipage}
+}
+\caption{\fontSixTeen{การเริ่มต้น Midori ในโหมดพัฒนา}}
+\label{figC:MidoriDev}
+\end{figure}
 \end{mycustomenum2}
 
-\section{การใช้งานส่วนประกอบต่าง ๆ ของระบบ}
 \hspace*{1.3em}
-ระบบ Cloud-Based Platform ประกอบด้วยส่วนประกอบหลัก 3 ส่วน ดังนี้
+หากต้องการทดสอบงานด้าน reverse proxy และ SSH automation เพิ่มเติม Satsuki จะต้องถูกติดตั้งและรันบนเครื่อง Nginx ภายนอกหรือเครื่องทดสอบที่มีสิทธิ์เขียนไฟล์ configuration และ reload Nginx ได้จริง
 
-\vspace{0.5em}
-\textbf{Midori - Frontend Application}
-\vspace{0.5em}
-
-\begin{mycustomenum2}
-    \item เป็น Web Application ที่พัฒนาด้วย Next.js 15.5
-    \item ใช้ Material UI 7.3 และ Tailwind CSS 4 สำหรับส่วน User Interface
-    \item รองรับการใช้งานบนอุปกรณ์ Desktop และ Mobile
-    \item มีฟีเจอร์หลัก ดังนี้:
-    \begin{mycustomenum2}
-        \item การจัดการ Virtual Machines (สร้าง, ติดตาม, จัดการ)
-        \item Dashboard สำหรับดูการใช้งานทรัพยากร
-        \item ระบบ Authentication และการจัดการบัญชีผู้ใช้
-        \item รองรับการใช้งานแบบ Responsive Design
-    \end{mycustomenum2}
-    \item URL สำหรับการเข้าใช้งาน: \url{http://localhost:3000}
-\end{mycustomenum2}
-
-\vspace{0.5em}
-\textbf{Momoi - API Service}
-\vspace{0.5em}
-
-\begin{mycustomenum2}
-    \item เป็น Core API Service ที่พัฒนาด้วย Elysia.js
-    \item ทำหน้าที่เป็นตัวกลางระหว่าง Frontend และ VM Operations Service
-    \item มีฟีเจอร์หลัก ดังนี้:
-    \begin{mycustomenum2}
-        \item RESTful API สำหรับการทำงานของแพลตฟอร์ม
-        \item OpenAPI Documentation แบบอัตโนมัติ
-        \item การติดตาม Telemetry ด้วย Jaeger และ Prometheus
-        \item การเชื่อมต่อกับ RabbitMQ สำหรับการประมวลผลแบบ Asynchronous
-    \end{mycustomenum2}
-    \item URL สำหรับ API: \url{http://localhost:3001}
-\end{mycustomenum2}
-
-\vspace{0.5em}
-\textbf{Yuzu - VM Operations Service}
-\vspace{0.5em}
-
-\begin{mycustomenum2}
-    \item เป็น Service สำหรับจัดการ Virtual Machines ใน Proxmox VE
-    \item ประมวลผลคำขอผ่าน RabbitMQ Message Queue
-    \item มีฟีเจอร์หลัก ดังนี้:
-    \begin{mycustomenum2}
-        \item จัดการ VM Lifecycle (สร้าง, เริ่ม, หยุด, ลบ VMs)
-        \item การ Provisioning แบบ Template-based
-        \item การจัดการ IP Address แบบอัตโนมัติ
-        \item ระบบ Logging ที่ครอบคลุมด้วย Pino
-    \end{mycustomenum2}
-\end{mycustomenum2}
-
-\section{การตรวจสอบและติดตามระบบ}
+\section{ส่วนประกอบหลักของระบบ}
 \hspace*{1.3em}
-ระบบมี Services สำหรับการตรวจสอบและติดตามการทำงานดังนี้
-
-\vspace{0.5em}
-\textbf{Monitoring Services}
-\vspace{0.5em}
+ระบบในฉบับปัจจุบันประกอบด้วยบริการหลักและบริการสนับสนุนที่สัมพันธ์กันดังนี้
 
 \begin{mycustomenum2}
-    \item \textbf{Prometheus} - การเก็บข้อมูล Metrics
-    \begin{mycustomenum2}
-        \item URL: \url{http://localhost:9090}
-        \item ใช้สำหรับติดตามประสิทธิภาพของระบบ
-    \end{mycustomenum2}
+    \item \textbf{Midori} เป็นเว็บแอปพลิเคชันส่วนติดต่อผู้ใช้ พัฒนาด้วย Next.js 16, React 19 และ Tailwind CSS 4
+    \item \textbf{Momoi} เป็น API หลักของระบบ พัฒนาด้วย Bun, Elysia.js, Prisma และ better-auth พร้อมเปิดเผย OpenAPI และจัดการเส้นทาง \textbf{/api/auth}
+    \item \textbf{Yuzu} เป็น worker service สำหรับงาน provision, deprovision และ toggle status โดยใช้ Redis ร่วมกับ BullMQ เป็นกลไกคิวงาน
+    \item \textbf{Satsuki} เป็นบริการ automation บนเครื่อง Nginx ภายนอก สำหรับสร้าง reverse proxy configuration และ \textbf{authorized\_keys}
+    \item \textbf{Yuuka} เป็นรีโพซิทอรีสำหรับ Docker Compose, Kubernetes manifests, environment examples และ observability stack
+\end{mycustomenum2}
 
-    \item \textbf{Jaeger} - การติดตาม Distributed Tracing
-    \begin{mycustomenum2}
-        \item URL: \url{http://localhost:16686}
-        \item ใช้สำหรับติดตามการทำงานของ API calls
-    \end{mycustomenum2}
+\section{จุดเชื่อมต่อสำคัญในสภาพแวดล้อมพัฒนา}
+\hspace*{1.3em}
+เมื่อเริ่มบริการครบแล้ว ผู้พัฒนาสามารถเข้าถึงบริการสำคัญได้จากพอร์ตมาตรฐานดังนี้
 
-    \item \textbf{Grafana} - Dashboard สำหรับการแสดงผล
-    \begin{mycustomenum2}
-        \item URL: \url{http://localhost:3002}
-        \item Username/Password: admin/admin (ค่าเริ่มต้น)
-        \item ใช้สำหรับแสดงข้อมูลสถิติและ Metrics
-    \end{mycustomenum2}
-
-    \item \textbf{RabbitMQ Management} - การจัดการ Message Queue
-    \begin{mycustomenum2}
-        \item URL: \url{http://localhost:15672}
-        \item Username/Password: user/password (ค่าเริ่มต้น)
-        \item ใช้สำหรับตรวจสอบ Message Queue
-    \end{mycustomenum2}
+\begin{mycustomenum2}
+    \item Midori ที่ \url{http://localhost:3000}
+    \item Momoi ที่ \url{http://localhost:3000}
+    \item Grafana ที่ \url{http://localhost:3002}
+    \item RustFS Console ที่ \url{http://localhost:9001}
+    \item Prometheus ที่ \url{http://localhost:9090}
+    \item Jaeger ที่ \url{http://localhost:16686}
 \end{mycustomenum2}
 
 \section{การแก้ไขปัญหาเบื้องต้น}
 \hspace*{1.3em}
-หากพบปัญหาในการใช้งาน สามารถแก้ไขได้ดังนี้
-
-\vspace{0.5em}
-\textbf{ปัญหาที่พบบ่อยและวิธีแก้ไข}
-\vspace{0.5em}
+หากพบปัญหาระหว่างการพัฒนา สามารถเริ่มตรวจสอบตามลำดับดังนี้
 
 \begin{mycustomenum2}
-    \item \textbf{Port ถูกใช้งานแล้ว}
+    \item \textbf{บริการประกอบเริ่มต้นไม่ได้}
     \begin{mycustomenum2}
-        \item ตรวจสอบ Port ที่ใช้งานด้วยคำสั่ง: lsof -i :3000 (สำหรับ macOS/Linux)
-        \item หยุดกระบวนการที่ใช้ Port หรือเปลี่ยน Port ในไฟล์ .env
+        \item ตรวจสอบสถานะด้วยคำสั่ง \textbf{docker compose -f docker/docker-compose.yaml ps}
+        \item ดู log ด้วยคำสั่ง \textbf{docker compose -f docker/docker-compose.yaml logs [service\_name]}
+        \item รีสตาร์ทบริการด้วยคำสั่ง \textbf{docker compose -f docker/docker-compose.yaml restart [service\_name]}
     \end{mycustomenum2}
-
-    \item \textbf{Docker Services ไม่สามารถเริ่มได้}
-    \begin{mycustomenum2}
-        \item ตรวจสอบสถานะด้วยคำสั่ง: docker-compose ps
-        \item ดู Log ด้วยคำสั่ง: docker-compose logs [service\_name]
-        \item รีสตาร์ท Services ด้วยคำสั่ง: docker-compose restart
-    \end{mycustomenum2}
-
-    \item \textbf{Database Connection Error}
-    \begin{mycustomenum2}
-        \item ตรวจสอบว่า PostgreSQL Container ทำงานอยู่
-        \item ตรวจสอบการตั้งค่าใน Environment Variables
-        \item รันคำสั่ง Database Migration (หากจำเป็น)
-    \end{mycustomenum2}
-
     \item \textbf{Frontend ไม่สามารถเชื่อมต่อ API ได้}
     \begin{mycustomenum2}
-        \item ตรวจสอบว่า Momoi API Service ทำงานอยู่ที่ Port 3000
-        \item ตรวจสอบการตั้งค่า API URL ในไฟล์ Environment
-        \item ตรวจสอบ CORS Settings ใน API Service
+        \item ตรวจสอบว่า Momoi ทำงานอยู่และเปิดพอร์ตที่กำหนดไว้จริง
+        \item ตรวจสอบค่า \textbf{SERVER\_API\_URL} และ \textbf{NEXT\_PUBLIC\_API\_URL} ใน Midori
+        \item ตรวจสอบ CORS และ cookie settings ของ Momoi
     \end{mycustomenum2}
-\end{mycustomenum2}
-
-% \newpage
-\vspace{0.5em}
-\textbf{การเข้าถึงข้อมูลเพิ่มเติม}
-\vspace{0.5em}
-
-\begin{mycustomenum2}
-    \item อ่าน Documentation เพิ่มเติมใน README.md ของแต่ละ Component
-    \item ตรวจสอบ Log Files สำหรับข้อมูลการ Debug
-    \item ใช้ Jaeger UI สำหรับติดตามการทำงานของ API
-    \item ใช้ Grafana Dashboard สำหรับติดตามประสิทธิภาพระบบ
+    \item \textbf{งาน VM ไม่ถูกประมวลผล}
+    \begin{mycustomenum2}
+        \item ตรวจสอบ Redis, queue state และ log ของ Yuzu
+        \item ตรวจสอบค่า concurrency และ resource lock ที่เกี่ยวข้องกับ \textbf{instanceId} หรือ \textbf{VMID}
+        \item ตรวจสอบการเชื่อมต่อไปยัง Proxmox VE
+    \end{mycustomenum2}
+    \item \textbf{reverse proxy หรือ SSH ใช้งานไม่ได้}
+    \begin{mycustomenum2}
+        \item ตรวจสอบ log ของ Satsuki บนเครื่อง Nginx ภายนอก
+        \item ตรวจสอบไฟล์ reverse proxy configuration และ \textbf{authorized\_keys} ที่ถูกสร้างจริง
+        \item ตรวจสอบสถานะการ reload ของ Nginx
+    \end{mycustomenum2}
 \end{mycustomenum2}

@@ -4,7 +4,7 @@
 \appendixChapterTitle{ข}{สถาปัตยกรรมระบบและส่วนประกอบทางเทคนิค}
 \section{สถาปัตยกรรมระบบและส่วนประกอบทางเทคนิค}
 \hspace*{1.3em}
-ระบบ Cloud-Based Platform ได้รับการออกแบบด้วยสถาปัตยกรรมแบบ Microservices เพื่อให้การพัฒนา การดูแลรักษา และการขยายระบบเป็นไปอย่างมีประสิทธิภาพ โดยมีรายละเอียดส่วนประกอบต่าง ๆ ดังนี้
+ระบบ Cloud-Based Platform ในฉบับปัจจุบันได้รับการออกแบบแบบ microservices และ multi-repository เพื่อให้แต่ละบริการสามารถพัฒนา ติดตั้ง และดูแลรักษาได้อย่างเป็นอิสระ ขณะที่ยังคงเชื่อมโยงกันผ่าน HTTP API, PostgreSQL, Redis และโครงสร้างพื้นฐานภายนอก
 
 \vspace{0.5em}
 \textbf{ภาพรวมสถาปัตยกรรมระบบ}
@@ -17,273 +17,94 @@
 \label{figD:SystemArchitecture}
 \end{figure}
 
+\section{บริการหลักและบทบาทในระบบ}
+\hspace*{1.3em}
+บริการหลักที่ใช้งานอยู่จริงใน code base ปัจจุบันมีดังนี้
+
+\begin{mycustomenum2}
+    \item \textbf{Midori} ทำหน้าที่เป็น frontend web application สำหรับนักศึกษา อาจารย์ และผู้ดูแลระบบ
+    \item \textbf{Momoi} ทำหน้าที่เป็น API หลักของระบบ รับผิดชอบ business logic, OpenAPI, storage integration และ authentication endpoints
+    \item \textbf{Yuzu} ทำหน้าที่เป็น background worker สำหรับจัดการ VM lifecycle บน Proxmox VE ผ่าน BullMQ
+    \item \textbf{Satsuki} ทำหน้าที่เป็น automation service บนเครื่อง Nginx ภายนอก สำหรับสร้างไฟล์ reverse proxy configuration และ \textbf{authorized\_keys}
+    \item \textbf{Yuuka} ทำหน้าที่เก็บ manifests, Docker Compose, observability configuration และเอกสารที่เกี่ยวข้องกับ deployment
+\end{mycustomenum2}
+
 \section{เทคโนโลยีที่ใช้ในการพัฒนา}
 \hspace*{1.3em}
-ระบบได้รับการพัฒนาด้วยเทคโนโลยีสมัยใหม่เพื่อประสิทธิภาพและความเสถียรสูงสุด
+เทคโนโลยีที่ใช้งานจริงใน code base ปัจจุบันสามารถสรุปได้ดังนี้
 
 \vspace{0.5em}
 \textbf{Frontend Technologies}
 \vspace{0.5em}
 
 \begin{mycustomenum2}
-    \item \textbf{Next.js 15.5} - React Framework สำหรับการพัฒนา Web Application
-    \begin{mycustomenum2}
-        \item รองรับ Server-Side Rendering (SSR) และ Static Site Generation (SSG)
-        \item มี Built-in Performance Optimization
-        \item รองรับ API Routes สำหรับ Backend Integration
-    \end{mycustomenum2}
-
-    \item \textbf{Material UI 7.3} - Component Library สำหรับ User Interface
-    \begin{mycustomenum2}
-        \item มี Pre-built Components ที่สวยงามและใช้งานง่าย
-        \item รองรับ Theming และ Customization
-        \item มี Accessibility Support ในตัว
-    \end{mycustomenum2}
-
-    \item \textbf{Tailwind CSS 4} - Utility-first CSS Framework
-    \begin{mycustomenum2}
-        \item ให้ความยืดหยุ่นสูงในการปรับแต่ง Styling
-        \item มีขนาดเล็กและประสิทธิภาพสูง
-        \item รองรับ Responsive Design ได้ดี
-    \end{mycustomenum2}
-
-    \item \textbf{Better Auth} - Authentication Library
-    \begin{mycustomenum2}
-        \item รองรับการ Authentication หลากหลายรูปแบบ
-        \item มีความปลอดภัยสูง
-        \item ง่ายต่อการ Integration
-    \end{mycustomenum2}
+    \item \textbf{Next.js 16} สำหรับพัฒนา Web Application แบบ React-based
+    \item \textbf{React 19} สำหรับโครงสร้างส่วนติดต่อผู้ใช้
+    \item \textbf{Tailwind CSS 4} สำหรับการจัดการรูปแบบหน้าจอ
+    \item \textbf{TanStack React Query} สำหรับ data fetching และ state synchronization ฝั่ง client
+    \item \textbf{better-auth client} สำหรับการเรียกใช้งาน authentication endpoints จากฝั่ง frontend
 \end{mycustomenum2}
 
 \vspace{0.5em}
-\textbf{Backend Technologies}
+\textbf{Backend และ Worker Technologies}
 \vspace{0.5em}
 
 \begin{mycustomenum2}
-    \item \textbf{Elysia.js} - Web Framework สำหรับ API Development
-    \begin{mycustomenum2}
-        \item ประสิทธิภาพสูงด้วย Bun Runtime
-        \item รองรับ TypeScript แบบ Native
-        \item มี Built-in OpenAPI Documentation
-        \item รองรับ Plugin System ที่ยืดหยุ่น
-    \end{mycustomenum2}
-
-    \item \textbf{Bun} - JavaScript Runtime และ Package Manager
-    \begin{mycustomenum2}
-        \item เร็วกว่า Node.js อย่างมีนัยสำคัญ
-        \item รองรับ TypeScript โดยไม่ต้องติดตั้งเพิ่มเติม
-        \item มี Built-in Package Manager, Bundler, และ Test Runner
-    \end{mycustomenum2}
-
-    \item \textbf{PostgreSQL} - Relational Database Management System
-    \begin{mycustomenum2}
-        \item ความเสถียรและประสิทธิภาพสูง
-        \item รองรับ Advanced SQL Features
-        \item มี ACID Compliance
-    \end{mycustomenum2}
-
-    \item \textbf{Prisma ORM} - Database Access Layer
-    \begin{mycustomenum2}
-        \item Type-safe Database Access
-        \item Auto-generated Database Client
-        \item Database Migration Management
-    \end{mycustomenum2}
+    \item \textbf{Bun} เป็น runtime หลักของ Momoi และ Yuzu
+    \item \textbf{Elysia.js} เป็น web framework ของ Momoi
+    \item \textbf{Prisma ORM} ใช้เข้าถึง PostgreSQL แบบ type-safe
+    \item \textbf{PostgreSQL} เป็นฐานข้อมูลเชิงธุรกรรมหลักของระบบ
+    \item \textbf{Redis} เป็น cache และ queue broker
+    \item \textbf{BullMQ} เป็นระบบคิวงานระหว่าง Momoi และ Yuzu
+    \item \textbf{better-auth} ใช้สำหรับ session และ OAuth flow ของระบบ
+    \item \textbf{Zod} ใช้สำหรับ validation ของ environment variables และข้อมูลบางส่วนในระบบ
 \end{mycustomenum2}
 
 \vspace{0.5em}
-\textbf{Message Queue และ Communication}
+\textbf{Virtualization และ Infrastructure}
 \vspace{0.5em}
 
 \begin{mycustomenum2}
-    \item \textbf{RabbitMQ} - Message Broker สำหรับ Asynchronous Communication
-    \begin{mycustomenum2}
-        \item รองรับ Message Patterns หลากหลายรูปแบบ
-        \item มีความเสถียรสูงและ Message Durability
-        \item มี Management Interface สำหรับการติดตาม
-    \end{mycustomenum2}
-    \newpage
-    \item \textbf{AMQP (Advanced Message Queuing Protocol)}
-    \begin{mycustomenum2}
-        \item Protocol มาตรฐานสำหรับ Message Queuing
-        \item รองรับการส่ง Message แบบ Reliable
-        \item มี Message Routing ที่ยืดหยุ่น
-    \end{mycustomenum2}
+    \item \textbf{Proxmox VE} เป็นแพลตฟอร์มหลักสำหรับจัดการ VM cluster
+    \item \textbf{Kubernetes manifests} ในรีโพซิทอรี Yuuka ใช้สำหรับการติดตั้งบริการหลักในบางสภาพแวดล้อม
+    \item \textbf{Docker Compose} ใช้สำหรับการเริ่มบริการประกอบในสภาพแวดล้อมพัฒนา
+    \item \textbf{RustFS} ใช้เป็น S3-compatible object storage
+    \item \textbf{Nginx} ทำหน้าที่เป็น reverse proxy หน้าด่านบนเครื่องภายนอก และรับการอัปเดต configuration จาก Satsuki
 \end{mycustomenum2}
+
+\section{ระบบคิวงานและการประมวลผลแบบ Asynchronous}
+\hspace*{1.3em}
+งานที่ใช้เวลานาน เช่น การสร้าง ลบ หรือเปลี่ยนสถานะ VM จะไม่ถูกประมวลผลภายใน request-response cycle ของ Momoi โดยตรง แต่จะถูกส่งเข้า Redis-backed BullMQ ก่อน จากนั้น Yuzu จะดึงงานไปประมวลผลแบบ asynchronous
+
+\begin{mycustomenum2}
+    \item \textbf{Provision Queue} สำหรับงานสร้าง VM ใหม่
+    \item \textbf{Deprovision Queue} สำหรับงานลบหรือคืนทรัพยากรของ VM
+    \item \textbf{Toggle Status Queue} สำหรับงาน Start, Stop และ Restart
+\end{mycustomenum2}
+
+\hspace*{1.3em}
+ใน implementation ปัจจุบัน Yuzu รองรับการตั้งค่า concurrency แยกตามแต่ละคิวผ่าน environment variables และใช้ Redis-based distributed locks เพื่อกันงานที่ชน \textbf{instanceId} หรือ \textbf{VMID} เดียวกันไม่ให้ทำงานพร้อมกันโดยไม่จำเป็น
 
 \section{Monitoring และ Observability}
 \hspace*{1.3em}
-ระบบมีการติดตามและตรวจสอบการทำงานอย่างครอบคลุม
-
-\vspace{0.5em}
-\textbf{Metrics Collection}
-\vspace{0.5em}
+ระบบมีการติดตามและตรวจสอบการทำงานอย่างครอบคลุมผ่านชุดเครื่องมือดังนี้
 
 \begin{mycustomenum2}
-    \item \textbf{Prometheus} - Time Series Database สำหรับ Metrics
-    \begin{mycustomenum2}
-        \item เก็บข้อมูล Performance Metrics
-        \item รองรับ PromQL สำหรับ Query ข้อมูล
-        \item มี Alerting System ในตัว
-    \end{mycustomenum2}
-
-    \item \textbf{Elysia Prometheus Plugin} - Metrics Integration
-    \begin{mycustomenum2}
-        \item ติดตาม HTTP Request/Response Metrics
-        \item วัดประสิทธิภาพของ API Endpoints
-        \item รองรับ Custom Metrics
-    \end{mycustomenum2}
-\end{mycustomenum2}
-
-\vspace{0.5em}
-\textbf{Distributed Tracing}
-\vspace{0.5em}
-
-\begin{mycustomenum2}
-    \item \textbf{Jaeger} - Distributed Tracing System
-    \begin{mycustomenum2}
-        \item ติดตามการเดินทางของ Request ข้ามหลาย Services
-        \item วิเคราะห์ Performance Bottlenecks
-        \item มี UI สำหรับการแสดงผล Traces
-    \end{mycustomenum2}
-
-    \item \textbf{OpenTelemetry} - Observability Framework
-    \begin{mycustomenum2}
-        \item มาตรฐานสำหรับ Telemetry Data Collection
-        \item รองรับ Metrics, Traces, และ Logs
-        \item มี Vendor-neutral Architecture
-    \end{mycustomenum2}
-\end{mycustomenum2}
-
-\vspace{0.5em}
-\textbf{Logging และ Log Aggregation}
-\vspace{0.5em}
-
-\begin{mycustomenum2}
-    \item \textbf{Pino} - High Performance Logging Library
-    \begin{mycustomenum2}
-        \item JSON-based Structured Logging
-        \item ประสิทธิภาพสูงมาก
-        \item รองรับ Log Levels และ Child Loggers
-    \end{mycustomenum2}
-
-    \item \textbf{Loki} - Log Aggregation System
-    \begin{mycustomenum2}
-        \item เก็บรวบรวม Logs จากหลาย Sources
-        \item ใช้ Label-based Indexing
-        \item Integration ที่ดีกับ Grafana
-    \end{mycustomenum2}
-
-    \item \textbf{Grafana} - Visualization Platform
-    \begin{mycustomenum2}
-        \item สร้าง Dashboard สำหรับ Metrics และ Logs
-        \item รองรับ Multiple Data Sources
-        \item มี Alerting และ Notification Features
-    \end{mycustomenum2}
-\end{mycustomenum2}
-
-\section{Virtualization และ Infrastructure}
-\hspace*{1.3em}
-ระบบใช้เทคโนโลยี Virtualization สำหรับการจัดการ Virtual Machines
-
-\vspace{0.5em}
-\textbf{Hypervisor Technology}
-\vspace{0.5em}
-
-\begin{mycustomenum2}
-    \item \textbf{Proxmox VE} - Enterprise Virtualization Platform
-    \begin{mycustomenum2}
-        \item รองรับทั้ง KVM Virtual Machines และ LXC Containers
-        \item มี Web-based Management Interface
-        \item รองรับ High Availability และ Clustering
-        \item มี Backup และ Restore Features
-    \end{mycustomenum2}
-
-    \item \textbf{KVM (Kernel-based Virtual Machine)}
-    \begin{mycustomenum2}
-        \item Hypervisor แบบ Type 1 ที่มีประสิทธิภาพสูง
-        \item รองรับ Hardware Virtualization
-        \item มีความเสถียรและความปลอดภัยสูง
-    \end{mycustomenum2}
-\end{mycustomenum2}
-
-\vspace{0.5em}
-\textbf{Container Technology}
-\vspace{0.5em}
-
-\begin{mycustomenum2}
-    \item \textbf{Docker} - Container Platform
-    \begin{mycustomenum2}
-        \item ใช้สำหรับ Package Applications และ Dependencies
-        \item รองรับการ Deploy แบบ Consistent
-        \item มีความเร็วในการ Start/Stop
-    \end{mycustomenum2}
-
-    \item \textbf{Docker Compose} - Multi-container Application Definition
-    \begin{mycustomenum2}
-        \item จัดการ Multiple Containers ด้วยไฟล์ YAML
-        \item รองรับ Service Dependencies
-        \item ง่ายต่อการ Setup Development Environment
-    \end{mycustomenum2}
-\end{mycustomenum2}
-
-\section{Data Validation และ Type Safety}
-\hspace*{1.3em}
-ระบบใช้เทคโนโลยีสำหรับการตรวจสอบข้อมูลและความปลอดภัยของประเภทข้อมูล
-
-\vspace{0.5em}
-\textbf{Schema Validation}
-\vspace{0.5em}
-
-\begin{mycustomenum2}
-    \item \textbf{Zod} - TypeScript Schema Validation Library
-    \begin{mycustomenum2}
-        \item Type-safe Schema Definition
-        \item Runtime Validation
-        \item Auto-generated TypeScript Types
-        \item รองรับ Complex Data Structures
-    \end{mycustomenum2}
-
-    \item \textbf{TypeScript} - Static Type Checking
-    \begin{mycustomenum2}
-        \item Compile-time Type Safety
-        \item Enhanced IDE Support
-        \item Better Code Quality และ Maintainability
-    \end{mycustomenum2}
+    \item \textbf{Prometheus} สำหรับเก็บ metrics
+    \item \textbf{Grafana} สำหรับสร้าง dashboards
+    \item \textbf{Loki} สำหรับรวบรวม logs
+    \item \textbf{Jaeger} สำหรับ distributed tracing
+    \item \textbf{OpenTelemetry} เป็นมาตรฐานกลางสำหรับ telemetry data ของหลายบริการ
 \end{mycustomenum2}
 
 \section{ข้อดีของสถาปัตยกรรมที่เลือกใช้}
 \hspace*{1.3em}
-การเลือกใช้สถาปัตยกรรมและเทคโนโลยีดังกล่าวมีข้อดีดังนี้
-
-\vspace{0.5em}
-\textbf{ประสิทธิภาพและความเร็ว}
-\vspace{0.5em}
+แนวทางสถาปัตยกรรมและเทคโนโลยีดังกล่าวมีข้อดีสำคัญดังนี้
 
 \begin{mycustomenum2}
-    \item Bun Runtime มีประสิทธิภาพสูงกว่า Node.js อย่างมีนัยสำคัญ
-    \item Elysia.js ให้ Throughput สูงและ Latency ต่ำ
-    \item PostgreSQL มีประสิทธิภาพดีในการจัดการข้อมูลขนาดใหญ่
-    \item Microservices Architecture ช่วยให้ Scale แต่ละส่วนได้อย่างอิสระ
-\end{mycustomenum2}
-
-\vspace{0.5em}
-\textbf{ความยืดหยุ่นและการขยายระบบ}
-\vspace{0.5em}
-
-\begin{mycustomenum2}
-    \item แต่ละ Service สามารถ Deploy และ Update แยกกันได้
-    \item RabbitMQ ช่วยให้ระบบทำงานแบบ Asynchronous ได้
-    \item Docker ทำให้การ Deploy ง่ายและ Consistent
-    \item Prometheus และ Grafana ให้ Observability ที่ดี
-\end{mycustomenum2}
-
-\vspace{0.5em}
-\textbf{ความปลอดภัยและความเสถียร}
-\vspace{0.5em}
-
-\begin{mycustomenum2}
-    \item TypeScript และ Zod ให้ Type Safety ที่แข็งแกร่ง
-    \item Better Auth ให้ระบบ Authentication ที่ปลอดภัย
-    \item PostgreSQL มี ACID Compliance
-    \item Microservices ช่วยลด Impact ของ Single Point of Failure
+    \item แต่ละบริการสามารถพัฒนาและ deploy แยกกันได้ตามขอบเขตงาน
+    \item Redis และ BullMQ ช่วยให้ระบบจัดการงานระยะยาวแบบ asynchronous ได้เหมาะสม
+    \item การแยก Yuzu ออกจาก Momoi ช่วยลดภาระของ API หลักและเพิ่มความยืดหยุ่นในการ scaling
+    \item Satsuki ช่วยทำให้ reverse proxy และ SSH access automation เชื่อมต่อกับข้อมูลในฐานข้อมูลได้โดยตรง
+    \item OpenTelemetry, Prometheus และ Grafana ช่วยให้ติดตามปัญหาและวิเคราะห์ประสิทธิภาพของระบบได้ดีขึ้น
 \end{mycustomenum2}
